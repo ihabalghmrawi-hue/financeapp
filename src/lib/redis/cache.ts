@@ -1,4 +1,4 @@
-import { RedisClient } from './client'
+import type { RedisClient } from './client'
 
 const CACHE_PREFIX = 'cache:'
 const TAG_PREFIX = 'cache:tag:'
@@ -74,13 +74,11 @@ export class DistributedCache {
     }
   }
 
-  async getOrSet<T>(
-    key: string,
-    fetch: () => Promise<T>,
-    options?: CacheOptions
-  ): Promise<T> {
+  async getOrSet<T>(key: string, fetch: () => Promise<T>, options?: CacheOptions): Promise<T> {
     const cached = await this.get<T>(key)
-    if (cached !== null) return cached
+    if (cached !== null) {
+      return cached
+    }
 
     const value = await fetch()
     await this.set(key, value, options)
@@ -110,7 +108,9 @@ export class DistributedCache {
   async invalidateTag(tag: string): Promise<number> {
     const tagKey = this.tagKey(tag)
     const members = await this.client.smembers(tagKey)
-    if (members.length === 0) return 0
+    if (members.length === 0) {
+      return 0
+    }
 
     await this.client.del(...members)
     await this.client.del(tagKey)
@@ -140,7 +140,7 @@ export class DistributedCache {
 
   async getStats(): Promise<CacheStats> {
     const info = await this.client.info('memory')
-    const memoryLine = info.split('\r\n').find((l) => l.startsWith('used_memory_human:'))
+    const memoryLine = info.split('\r\n').find((l: string) => l.startsWith('used_memory_human:'))
     const memory = memoryLine ? memoryLine.split(':')[1] : 'unknown'
 
     let keys = 0

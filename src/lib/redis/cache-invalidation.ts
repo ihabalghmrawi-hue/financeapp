@@ -31,20 +31,28 @@ export class CacheInvalidationBus {
   }
 
   async subscribe(handler?: (event: CacheInvalidationEvent) => void): Promise<void> {
-    if (this.subscribed) return
+    if (this.subscribed) {
+      return
+    }
     this.subscribed = true
-    if (handler) this.handler = handler
+    if (handler) {
+      this.handler = handler
+    }
 
     const subClient = this.client.duplicate ? this.client.duplicate() : this.client
     try {
       await subClient.subscribe(this.channel)
       subClient.on('message', (channel: string, message: string) => {
-        if (channel !== this.channel) return
+        if (channel !== this.channel) {
+          return
+        }
         try {
           const event: CacheInvalidationEvent = JSON.parse(message)
           this.dispatchToListeners(event)
-          if (this.handler) this.handler(event)
-        } catch { }
+          if (this.handler) {
+            this.handler(event)
+          }
+        } catch {}
       })
       logger.info(`Subscribed to cache invalidation channel: ${this.channel}`)
     } catch (error) {
@@ -54,15 +62,19 @@ export class CacheInvalidationBus {
   }
 
   async unsubscribe(): Promise<void> {
-    if (!this.subscribed) return
+    if (!this.subscribed) {
+      return
+    }
     this.subscribed = false
     try {
       await this.client.unsubscribe(this.channel)
-    } catch { }
+    } catch {}
   }
 
   on(eventType: string, listener: (event: CacheInvalidationEvent) => void): void {
-    if (!this.listeners.has(eventType)) this.listeners.set(eventType, new Set())
+    if (!this.listeners.has(eventType)) {
+      this.listeners.set(eventType, new Set())
+    }
     this.listeners.get(eventType)!.add(listener)
   }
 
@@ -74,13 +86,17 @@ export class CacheInvalidationBus {
     const typeListeners = this.listeners.get(event.type)
     if (typeListeners) {
       for (const listener of typeListeners) {
-        try { listener(event) } catch { }
+        try {
+          listener(event)
+        } catch {}
       }
     }
     const allListeners = this.listeners.get('*')
     if (allListeners) {
       for (const listener of allListeners) {
-        try { listener(event) } catch { }
+        try {
+          listener(event)
+        } catch {}
       }
     }
   }
@@ -174,11 +190,11 @@ export class CacheInvalidationBus {
   private async getWorkerId(): Promise<string> {
     if (!this.workerId) {
       try {
-        this.workerId = await this.client.get(`${this.prefix}worker-id`) || 'unknown'
+        this.workerId = (await this.client.get(`${this.prefix}worker-id`)) || 'unknown'
       } catch {
         this.workerId = 'unknown'
       }
     }
-    return this.workerId
+    return this.workerId!
   }
 }
