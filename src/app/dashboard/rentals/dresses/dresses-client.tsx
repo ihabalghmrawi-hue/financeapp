@@ -4,13 +4,6 @@ import { useState, useRef } from 'react'
 import { Plus, Edit, Wrench, Check, X, Loader2, Search, Shirt, Upload, ImageIcon } from 'lucide-react'
 import { formatCurrency, cn } from '@/lib/utils'
 
-const CATEGORIES = [
-  { value: 'wedding', label: 'زفاف' },
-  { value: 'evening', label: 'سهرة' },
-  { value: 'casual', label: 'كاجوال' },
-  { value: 'other', label: 'أخرى' },
-]
-
 const STATUS_STYLES: Record<string, string> = {
   available: 'bg-green-100 text-green-700 dark:bg-green-900/30',
   rented: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30',
@@ -25,7 +18,6 @@ const STATUS_LABELS: Record<string, string> = {
 const emptyForm = {
   name: '',
   code: '',
-  category: 'wedding',
   size: '',
   color: '',
   description: '',
@@ -37,7 +29,6 @@ const emptyForm = {
 export function DressesClient({ dresses: init, currency }: { dresses: any[]; currency: string }) {
   const [dresses, setDresses] = useState(init)
   const [search, setSearch] = useState('')
-  const [filterCat, setFilterCat] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<any>(null)
@@ -55,7 +46,6 @@ export function DressesClient({ dresses: init, currency }: { dresses: any[]; cur
         d.name?.toLowerCase().includes(q) ||
         d.code?.toLowerCase().includes(q) ||
         d.color?.toLowerCase().includes(q)) &&
-      (!filterCat || d.category === filterCat) &&
       (!filterStatus || d.status === filterStatus)
     )
   })
@@ -71,7 +61,6 @@ export function DressesClient({ dresses: init, currency }: { dresses: any[]; cur
     setForm({
       name: d.name,
       code: d.code || '',
-      category: d.category,
       size: d.size || '',
       color: d.color || '',
       description: d.description || '',
@@ -184,18 +173,6 @@ export function DressesClient({ dresses: init, currency }: { dresses: any[]; cur
           />
         </div>
         <select
-          value={filterCat}
-          onChange={(e) => setFilterCat(e.target.value)}
-          className="border border-input rounded-lg px-3 py-2 text-sm bg-background"
-        >
-          <option value="">كل الفئات</option>
-          {CATEGORIES.map((c) => (
-            <option key={c.value} value={c.value}>
-              {c.label}
-            </option>
-          ))}
-        </select>
-        <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
           className="border border-input rounded-lg px-3 py-2 text-sm bg-background"
@@ -240,11 +217,6 @@ export function DressesClient({ dresses: init, currency }: { dresses: any[]; cur
               </span>
             </div>
             <div className="flex flex-wrap gap-1.5 mb-3">
-              {d.category && (
-                <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
-                  {CATEGORIES.find((c) => c.value === d.category)?.label || d.category}
-                </span>
-              )}
               {d.size && (
                 <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">مقاس {d.size}</span>
               )}
@@ -322,20 +294,6 @@ export function DressesClient({ dresses: init, currency }: { dresses: any[]; cur
                     className={inp}
                     dir="ltr"
                   />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">الفئة</label>
-                  <select
-                    value={form.category}
-                    onChange={(e) => setForm((f: any) => ({ ...f, category: e.target.value }))}
-                    className={inp}
-                  >
-                    {CATEGORIES.map((c) => (
-                      <option key={c.value} value={c.value}>
-                        {c.label}
-                      </option>
-                    ))}
-                  </select>
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">المقاس</label>

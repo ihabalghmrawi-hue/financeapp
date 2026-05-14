@@ -29,7 +29,6 @@ export async function POST(req: NextRequest) {
       company_id: COMPANY_ID,
       name: String(body.name || ''),
       code: body.code || null,
-      category: body.category || 'other',
       size: body.size || null,
       color: body.color || null,
       description: body.description || null,

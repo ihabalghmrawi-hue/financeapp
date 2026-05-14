@@ -16,9 +16,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if ('code' in body) {
     allowed.code = body.code || null
   }
-  if ('category' in body) {
-    allowed.category = String(body.category)
-  }
   if ('size' in body) {
     allowed.size = body.size || null
   }

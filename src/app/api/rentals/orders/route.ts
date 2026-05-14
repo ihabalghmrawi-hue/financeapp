@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   const status = req.nextUrl.searchParams.get('status')
   let q = supabase
     .from('rental_orders')
-    .select('*, dresses(name, code, color, size, category), customers(name, phone)')
+    .select('*, dresses(name, code, color, size), customers(name, phone)')
     .eq('company_id', COMPANY_ID)
     .order('start_date', { ascending: true })
   if (status) {
