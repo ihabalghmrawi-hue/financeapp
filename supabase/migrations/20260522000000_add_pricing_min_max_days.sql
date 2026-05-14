@@ -1,0 +1,3 @@
+ALTER TABLE rental_pricing_rules
+  ADD COLUMN IF NOT EXISTS min_days INTEGER,
+  ADD COLUMN IF NOT EXISTS max_days INTEGER;

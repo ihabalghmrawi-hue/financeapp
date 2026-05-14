@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS rental_pricing_rules (
   base_price    NUMERIC(12,2) NOT NULL DEFAULT 0,
   deposit_type  TEXT NOT NULL DEFAULT 'fixed',   -- fixed | percentage
   deposit_value NUMERIC(12,2) NOT NULL DEFAULT 0,
+  min_days      INTEGER,
+  max_days      INTEGER,
   packages      JSONB DEFAULT '[]',
   weekend       JSONB DEFAULT '{"days":[5,6],"multiplier":1.5}',
   events        JSONB DEFAULT '[]',
