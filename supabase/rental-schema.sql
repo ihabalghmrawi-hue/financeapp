@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS rental_orders (
   rental_price    NUMERIC(12,2) NOT NULL,    -- price per day
   total_price     NUMERIC(12,2) NOT NULL,    -- rental_price * days
   deposit         NUMERIC(12,2) NOT NULL DEFAULT 0,
-  deposit_paid    BOOLEAN NOT NULL DEFAULT false,
+  deposit_paid    NUMERIC(12,2) NOT NULL DEFAULT 0,
   amount_paid     NUMERIC(12,2) NOT NULL DEFAULT 0,
   status          TEXT NOT NULL DEFAULT 'booked', -- booked | active | returned | late | cancelled
   notes           TEXT,
