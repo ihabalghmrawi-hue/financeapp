@@ -290,9 +290,11 @@ CREATE TABLE IF NOT EXISTS expenses (
   expense_date DATE DEFAULT CURRENT_DATE,
   payment_method VARCHAR(30) DEFAULT 'cash',
   reference VARCHAR(100),
-  attachment_url TEXT,
+  wallet_id UUID REFERENCES treasury_accounts(id),
+  notes TEXT,
   created_by UUID REFERENCES auth.users(id),
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ============================================================
