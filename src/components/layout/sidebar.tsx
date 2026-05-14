@@ -3,12 +3,37 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
-  LayoutDashboard, ShoppingCart, Package, ShoppingBag, Users, Truck,
-  BarChart3, Settings, BookOpen, Wallet, Receipt, DollarSign, Tag,
-  Warehouse, TrendingUp, RotateCcw, Clock, Shield, UserCog, LogOut,
-  Layers, Shirt, Calendar, CalendarDays, Trash2 as Trash2Icon, AlertOctagon,
-  ShieldCheck, Building2, Scale, FileText, PieChart, GitBranch, CalendarRange,
-  HardHat, Hammer, CheckSquare, PackageOpen, CreditCard,
+  LayoutDashboard,
+  ShoppingCart,
+  Package,
+  ShoppingBag,
+  Users,
+  Truck,
+  BarChart3,
+  Settings,
+  Wallet,
+  Receipt,
+  DollarSign,
+  Tag,
+  Warehouse,
+  TrendingUp,
+  RotateCcw,
+  Clock,
+  Shield,
+  UserCog,
+  LogOut,
+  Layers,
+  Shirt,
+  Calendar,
+  CalendarDays,
+  Trash2 as Trash2Icon,
+  AlertOctagon,
+  ShieldCheck,
+  Building2,
+  HardHat,
+  CheckSquare,
+  PackageOpen,
+  CreditCard,
 } from 'lucide-react'
 import { cn, getInitials } from '@/lib/utils'
 import type { Features } from '@/lib/features'
@@ -30,9 +55,15 @@ interface SidebarProps {
 }
 
 function can(staff: StaffInfo | undefined, perm: string): boolean {
-  if (!staff) return true
-  if (staff.role === 'admin' || staff.role === 'owner') return true
-  if (staff.permissions.includes('*')) return true
+  if (!staff) {
+    return true
+  }
+  if (staff.role === 'admin' || staff.role === 'owner') {
+    return true
+  }
+  if (staff.permissions.includes('*')) {
+    return true
+  }
   return staff.permissions.includes(perm)
 }
 
@@ -41,7 +72,9 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
   const router = useRouter()
 
   const isActive = (href: string) => {
-    if (href === '/dashboard') return pathname === '/dashboard'
+    if (href === '/dashboard') {
+      return pathname === '/dashboard'
+    }
     return pathname.startsWith(href)
   }
 
@@ -53,73 +86,139 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
   const navGroups = [
     {
       label: 'الرئيسية',
-      items: [
-        { label: 'لوحة التحكم', href: '/dashboard', icon: LayoutDashboard, show: true },
-      ],
+      items: [{ label: 'لوحة التحكم', href: '/dashboard', icon: LayoutDashboard, show: true }],
     },
     {
       label: 'المبيعات',
       items: [
-        { label: 'نقطة البيع', href: '/dashboard/pos', icon: ShoppingCart, show: features.showPOS && can(staff, 'pos.access') },
-        { label: 'فواتير المبيعات', href: '/dashboard/sales', icon: Receipt, show: features.showPOS && can(staff, 'returns.view') },
-        { label: 'المرتجعات', href: '/dashboard/returns', icon: RotateCcw, show: features.showReturns && can(staff, 'returns.view') },
-        { label: 'العملاء', href: '/dashboard/customers', icon: Users, show: features.showPOS && can(staff, 'customers.view') },
-        { label: 'الورديات', href: '/dashboard/shifts', icon: Clock, show: features.showShifts && can(staff, 'shifts.manage') },
+        {
+          label: 'نقطة البيع',
+          href: '/dashboard/pos',
+          icon: ShoppingCart,
+          show: features.showPOS && can(staff, 'pos.access'),
+        },
+        {
+          label: 'فواتير المبيعات',
+          href: '/dashboard/sales',
+          icon: Receipt,
+          show: features.showPOS && can(staff, 'returns.view'),
+        },
+        {
+          label: 'المرتجعات',
+          href: '/dashboard/returns',
+          icon: RotateCcw,
+          show: features.showReturns && can(staff, 'returns.view'),
+        },
+        {
+          label: 'العملاء',
+          href: '/dashboard/customers',
+          icon: Users,
+          show: features.showPOS && can(staff, 'customers.view'),
+        },
+        {
+          label: 'الورديات',
+          href: '/dashboard/shifts',
+          icon: Clock,
+          show: features.showShifts && can(staff, 'shifts.manage'),
+        },
       ],
     },
     {
       label: 'المشتريات',
       items: [
-        { label: 'فواتير الشراء', href: '/dashboard/purchases', icon: ShoppingBag, show: features.showPurchases && can(staff, 'purchases.view') },
-        { label: 'الموردون', href: '/dashboard/suppliers', icon: Truck, show: features.showPurchases && can(staff, 'purchases.view') },
+        {
+          label: 'فواتير الشراء',
+          href: '/dashboard/purchases',
+          icon: ShoppingBag,
+          show: features.showPurchases && can(staff, 'purchases.view'),
+        },
+        {
+          label: 'الموردون',
+          href: '/dashboard/suppliers',
+          icon: Truck,
+          show: features.showPurchases && can(staff, 'purchases.view'),
+        },
       ],
     },
     {
       label: 'المستودع',
       items: [
-        { label: 'المنتجات',     href: '/dashboard/inventory',           icon: Package,    show: features.showInventory && can(staff, 'inventory.view') },
-        { label: 'المخازن',      href: '/dashboard/warehouses',          icon: Building2,  show: features.showInventory && can(staff, 'inventory.view') },
-        { label: 'حركة المخزون', href: '/dashboard/inventory/movements', icon: Warehouse,  show: features.showInventory && can(staff, 'inventory.view') },
-        { label: 'متغيرات المنتجات', href: '/dashboard/inventory/variants', icon: Layers,  show: false },
+        {
+          label: 'المنتجات',
+          href: '/dashboard/inventory',
+          icon: Package,
+          show: features.showInventory && can(staff, 'inventory.view'),
+        },
+        {
+          label: 'المخازن',
+          href: '/dashboard/warehouses',
+          icon: Building2,
+          show: features.showInventory && can(staff, 'inventory.view'),
+        },
+        {
+          label: 'حركة المخزون',
+          href: '/dashboard/inventory/movements',
+          icon: Warehouse,
+          show: features.showInventory && can(staff, 'inventory.view'),
+        },
+        { label: 'متغيرات المنتجات', href: '/dashboard/inventory/variants', icon: Layers, show: false },
       ],
     },
     {
       label: 'المالية',
       items: [
-        { label: 'المصروفات',  href: '/dashboard/expenses', icon: DollarSign, show: can(staff, 'expenses.view') },
-        { label: 'الصندوق',    href: '/dashboard/wallet',   icon: Wallet,     show: can(staff, 'reports.view')  },
-      ],
-    },
-    {
-      label: 'المحاسبة',
-      items: [
-        { label: 'لوحة المحاسبة',     href: '/dashboard/accounting',                   icon: Scale,         show: can(staff, 'reports.view') },
-        { label: 'القيود اليومية',     href: '/dashboard/accounting/journal',           icon: BookOpen,      show: can(staff, 'reports.view') },
-        { label: 'دفتر الأستاذ',       href: '/dashboard/accounting/ledger',            icon: FileText,      show: can(staff, 'reports.view') },
-        { label: 'ميزان المراجعة',     href: '/dashboard/accounting/trial-balance',     icon: GitBranch,     show: can(staff, 'reports.view') },
-        { label: 'القوائم المالية',    href: '/dashboard/accounting/statements',        icon: PieChart,      show: can(staff, 'reports.view') },
-        { label: 'شجرة الحسابات',     href: '/dashboard/accounting/coa',               icon: TrendingUp,    show: can(staff, 'reports.view') },
-        { label: 'الفترات المالية',    href: '/dashboard/accounting/periods',           icon: CalendarRange, show: can(staff, 'reports.view') },
+        { label: 'المصروفات', href: '/dashboard/expenses', icon: DollarSign, show: can(staff, 'expenses.view') },
+        { label: 'الصندوق', href: '/dashboard/wallet', icon: Wallet, show: can(staff, 'reports.view') },
       ],
     },
     {
       label: 'التقارير',
       items: [
         { label: 'التقارير', href: '/dashboard/reports', icon: BarChart3, show: can(staff, 'reports.view') },
-        { label: 'الأرباح والخسائر', href: '/dashboard/reports/profit-loss', icon: TrendingUp, show: can(staff, 'reports.view') },
+        {
+          label: 'الأرباح والخسائر',
+          href: '/dashboard/reports/profit-loss',
+          icon: TrendingUp,
+          show: can(staff, 'reports.view'),
+        },
       ],
     },
     {
       label: 'البناء والتشطيبات',
       items: [
-        { label: 'لوحة البناء',  href: '/dashboard/construction',           icon: HardHat,    show: features.hasConstruction },
-        { label: 'المشاريع',     href: '/dashboard/construction/projects',   icon: Building2,  show: features.hasConstruction },
-        { label: 'العمال',       href: '/dashboard/construction/workers',    icon: Users,      show: features.hasConstruction },
-        { label: 'المهام',       href: '/dashboard/construction/tasks',      icon: CheckSquare,show: features.hasConstruction },
-        { label: 'المصروفات',    href: '/dashboard/construction/expenses',   icon: DollarSign, show: features.hasConstruction },
-        { label: 'المواد',       href: '/dashboard/construction/materials',  icon: PackageOpen,show: features.hasConstruction },
-        { label: 'المدفوعات',    href: '/dashboard/construction/payments',   icon: CreditCard, show: features.hasConstruction },
-        { label: 'تقارير البناء',href: '/dashboard/construction/reports',   icon: BarChart3,  show: features.hasConstruction },
+        { label: 'لوحة البناء', href: '/dashboard/construction', icon: HardHat, show: features.hasConstruction },
+        {
+          label: 'المشاريع',
+          href: '/dashboard/construction/projects',
+          icon: Building2,
+          show: features.hasConstruction,
+        },
+        { label: 'العمال', href: '/dashboard/construction/workers', icon: Users, show: features.hasConstruction },
+        { label: 'المهام', href: '/dashboard/construction/tasks', icon: CheckSquare, show: features.hasConstruction },
+        {
+          label: 'المصروفات',
+          href: '/dashboard/construction/expenses',
+          icon: DollarSign,
+          show: features.hasConstruction,
+        },
+        {
+          label: 'المواد',
+          href: '/dashboard/construction/materials',
+          icon: PackageOpen,
+          show: features.hasConstruction,
+        },
+        {
+          label: 'المدفوعات',
+          href: '/dashboard/construction/payments',
+          icon: CreditCard,
+          show: features.hasConstruction,
+        },
+        {
+          label: 'تقارير البناء',
+          href: '/dashboard/construction/reports',
+          icon: BarChart3,
+          show: features.hasConstruction,
+        },
       ],
     },
     {
@@ -137,14 +236,34 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
     {
       label: 'الإدارة',
       items: [
-        { label: 'الموظفون',         href: '/dashboard/admin/staff',        icon: UserCog,     show: can(staff, 'admin.staff') },
-        { label: 'سجل الأحداث',      href: '/dashboard/admin/audit',        icon: Shield,      show: can(staff, 'admin.audit') },
-        { label: 'سلامة البيانات',   href: '/dashboard/admin/integrity',    icon: ShieldCheck, show: can(staff, 'admin.audit') },
-        { label: 'الفئات',          href: '/dashboard/categories',         icon: Tag,         show: can(staff, 'admin.settings') },
-        { label: 'الإعدادات',       href: '/dashboard/settings',           icon: Settings,    show: can(staff, 'admin.settings') },
-        { label: 'النسخ الاحتياطية', href: '/dashboard/settings/backup',   icon: Shield,      show: can(staff, 'admin.settings') },
-        { label: 'سلة المحذوفات',   href: '/dashboard/settings/trash',    icon: Trash2Icon,  show: can(staff, 'admin.settings') },
-        { label: 'منطقة الخطر',     href: '/dashboard/settings/danger',   icon: AlertOctagon,show: can(staff, 'admin.settings') },
+        { label: 'الموظفون', href: '/dashboard/admin/staff', icon: UserCog, show: can(staff, 'admin.staff') },
+        { label: 'سجل الأحداث', href: '/dashboard/admin/audit', icon: Shield, show: can(staff, 'admin.audit') },
+        {
+          label: 'سلامة البيانات',
+          href: '/dashboard/admin/integrity',
+          icon: ShieldCheck,
+          show: can(staff, 'admin.audit'),
+        },
+        { label: 'الفئات', href: '/dashboard/categories', icon: Tag, show: can(staff, 'admin.settings') },
+        { label: 'الإعدادات', href: '/dashboard/settings', icon: Settings, show: can(staff, 'admin.settings') },
+        {
+          label: 'النسخ الاحتياطية',
+          href: '/dashboard/settings/backup',
+          icon: Shield,
+          show: can(staff, 'admin.settings'),
+        },
+        {
+          label: 'سلة المحذوفات',
+          href: '/dashboard/settings/trash',
+          icon: Trash2Icon,
+          show: can(staff, 'admin.settings'),
+        },
+        {
+          label: 'منطقة الخطر',
+          href: '/dashboard/settings/danger',
+          icon: AlertOctagon,
+          show: can(staff, 'admin.settings'),
+        },
       ],
     },
   ]
@@ -161,14 +280,20 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
       <div className="p-4 border-b bg-primary/5">
         <div className="flex items-center gap-3">
           {branding?.logo_url ? (
-            <img src={branding.logo_url} alt="logo" className="w-9 h-9 rounded-xl object-contain bg-white p-0.5 shadow-sm shrink-0" />
+            <img
+              src={branding.logo_url}
+              alt="logo"
+              className="w-9 h-9 rounded-xl object-contain bg-white p-0.5 shadow-sm shrink-0"
+            />
           ) : (
             <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-sm shrink-0">
               {getInitials(branding?.name_ar || company?.name || 'ش')}
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-sm text-foreground truncate">{branding?.name_ar || company?.name || 'شركتي'}</p>
+            <p className="font-semibold text-sm text-foreground truncate">
+              {branding?.name_ar || company?.name || 'شركتي'}
+            </p>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
               <span>{features.icon}</span>
               <span>{features.label}</span>
@@ -180,8 +305,10 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-2">
         {navGroups.map((group) => {
-          const visibleItems = group.items.filter(i => i.show)
-          if (visibleItems.length === 0) return null
+          const visibleItems = group.items.filter((i) => i.show)
+          if (visibleItems.length === 0) {
+            return null
+          }
           return (
             <div key={group.label} className="mb-1">
               <p className="text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-widest px-4 py-1.5">
@@ -198,7 +325,7 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
                       'flex items-center gap-2.5 px-4 py-2 mx-2 rounded-lg text-sm transition-all',
                       active
                         ? 'bg-primary text-primary-foreground font-medium shadow-sm'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent',
                     )}
                   >
                     <Icon className="w-4 h-4 shrink-0" />
