@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Eye, EyeOff, Loader2, Mail, Lock, Sparkles } from 'lucide-react'
-import { cn } from '@/lib/utils'
 
 function LoginForm() {
   const router = useRouter()
@@ -66,11 +65,10 @@ function LoginForm() {
           )}
         </AnimatePresence>
 
-        {/* Email */}
         <div>
-          <label className="block text-sm font-medium text-white/70 mb-1.5">Email</label>
+          <label className="auth-label">Email</label>
           <div className="relative group">
-            <Mail className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-emerald-400 transition-colors" />
+            <Mail className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 auth-icon-muted group-focus-within:text-emerald-400 transition-colors" />
             <input
               type="email"
               value={email}
@@ -83,11 +81,10 @@ function LoginForm() {
           </div>
         </div>
 
-        {/* Password */}
         <div>
-          <label className="block text-sm font-medium text-white/70 mb-1.5">Password</label>
+          <label className="auth-label">Password</label>
           <div className="relative group">
-            <Lock className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-emerald-400 transition-colors" />
+            <Lock className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 auth-icon-muted group-focus-within:text-emerald-400 transition-colors" />
             <input
               type={showPassword ? 'text' : 'password'}
               value={password}
@@ -100,14 +97,13 @@ function LoginForm() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+              className="absolute left-3 top-1/2 -translate-y-1/2 auth-icon-muted hover:opacity-70 transition-opacity"
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
         </div>
 
-        {/* Remember + Forgot */}
         <div className="flex items-center justify-between">
           <label className="flex items-center gap-2 cursor-pointer">
             <input
@@ -116,14 +112,13 @@ function LoginForm() {
               onChange={(e) => setRemember(e.target.checked)}
               className="w-4 h-4 rounded border-white/20 bg-white/5 text-emerald-500 focus:ring-emerald-500/30"
             />
-            <span className="text-xs text-white/50">Remember me</span>
+            <span className="auth-text-muted text-xs">Remember me</span>
           </label>
           <button type="button" className="text-xs text-emerald-400/70 hover:text-emerald-400 transition-colors">
             Forgot password?
           </button>
         </div>
 
-        {/* Sign in button */}
         <button
           type="submit"
           disabled={loading}
@@ -141,21 +136,19 @@ function LoginForm() {
         </button>
       </form>
 
-      {/* Divider */}
       <div className="relative my-6">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-white/5" />
+          <div className="w-full border-t border-white/10" />
         </div>
         <div className="relative flex justify-center text-xs">
-          <span className="px-3 bg-[#0d1117] text-white/30">Or continue with</span>
+          <span className="px-3 auth-divider-bg auth-text-muted">Or continue with</span>
         </div>
       </div>
 
-      {/* Social buttons */}
       <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
-          className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all text-white/60 hover:text-white/80 text-xs font-medium"
+          className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all auth-text hover:brightness-110 text-xs font-medium"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24">
             <path
@@ -179,7 +172,7 @@ function LoginForm() {
         </button>
         <button
           type="button"
-          className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all text-white/60 hover:text-white/80 text-xs font-medium"
+          className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all auth-text hover:brightness-110 text-xs font-medium"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24">
             <path
@@ -191,10 +184,9 @@ function LoginForm() {
         </button>
       </div>
 
-      {/* SSO */}
       <button
         type="button"
-        className="w-full mt-3 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-all text-white/40 hover:text-white/60 text-xs font-medium"
+        className="w-full mt-3 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-all auth-text-muted text-xs font-medium"
       >
         <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
@@ -203,8 +195,7 @@ function LoginForm() {
         Enterprise SSO
       </button>
 
-      {/* Signup link */}
-      <p className="mt-6 text-center text-xs text-white/40">
+      <p className="mt-6 text-center auth-text-muted text-xs">
         Don&apos;t have an account?{' '}
         <Link href="/auth/signup" className="text-emerald-400 font-medium hover:text-emerald-300 transition-colors">
           Create account
@@ -212,7 +203,7 @@ function LoginForm() {
       </p>
 
       <div className="mt-2 text-center">
-        <Link href="/staff-login" className="text-xs text-white/20 hover:text-white/40 transition-colors">
+        <Link href="/staff-login" className="text-xs auth-text-muted opacity-60 hover:opacity-100 transition-opacity">
           Staff login (PIN)
         </Link>
       </div>

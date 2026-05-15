@@ -8,6 +8,7 @@ interface BrandLogoProps {
   variant?: 'default' | 'minimal' | 'icon-only'
   animated?: boolean
   className?: string
+  monochrome?: boolean
 }
 
 const sizeMap = {
@@ -17,20 +18,79 @@ const sizeMap = {
   xl: { text: 'text-4xl', icon: 'w-16 h-16', gap: 'gap-4' },
 }
 
-export function BrandLogo({ size = 'md', variant = 'default', animated = true, className }: BrandLogoProps) {
+function Logomark({ className, monochrome }: { className?: string; monochrome?: boolean }) {
+  const accent = monochrome ? '#888' : '#00e676'
+  const mid = monochrome ? '#666' : '#00bcd4'
+  const light = monochrome ? '#444' : '#18ffff'
+
+  return (
+    <svg viewBox="0 0 40 40" fill="none" className={cn('flex-shrink-0', className)}>
+      <defs>
+        <linearGradient id="lg-primary" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={accent} />
+          <stop offset="50%" stopColor={mid} />
+          <stop offset="100%" stopColor={light} />
+        </linearGradient>
+        <linearGradient id="lg-glow" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={accent} stopOpacity="0.2" />
+          <stop offset="100%" stopColor={light} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+
+      <circle cx="20" cy="20" r="18" fill="url(#lg-glow)" />
+
+      <polygon points="20,2 36,11 36,29 20,38 4,29 4,11" stroke="url(#lg-primary)" strokeWidth="1.5" fill="none" />
+
+      <polygon points="20,10 30,20 20,30 10,20" fill="url(#lg-primary)" fillOpacity="0.1" />
+      <polygon points="20,10 30,20 20,30 10,20" stroke="url(#lg-primary)" strokeWidth="0.75" fill="none" />
+
+      <line x1="20" y1="2" x2="20" y2="38" stroke={accent} strokeWidth="0.5" opacity="0.25" />
+      <line x1="4" y1="20" x2="36" y2="20" stroke={mid} strokeWidth="0.5" opacity="0.25" />
+      <line x1="8" y1="12" x2="32" y2="28" stroke={light} strokeWidth="0.5" opacity="0.15" />
+      <line x1="8" y1="28" x2="32" y2="12" stroke={accent} strokeWidth="0.5" opacity="0.15" />
+
+      <circle cx="20" cy="20" r="2.5" fill="url(#lg-primary)" />
+      <circle cx="20" cy="20" r="5" stroke="url(#lg-primary)" strokeWidth="0.5" fill="none" opacity="0.4" />
+
+      <circle cx="20" cy="2" r="1.5" fill={accent} />
+      <circle cx="36" cy="11" r="1.5" fill={mid} />
+      <circle cx="36" cy="29" r="1.5" fill={accent} />
+      <circle cx="20" cy="38" r="1.5" fill={mid} />
+      <circle cx="4" cy="29" r="1.5" fill={accent} />
+      <circle cx="4" cy="11" r="1.5" fill={mid} />
+    </svg>
+  )
+}
+
+function MonochromeLogomark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 40 40" fill="none" className={cn('flex-shrink-0', className)}>
+      <polygon points="20,2 36,11 36,29 20,38 4,29 4,11" stroke="currentColor" strokeWidth="1.5" fill="none" />
+      <polygon points="20,10 30,20 20,30 10,20" stroke="currentColor" strokeWidth="0.75" fill="none" opacity="0.5" />
+      <circle cx="20" cy="20" r="2.5" fill="currentColor" />
+    </svg>
+  )
+}
+
+export function BrandLogo({
+  size = 'md',
+  variant = 'default',
+  animated = true,
+  className,
+  monochrome,
+}: BrandLogoProps) {
   const isIconOnly = variant === 'icon-only'
   const s = sizeMap[size]
 
-  const Logomark = () => (
-    <img
-      src="/1.png"
-      alt="EzyERP"
-      className={cn(s.icon, 'flex-shrink-0 object-contain', animated ? 'animate-fade-in-scale' : '')}
-    />
-  )
+  const LogoMarkComponent = monochrome ? MonochromeLogomark : Logomark
 
   if (isIconOnly) {
-    return <Logomark />
+    return (
+      <LogoMarkComponent
+        className={cn(s.icon, animated ? 'animate-fade-in-scale' : '', className)}
+        monochrome={monochrome}
+      />
+    )
   }
 
   return (
@@ -39,11 +99,11 @@ export function BrandLogo({ size = 'md', variant = 'default', animated = true, c
       animate={{ opacity: 1, x: 0 }}
       className={cn('flex items-center', s.gap, className)}
     >
-      <Logomark />
+      <LogoMarkComponent className={s.icon} monochrome={monochrome} />
       <div className="flex flex-col">
         <span className={cn('font-bold tracking-tight', s.text)}>
           <span className="brand-gradient-text">Ezy</span>
-          <span className="text-foreground">ERP</span>
+          <span className={cn(monochrome ? 'text-foreground' : 'text-foreground')}>ERP</span>
         </span>
         {variant === 'default' && (
           <span className="text-[10px] text-muted-foreground tracking-[0.15em] uppercase -mt-0.5 font-medium">
@@ -115,3 +175,5 @@ export function SplashScreen() {
     </div>
   )
 }
+
+export { MonochromeLogomark }

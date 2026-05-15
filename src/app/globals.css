@@ -462,6 +462,93 @@
     @apply bg-white/60 backdrop-blur-xl border-white/20;
   }
 
+  .light .auth-heading {
+    @apply text-gray-900;
+  }
+  .light .auth-subtitle {
+    @apply text-gray-500;
+  }
+  .light .auth-label {
+    @apply text-gray-700;
+  }
+  .light .auth-text {
+    @apply text-gray-600;
+  }
+  .light .auth-text-muted {
+    @apply text-gray-400;
+  }
+  .light .auth-text-white {
+    @apply text-gray-900;
+  }
+
+  .light .auth-divider-bg {
+    @apply bg-white;
+  }
+
+  .auth-divider-bg {
+    @apply bg-[#0d1117];
+  }
+
+  .auth-icon-muted {
+    @apply text-white/30;
+  }
+  .light .auth-icon-muted {
+    @apply text-gray-400;
+  }
+
+  .auth-label {
+    @apply block text-sm font-medium text-white/70 mb-1.5;
+  }
+  .light .auth-label {
+    @apply text-gray-700;
+  }
+
+  .auth-text {
+    @apply text-white/60;
+  }
+  .light .auth-text {
+    @apply text-gray-600;
+  }
+
+  .auth-text-muted {
+    @apply text-white/40;
+  }
+  .light .auth-text-muted {
+    @apply text-gray-400;
+  }
+
+  .auth-btn-secondary {
+    @apply flex-1 border border-white/10 bg-white/5 rounded-xl py-3.5 text-sm font-medium text-white/60 hover:bg-white/10 hover:text-white/80 transition-all duration-200;
+  }
+  .light .auth-btn-secondary {
+    @apply border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900;
+  }
+
+  .light .auth-input {
+    @apply bg-white/90 text-gray-900 placeholder:text-gray-400 border-gray-200;
+  }
+
+  .light .auth-input:focus {
+    border-color: rgba(0, 188, 212, 0.5);
+    box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1);
+  }
+
+  .light .auth-gradient-btn {
+    background: linear-gradient(135deg, #00bcd4, #00e676);
+  }
+
+  .light .light-toggle-bg {
+    @apply bg-white/70 border-gray-200;
+  }
+
+  .light .light-toggle-text {
+    @apply text-gray-600;
+  }
+
+  .light .light-toggle-text:hover {
+    @apply text-gray-900;
+  }
+
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }

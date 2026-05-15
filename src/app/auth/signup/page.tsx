@@ -187,9 +187,9 @@ export default function SignupPage() {
           {step === 1 ? (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-1.5">الاسم الكامل</label>
+                <label className="auth-label">الاسم الكامل</label>
                 <div className="relative group">
-                  <User className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-emerald-400 transition-colors" />
+                  <User className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 auth-icon-muted group-focus-within:text-emerald-400 transition-colors" />
                   <input
                     type="text"
                     value={formData.fullName}
@@ -201,9 +201,9 @@ export default function SignupPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-1.5">البريد الإلكتروني</label>
+                <label className="auth-label">البريد الإلكتروني</label>
                 <div className="relative group">
-                  <Mail className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-emerald-400 transition-colors" />
+                  <Mail className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 auth-icon-muted group-focus-within:text-emerald-400 transition-colors" />
                   <input
                     type="email"
                     value={formData.email}
@@ -216,9 +216,9 @@ export default function SignupPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-1.5">كلمة المرور</label>
+                <label className="auth-label">كلمة المرور</label>
                 <div className="relative group">
-                  <Lock className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-emerald-400 transition-colors" />
+                  <Lock className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 auth-icon-muted group-focus-within:text-emerald-400 transition-colors" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={formData.password}
@@ -230,7 +230,7 @@ export default function SignupPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 auth-icon-muted hover:opacity-70 transition-opacity"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -238,9 +238,9 @@ export default function SignupPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-1.5">تأكيد كلمة المرور</label>
+                <label className="auth-label">تأكيد كلمة المرور</label>
                 <div className="relative group">
-                  <Lock className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-emerald-400 transition-colors" />
+                  <Lock className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 auth-icon-muted group-focus-within:text-emerald-400 transition-colors" />
                   <input
                     type="password"
                     value={formData.confirmPassword}
@@ -263,9 +263,9 @@ export default function SignupPage() {
           ) : step === 2 ? (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-1.5">اسم الشركة أو المتجر</label>
+                <label className="auth-label">اسم الشركة أو المتجر</label>
                 <div className="relative group">
-                  <Building2 className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-emerald-400 transition-colors" />
+                  <Building2 className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 auth-icon-muted group-focus-within:text-emerald-400 transition-colors" />
                   <input
                     type="text"
                     value={formData.companyName}
@@ -277,7 +277,7 @@ export default function SignupPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-1.5">العملة الافتراضية</label>
+                <label className="auth-label">العملة الافتراضية</label>
                 <select
                   value={formData.currency}
                   onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
@@ -305,11 +305,7 @@ export default function SignupPage() {
               </div>
 
               <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setStep(1)}
-                  className="flex-1 border border-white/10 bg-white/5 rounded-xl py-3.5 text-sm font-medium text-white/60 hover:bg-white/10 hover:text-white/80 transition-all duration-200"
-                >
+                <button type="button" onClick={() => setStep(1)} className="flex-1 auth-btn-secondary">
                   رجوع
                 </button>
                 <button
@@ -342,7 +338,7 @@ export default function SignupPage() {
                       >
                         {bt.label}
                       </p>
-                      <p className="text-xs text-white/30 mt-0.5">{bt.description}</p>
+                      <p className="auth-text-muted text-xs mt-0.5">{bt.description}</p>
                     </div>
                     {formData.businessType === bt.value && (
                       <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
@@ -356,11 +352,7 @@ export default function SignupPage() {
               </div>
 
               <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setStep(2)}
-                  className="flex-1 border border-white/10 bg-white/5 rounded-xl py-3.5 text-sm font-medium text-white/60 hover:bg-white/10 hover:text-white/80 transition-all duration-200"
-                >
+                <button type="button" onClick={() => setStep(2)} className="auth-btn-secondary">
                   رجوع
                 </button>
                 <button
@@ -385,7 +377,7 @@ export default function SignupPage() {
         </motion.div>
       </AnimatePresence>
 
-      <p className="mt-6 text-center text-xs text-white/40">
+      <p className="mt-6 text-center auth-text-muted text-xs">
         لديك حساب بالفعل؟{' '}
         <Link href="/auth/login" className="text-emerald-400 font-medium hover:text-emerald-300 transition-colors">
           تسجيل الدخول
