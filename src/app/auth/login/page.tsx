@@ -195,14 +195,7 @@ function LoginForm() {
         Enterprise SSO
       </button>
 
-      <p className="mt-6 text-center auth-text-muted text-xs">
-        Don&apos;t have an account?{' '}
-        <Link href="/auth/signup" className="text-emerald-400 font-medium hover:text-emerald-300 transition-colors">
-          Create account
-        </Link>
-      </p>
-
-      <div className="mt-2 text-center">
+      <div className="mt-6 text-center">
         <Link href="/staff-login" className="text-xs auth-text-muted opacity-60 hover:opacity-100 transition-opacity">
           Staff login (PIN)
         </Link>

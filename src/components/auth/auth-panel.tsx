@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { BrandLogo } from '@/components/ui/brand-logo'
 import { SceneBackground } from '@/components/auth/scene-background'
-import { Moon, Sun, Globe } from 'lucide-react'
+import { Moon, Sun, Globe, PanelRightClose, PanelRightOpen } from 'lucide-react'
 
 interface AuthPanelProps {
   children: React.ReactNode
@@ -21,6 +21,7 @@ const variantMap: Record<string, Record<string, 'dark-en' | 'dark-ar' | 'dark-al
 export function AuthPanel({ children, title, subtitle }: AuthPanelProps) {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
   const [language, setLanguage] = useState<'ar' | 'en'>('ar')
+  const [collapsed, setCollapsed] = useState(false)
 
   const isDark = theme === 'dark'
   const variant = variantMap[language]?.[theme] || 'dark-en'
@@ -52,51 +53,73 @@ export function AuthPanel({ children, title, subtitle }: AuthPanelProps) {
         </div>
 
         {/* Auth card */}
-        <div className="w-full max-w-md">
+        <div className="relative">
+          {/* Fold button */}
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className={cn(
+              'absolute -left-3 top-1/2 -translate-y-1/2 z-30 p-1.5 rounded-full transition-all duration-300 backdrop-blur-sm',
+              isDark
+                ? 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
+                : 'bg-black/10 text-black/50 hover:bg-black/20 hover:text-black',
+              collapsed && '-left-3',
+            )}
+            dir="ltr"
+          >
+            {collapsed ? <PanelRightOpen className="w-4 h-4" /> : <PanelRightClose className="w-4 h-4" />}
+          </button>
+
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="mb-8"
+            animate={{ x: collapsed ? (language === 'ar' ? -120 : 120) : 0, opacity: collapsed ? 0 : 1 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full max-w-md"
+            style={{ pointerEvents: collapsed ? 'none' : 'auto' }}
           >
-            <BrandLogo size="md" monochrome={!isDark} />
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              className="mb-8"
+            >
+              <BrandLogo size="md" monochrome={!isDark} />
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+              className="auth-card p-8 sm:p-10"
+            >
+              <div className="absolute -inset-0.5 rounded-3xl opacity-30 pointer-events-none blur-sm bg-gradient-to-b from-emerald-500/10 via-cyan-500/5 to-transparent" />
+
+              <div className="relative">
+                {title && (
+                  <div className="mb-8">
+                    <h2
+                      className={cn(
+                        'text-2xl sm:text-3xl font-bold tracking-tight',
+                        isDark ? 'text-white' : 'text-gray-900',
+                      )}
+                    >
+                      {title}
+                    </h2>
+                    <p className={cn('text-sm mt-2', isDark ? 'text-white/40' : 'text-gray-500')}>{subtitle}</p>
+                  </div>
+                )}
+
+                {children}
+              </div>
+            </motion.div>
+
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6, duration: 0.4 }}
+              className={cn('text-xs mt-6 text-center', isDark ? 'text-white/40' : 'text-gray-400')}
+            >
+              © 2026 EzyERP · Enterprise SaaS Platform · Protected by AES-256
+            </motion.p>
           </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            className="auth-card p-8 sm:p-10"
-          >
-            <div className="absolute -inset-0.5 rounded-3xl opacity-30 pointer-events-none blur-sm bg-gradient-to-b from-emerald-500/10 via-cyan-500/5 to-transparent" />
-
-            <div className="relative">
-              {title && (
-                <div className="mb-8">
-                  <h2
-                    className={cn(
-                      'text-2xl sm:text-3xl font-bold tracking-tight',
-                      isDark ? 'text-white' : 'text-gray-900',
-                    )}
-                  >
-                    {title}
-                  </h2>
-                  <p className={cn('text-sm mt-2', isDark ? 'text-white/40' : 'text-gray-500')}>{subtitle}</p>
-                </div>
-              )}
-
-              {children}
-            </div>
-          </motion.div>
-
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6, duration: 0.4 }}
-            className={cn('text-xs mt-6 text-center', isDark ? 'text-white/40' : 'text-gray-400')}
-          >
-            © 2026 EzyERP · Enterprise SaaS Platform · Protected by AES-256
-          </motion.p>
         </div>
       </div>
     </div>
