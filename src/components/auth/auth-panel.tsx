@@ -27,7 +27,7 @@ export function AuthPanel({ children, title, subtitle }: AuthPanelProps) {
   return (
     <div className="relative min-h-screen overflow-hidden">
       {/* Full-viewport background image */}
-      <div className="fixed inset-0 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(${bg})` }} />
+      <img src={bg} alt="" className="fixed inset-0 w-full h-full object-cover" />
 
       {/* Dark overlay for text readability */}
       <div className={cn('fixed inset-0 transition-opacity duration-300', isDark ? 'bg-black/50' : 'bg-black/20')} />
