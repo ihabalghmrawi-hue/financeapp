@@ -2,7 +2,6 @@
 
 import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Eye, EyeOff, Loader2, Mail, Lock, Sparkles } from 'lucide-react'
@@ -194,12 +193,6 @@ function LoginForm() {
         </svg>
         Enterprise SSO
       </button>
-
-      <div className="mt-6 text-center">
-        <Link href="/staff-login" className="text-xs auth-text-muted opacity-60 hover:opacity-100 transition-opacity">
-          Staff login (PIN)
-        </Link>
-      </div>
     </>
   )
 }

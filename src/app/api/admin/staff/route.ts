@@ -1,235 +1,328 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getCompanyId } from '@/lib/tenant'
-import { hashPin } from '@/lib/session'
 import { logAudit } from '@/lib/audit'
+import { loadRolePermissions } from '@/lib/rbac'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-/** Fetch roles by IDs — tries with `permissions` column, falls back without it */
-async function fetchRoles(admin: ReturnType<typeof createAdminClient>, roleIds: string[]) {
-  if (!roleIds.length) return {}
-
-  // Try with permissions column
-  const { data, error } = await admin
-    .from('staff_roles')
-    .select('id, name, name_ar, permissions')
-    .in('id', roleIds)
-
-  if (!error) {
-    return Object.fromEntries((data || []).map(r => [r.id, r]))
+function splitPermCode(code: string): { resource: string; action: string } {
+  const dot = code.lastIndexOf('.')
+  if (dot === -1) {
+    return { resource: code, action: 'access' }
   }
-
-  // Column missing — fetch without it and return empty permissions
-  const { data: fallback } = await admin
-    .from('staff_roles')
-    .select('id, name, name_ar')
-    .in('id', roleIds)
-
-  return Object.fromEntries(
-    (fallback || []).map(r => [r.id, { ...r, permissions: [] }])
-  )
+  return { resource: code.slice(0, dot), action: code.slice(dot + 1) }
 }
 
-/** Create or update a role — stores permissions in JSONB if column exists */
-async function upsertRolePermissions(
-  admin:      ReturnType<typeof createAdminClient>,
-  roleId:     string,
-  updates:    Record<string, unknown>,
-) {
-  // Try with permissions; if column doesn't exist the error is swallowed
-  const { error } = await admin.from('staff_roles').update(updates).eq('id', roleId)
-  if (error && error.message.includes('permissions')) {
-    // permissions column doesn't exist — update everything except permissions
-    const { permissions: _p, ...rest } = updates
-    if (Object.keys(rest).length > 0) {
-      await admin.from('staff_roles').update(rest).eq('id', roleId)
+async function ensurePermissions(admin: ReturnType<typeof createAdminClient>, codes: string[]): Promise<string[]> {
+  const ids: string[] = []
+  for (const code of codes) {
+    const { resource, action } = splitPermCode(code)
+    const { data } = await admin
+      .from('permissions')
+      .upsert({ resource, action }, { onConflict: 'resource,action', ignoreDuplicates: true })
+      .select('id')
+      .maybeSingle()
+    if (data) {
+      ids.push(data.id)
+    } else {
+      const { data: existing } = await admin
+        .from('permissions')
+        .select('id')
+        .eq('resource', resource)
+        .eq('action', action)
+        .maybeSingle()
+      if (existing) {
+        ids.push(existing.id)
+      }
     }
   }
+  return ids
+}
+
+async function setRolePermissions(
+  admin: ReturnType<typeof createAdminClient>,
+  roleId: string,
+  permissionCodes: string[],
+) {
+  const permIds = await ensurePermissions(admin, permissionCodes)
+  await admin.from('role_permissions').delete().eq('role_id', roleId)
+  if (permIds.length) {
+    await admin.from('role_permissions').insert(permIds.map((pid) => ({ role_id: roleId, permission_id: pid })))
+  }
+}
+
+async function fetchRoleInfo(
+  admin: ReturnType<typeof createAdminClient>,
+  roleId: string | null,
+): Promise<{ name: string; name_ar: string; permissions: string[] } | null> {
+  if (!roleId) {
+    return null
+  }
+  const { data: role } = await admin.from('roles').select('name, name_ar').eq('id', roleId).maybeSingle()
+  if (!role) {
+    return null
+  }
+  const perms = await loadRolePermissions(admin, roleId)
+  return { name: role.name, name_ar: role.name_ar, permissions: perms }
 }
 
 // ── GET ───────────────────────────────────────────────────────────────────────
 export async function GET() {
-  const admin     = createAdminClient()
+  const admin = createAdminClient()
   const companyId = await getCompanyId()
 
-  const { data: staffUsers, error } = await admin
-    .from('staff_users')
-    .select('id, name, is_active, role_id, created_at')
+  const { data: members, error } = await admin
+    .from('memberships')
+    .select('user_id, role, role_id, is_active, created_at')
     .eq('company_id', companyId)
     .eq('is_active', true)
+    .neq('role', 'owner')
     .order('created_at')
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  if (!staffUsers?.length) return NextResponse.json([])
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+  if (!members?.length) {
+    return NextResponse.json([])
+  }
 
-  const roleIds = [...new Set(staffUsers.map(s => s.role_id).filter(Boolean))] as string[]
-  const roleMap = await fetchRoles(admin, roleIds)
+  const result = await Promise.all(
+    members.map(async (m) => {
+      let name = m.role
+      let email = ''
+      let lastLogin: string | null = null
+      try {
+        const {
+          data: { user },
+        } = await admin.auth.admin.getUserById(m.user_id)
+        if (user) {
+          name = user.user_metadata?.full_name || user.email?.split('@')[0] || name
+          email = user.email || ''
+          lastLogin = user.last_sign_in_at || null
+        }
+      } catch {
+        /* fallback */
+      }
 
-  const result = staffUsers.map(s => ({
-    ...s,
-    staff_roles: s.role_id ? (roleMap[s.role_id] ?? null) : null,
-  }))
+      const roleInfo = await fetchRoleInfo(admin, m.role_id)
+      return {
+        id: m.user_id,
+        name,
+        email,
+        last_login: lastLogin,
+        staff_roles: roleInfo,
+      }
+    }),
+  )
 
   return NextResponse.json(result)
 }
 
 // ── POST ──────────────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
-  const admin     = createAdminClient()
+  const admin = createAdminClient()
   const companyId = await getCompanyId()
-  const body      = await req.json()
-  const { name, pin, role_name = 'staff', role_name_ar = 'موظف', permissions = [] } = body
+  const body = await req.json()
+  const { name, email, password, role_name = 'employee', role_name_ar = 'موظف', permissions = [] } = body
 
-  if (!name?.trim())
+  if (!name?.trim()) {
     return NextResponse.json({ error: 'اسم الموظف مطلوب' }, { status: 400 })
-  if (!pin || !/^\d{4,6}$/.test(pin))
-    return NextResponse.json({ error: 'الرقم السري يجب أن يكون 4-6 أرقام' }, { status: 400 })
-
-  const pinHash = await hashPin(pin)
-
-  // Try inserting role WITH permissions; fall back without if column missing
-  let role: any = null
-  const roleBase = {
-    company_id: companyId,
-    name:       `${role_name}_${Date.now()}`,
-    name_ar:    role_name_ar,
-    permissions,
+  }
+  if (!email?.trim()) {
+    return NextResponse.json({ error: 'البريد الإلكتروني مطلوب' }, { status: 400 })
+  }
+  if (!password || password.length < 6) {
+    return NextResponse.json({ error: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' }, { status: 400 })
   }
 
-  const { data: r1, error: e1 } = await admin
-    .from('staff_roles').insert(roleBase).select().single()
-
-  if (e1) {
-    if (e1.message.includes('permissions')) {
-      // Column doesn't exist yet — insert without it
-      const { permissions: _p, ...roleWithout } = roleBase
-      const { data: r2, error: e2 } = await admin
-        .from('staff_roles').insert(roleWithout).select().single()
-      if (e2) return NextResponse.json({ error: e2.message }, { status: 500 })
-      role = r2
-    } else {
-      return NextResponse.json({ error: e1.message }, { status: 500 })
-    }
-  } else {
-    role = r1
+  // 1. Create auth user
+  const { data: authUser, error: authErr } = await admin.auth.admin.createUser({
+    email: email.trim(),
+    password,
+    email_confirm: true,
+    user_metadata: { full_name: name.trim() },
+  })
+  if (authErr) {
+    return NextResponse.json({ error: authErr.message }, { status: 500 })
   }
 
-  // Create the staff user
-  const { data: staff, error: staffErr } = await admin
-    .from('staff_users')
+  const userId = authUser.user.id
+
+  // 2. Create role in `roles` table
+  const { data: role, error: roleErr } = await admin
+    .from('roles')
     .insert({
       company_id: companyId,
-      name:       name.trim(),
-      pin_hash:   pinHash,
-      role_id:    role.id,
-      is_active:  true,
+      name: role_name,
+      name_ar: role_name_ar,
+      is_system: false,
     })
-    .select('id, name, is_active, role_id, created_at')
+    .select('id')
     .single()
 
-  if (staffErr) {
-    await admin.from('staff_roles').delete().eq('id', role.id)
-    return NextResponse.json({ error: staffErr.message }, { status: 500 })
+  if (roleErr) {
+    await admin.auth.admin.deleteUser(userId).catch(() => {})
+    return NextResponse.json({ error: roleErr.message }, { status: 500 })
+  }
+
+  // 3. Set role permissions
+  try {
+    await setRolePermissions(admin, role.id, permissions)
+  } catch (permErr: any) {
+    await admin.from('roles').delete().eq('id', role.id)
+    await admin.auth.admin.deleteUser(userId).catch(() => {})
+    return NextResponse.json({ error: permErr.message }, { status: 500 })
+  }
+
+  // 4. Create membership
+  const { error: memErr } = await admin.from('memberships').insert({
+    user_id: userId,
+    company_id: companyId,
+    role: role_name,
+    role_id: role.id,
+    is_active: true,
+  })
+
+  if (memErr) {
+    await admin.from('roles').delete().eq('id', role.id)
+    await admin.auth.admin.deleteUser(userId).catch(() => {})
+    return NextResponse.json({ error: memErr.message }, { status: 500 })
   }
 
   await logAudit({
-    action:     'staff.created',
-    entityType: 'staff_users',
-    entityId:   staff.id,
-    newValue:   { name: name.trim(), role: role_name_ar, permissions },
+    action: 'staff.created',
+    entityType: 'memberships',
+    entityId: userId,
+    newValue: { name: name.trim(), email, role: role_name_ar, permissions },
   })
 
-  return NextResponse.json({
-    ...staff,
-    staff_roles: { ...role, permissions: role.permissions ?? permissions },
-  }, { status: 201 })
+  return NextResponse.json(
+    {
+      id: userId,
+      name: name.trim(),
+      email: email.trim(),
+      is_active: true,
+      created_at: new Date().toISOString(),
+      last_login: null,
+      staff_roles: { name: role_name, name_ar: role_name_ar, permissions },
+    },
+    { status: 201 },
+  )
 }
 
 // ── PATCH ─────────────────────────────────────────────────────────────────────
 export async function PATCH(req: NextRequest) {
-  const admin     = createAdminClient()
+  const admin = createAdminClient()
   const companyId = await getCompanyId()
-  const body      = await req.json()
-  const { id, name, pin, permissions, role_name_ar } = body
+  const body = await req.json()
+  const { id, name, email, password, permissions, role_name_ar } = body
 
-  if (!id) return NextResponse.json({ error: 'id مطلوب' }, { status: 400 })
-
-  const { data: current } = await admin
-    .from('staff_users')
-    .select('name, role_id')
-    .eq('id', id).eq('company_id', companyId)
-    .single()
-
-  if (!current) return NextResponse.json({ error: 'الموظف غير موجود' }, { status: 404 })
-
-  // Update user fields
-  const userUpdates: Record<string, unknown> = {}
-  if (name?.trim())                 userUpdates.name     = name.trim()
-  if (pin && /^\d{4,6}$/.test(pin)) userUpdates.pin_hash = await hashPin(pin)
-  if (Object.keys(userUpdates).length > 0) {
-    await admin.from('staff_users').update(userUpdates).eq('id', id).eq('company_id', companyId)
+  if (!id) {
+    return NextResponse.json({ error: 'id مطلوب' }, { status: 400 })
   }
 
-  // Update role
-  if (current.role_id) {
-    const roleUpdates: Record<string, unknown> = {}
-    if (Array.isArray(permissions)) roleUpdates.permissions = permissions
-    if (role_name_ar)               roleUpdates.name_ar     = role_name_ar
-    if (Object.keys(roleUpdates).length > 0) {
-      await upsertRolePermissions(admin, current.role_id, roleUpdates)
+  // Find membership
+  const { data: membership } = await admin
+    .from('memberships')
+    .select('role_id, role')
+    .eq('user_id', id)
+    .eq('company_id', companyId)
+    .eq('is_active', true)
+    .maybeSingle()
+
+  if (!membership) {
+    return NextResponse.json({ error: 'الموظف غير موجود' }, { status: 404 })
+  }
+
+  // Update auth user
+  const authUpdates: Record<string, any> = {}
+  if (name?.trim()) {
+    authUpdates.user_metadata = { full_name: name.trim() }
+  }
+  if (email?.trim()) {
+    authUpdates.email = email.trim()
+  }
+  if (password) {
+    authUpdates.password = password
+  }
+  if (Object.keys(authUpdates).length > 0) {
+    const { error: authErr } = await admin.auth.admin.updateUserById(id, authUpdates)
+    if (authErr) {
+      return NextResponse.json({ error: authErr.message }, { status: 500 })
     }
   }
 
-  // Re-fetch
-  const { data: updatedUser } = await admin
-    .from('staff_users')
-    .select('id, name, is_active, role_id, created_at')
-    .eq('id', id).single()
+  // Update role permissions
+  if (membership.role_id && Array.isArray(permissions)) {
+    await setRolePermissions(admin, membership.role_id, permissions)
+  }
 
-  const roleMap = updatedUser?.role_id
-    ? await fetchRoles(admin, [updatedUser.role_id])
-    : {}
+  // Update role name_ar
+  if (membership.role_id && role_name_ar) {
+    await admin.from('roles').update({ name_ar: role_name_ar }).eq('id', membership.role_id)
+  }
+
+  // Refetch
+  const {
+    data: { user },
+  } = await admin.auth.admin.getUserById(id)
+  const roleInfo = await fetchRoleInfo(admin, membership.role_id)
 
   await logAudit({
-    action:     'staff.updated',
-    entityType: 'staff_users',
-    entityId:   id,
-    newValue:   { name: userUpdates.name || current.name, permissions },
+    action: 'staff.updated',
+    entityType: 'memberships',
+    entityId: id,
+    newValue: { name: name?.trim() || user?.user_metadata?.full_name, permissions },
   })
 
   return NextResponse.json({
-    ...updatedUser,
-    staff_roles: updatedUser?.role_id ? (roleMap[updatedUser.role_id] ?? null) : null,
+    id,
+    name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || '',
+    email: user?.email || '',
+    last_login: user?.last_sign_in_at || null,
+    staff_roles: roleInfo,
   })
 }
 
 // ── DELETE ────────────────────────────────────────────────────────────────────
 export async function DELETE(req: NextRequest) {
-  const admin     = createAdminClient()
+  const admin = createAdminClient()
   const companyId = await getCompanyId()
-  const { id }    = await req.json()
+  const { id } = await req.json()
 
-  if (!id) return NextResponse.json({ error: 'id مطلوب' }, { status: 400 })
+  if (!id) {
+    return NextResponse.json({ error: 'id مطلوب' }, { status: 400 })
+  }
 
-  const { data: staffUser } = await admin
-    .from('staff_users')
-    .select('name')
-    .eq('id', id).eq('company_id', companyId)
-    .single()
+  const { data: membership } = await admin
+    .from('memberships')
+    .select('role')
+    .eq('user_id', id)
+    .eq('company_id', companyId)
+    .eq('is_active', true)
+    .maybeSingle()
+
+  if (!membership) {
+    return NextResponse.json({ error: 'الموظف غير موجود' }, { status: 404 })
+  }
 
   const { error } = await admin
-    .from('staff_users')
+    .from('memberships')
     .update({ is_active: false })
-    .eq('id', id).eq('company_id', companyId)
+    .eq('user_id', id)
+    .eq('company_id', companyId)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
 
   await logAudit({
-    action:     'staff.deleted',
-    entityType: 'staff_users',
-    entityId:   id,
-    newValue:   { name: staffUser?.name },
+    action: 'staff.deleted',
+    entityType: 'memberships',
+    entityId: id,
+    newValue: { userId: id },
   })
   return NextResponse.json({ ok: true })
 }
