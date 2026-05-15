@@ -22,42 +22,11 @@ export function BrandLogo({ size = 'md', variant = 'default', animated = true, c
   const s = sizeMap[size]
 
   const Logomark = () => (
-    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn(s.icon, 'flex-shrink-0')}>
-      {/* Outer glow ring */}
-      <circle cx="24" cy="24" r="22" className="stroke-primary/20" strokeWidth="1" fill="none" />
-      {/* Background capsule */}
-      <rect x="6" y="6" width="36" height="36" rx="10" className="fill-primary/10" />
-      {/* Geometric connected E symbol */}
-      <path
-        d="M16 16h16M16 24h12M16 32h16"
-        stroke="url(#brand-grad)"
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className={animated ? 'animate-fade-in-scale' : ''}
-      />
-      {/* Vertical connector */}
-      <path
-        d="M16 14v20"
-        stroke="url(#brand-grad)"
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        opacity="0.6"
-      />
-      {/* Decorative dots */}
-      <circle cx="16" cy="16" r="1.5" fill="#00E676" opacity="0.8" />
-      <circle cx="16" cy="24" r="1.5" fill="#00BCD4" opacity="0.8" />
-      <circle cx="16" cy="32" r="1.5" fill="#18FFFF" opacity="0.8" />
-      {/* Gradient definition */}
-      <defs>
-        <linearGradient id="brand-grad" x1="12" y1="14" x2="36" y2="34" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#00E676" />
-          <stop offset="0.5" stopColor="#00BCD4" />
-          <stop offset="1" stopColor="#18FFFF" />
-        </linearGradient>
-      </defs>
-    </svg>
+    <img
+      src="/3.png"
+      alt="EzyERP"
+      className={cn(s.icon, 'flex-shrink-0 object-contain', animated ? 'animate-fade-in-scale' : '')}
+    />
   )
 
   if (isIconOnly) {

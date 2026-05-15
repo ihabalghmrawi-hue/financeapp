@@ -41,27 +41,7 @@ export function AuthPanel({ children, title, subtitle }: AuthPanelProps) {
       <div className="flex w-full">
         {/* Left side - ERP Visualization */}
         <div className="hidden lg:flex lg:w-[55%] xl:w-[60%] relative overflow-hidden">
-          <div className="absolute inset-0">
-            {/* Deep gradient background */}
-            <div
-              className={cn(
-                'absolute inset-0',
-                isDark
-                  ? 'bg-gradient-to-br from-[#0a0a0a] via-[#0d1117] to-[#0a0a0a]'
-                  : 'bg-gradient-to-br from-gray-50 via-white to-gray-50',
-              )}
-            />
-            {/* Grid overlay */}
-            <div
-              className={cn(
-                'absolute inset-0 opacity-[0.03]',
-                'bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)]',
-                'bg-[size:60px_60px]',
-              )}
-            />
-          </div>
-
-          <ErpVisualization />
+          <ErpVisualization isDark={isDark} />
         </div>
 
         {/* Right side - Auth panel */}
