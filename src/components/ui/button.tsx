@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import { Loader2 } from 'lucide-react'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-medium ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.97] select-none',
+  'inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-medium ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.97] select-none hover-lift',
   {
     variants: {
       variant: {
@@ -20,6 +20,9 @@ const buttonVariants = cva(
         link: 'text-primary underline-offset-4 hover:underline',
         spotify:
           'bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/25',
+        premium:
+          'bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/25 hover:scale-[1.02]',
+        glass: 'bg-white/5 backdrop-blur-xl border border-white/10 text-foreground hover:bg-white/10 dark:bg-black/20',
       },
       size: {
         sm: 'h-9 px-3.5 text-xs gap-1.5 rounded-lg',

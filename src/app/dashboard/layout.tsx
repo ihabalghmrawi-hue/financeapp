@@ -7,6 +7,7 @@ import { TopBar } from '@/components/layout/topbar'
 import { QuickActionBar } from '@/components/layout/quick-action-bar'
 import { DashboardMobileLayout } from '@/components/layout/dashboard-mobile-layout'
 import { PageTransitionWrapper } from '@/components/layout/page-transition-wrapper'
+import { CommandBar } from '@/components/command-center'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const h = await headers()
@@ -84,6 +85,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </main>
         </div>
       </div>
+      <CommandBar />
     </DashboardMobileLayout>
   )
 }

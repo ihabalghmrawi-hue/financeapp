@@ -131,6 +131,16 @@
   ::selection {
     @apply bg-primary/20 text-foreground;
   }
+
+  .hover-lift {
+    transition:
+      transform 0.15s ease,
+      box-shadow 0.2s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-1px);
+  }
 }
 
 @layer components {
@@ -259,6 +269,49 @@
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  .scroll-smooth {
+    scroll-behavior: smooth;
+  }
+
+  .premium-focus {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background;
+  }
+
+  .premium-transition {
+    @apply transition-all duration-200 ease-out;
+  }
+
+  .card-hover-effect {
+    @apply transition-all duration-300 hover:shadow-elevation-3 hover:-translate-y-0.5;
+  }
+
+  .glass-premium {
+    @apply bg-white/5 backdrop-blur-2xl border border-white/10 shadow-xl;
+  }
+
+  .dark .glass-premium {
+    @apply bg-black/30 backdrop-blur-2xl border border-white/5;
+  }
+
+  .text-gradient-primary {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary/80 to-primary/60;
+  }
+
+  .premium-divider {
+    @apply border-t border-border/50 my-4;
+  }
+
+  .hover-brightness {
+    @apply transition-all duration-200;
+  }
+  .hover-brightness:hover {
+    filter: brightness(1.1);
+  }
+
+  .content-auto {
+    content-visibility: auto;
   }
 
   .no-scrollbar::-webkit-scrollbar {

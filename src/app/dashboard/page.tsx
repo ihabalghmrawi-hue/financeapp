@@ -20,6 +20,8 @@ import {
   CheckCircle,
   Plus,
 } from 'lucide-react'
+import { AnimatedKPICounter, GlassChartCard, TrendIndicator, ActivityFeed } from '@/components/charts'
+import { EmptyState } from '@/components/ui/empty-state'
 import { InsightsWidget } from '@/components/insights-widget'
 import { DashboardOnboarding } from '@/components/onboarding/dashboard-onboarding'
 import { getCompanyId, getCurrency } from '@/lib/tenant'
@@ -99,27 +101,15 @@ export default async function DashboardPage() {
     return (
       <DashboardShell greeting={greeting} staffName={staffName}>
         {isEmpty ? (
-          <div className="premium-card p-12 text-center">
-            <div className="text-6xl mb-4">👗</div>
-            <h2 className="text-xl font-bold mb-2">لا يوجد فساتين بعد</h2>
-            <p className="text-muted-foreground text-sm mb-6 max-w-sm mx-auto">
-              ابدأ بإضافة فساتينك حتى تتمكن من استقبال الحجوزات وإدارة التأجير
-            </p>
-            <div className="flex justify-center gap-3">
-              <Link
-                href="/dashboard/rentals/dresses"
-                className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-xl font-bold text-sm hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
-              >
-                <Plus className="w-4 h-4" /> أضف أول فستان
-              </Link>
-              <Link
-                href="/dashboard/rentals/calendar"
-                className="inline-flex items-center gap-2 border border-border/50 px-6 py-3 rounded-xl font-medium text-sm hover:bg-secondary transition-all"
-              >
-                <Calendar className="w-4 h-4" /> استعرض التقويم
-              </Link>
-            </div>
-          </div>
+          <EmptyState
+            icon={<Shirt className="w-full h-full" />}
+            title="لا يوجد فساتين بعد"
+            description="ابدأ بإضافة فساتينك حتى تتمكن من استقبال الحجوزات وإدارة التأجير"
+            action={{ label: 'أضف أول فستان', href: '/dashboard/rentals/dresses' }}
+            secondaryAction={{ label: 'استعرض التقويم', href: '/dashboard/rentals/calendar' }}
+            variant="premium"
+            size="lg"
+          />
         ) : (
           <>
             <div className="flex items-center justify-between mb-1">
@@ -136,40 +126,51 @@ export default async function DashboardPage() {
             </div>
 
             <div data-tour="dashboard-stats" className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <KpiCard
-                label="فساتين متاحة"
-                value={available}
-                sub={`من ${totalDresses}`}
-                icon={Shirt}
-                href="/dashboard/rentals/dresses"
-                color="green"
-              />
-              <KpiCard
-                label="مؤجرة الآن"
-                value={rented}
-                sub="حجز نشط"
-                icon={Calendar}
-                href="/dashboard/rentals/bookings"
-                color="blue"
-              />
-              <KpiCard
-                label="إجمالي الإيرادات"
-                value={formatCurrency(revenue, CURRENCY)}
-                sub="كل الوقت"
-                icon={TrendingUp}
-                href="/dashboard/rentals/bookings"
-                color="purple"
-                isText
-              />
-              <KpiCard
-                label="مدفوعات معلقة"
-                value={formatCurrency(pending, CURRENCY)}
-                sub="غير محصّلة"
-                icon={DollarSign}
-                href="/dashboard/rentals/returns"
-                color="amber"
-                isText
-              />
+              <Link href="/dashboard/rentals/dresses">
+                <AnimatedKPICounter
+                  title="فساتين متاحة"
+                  value={available}
+                  format="number"
+                  icon={<Shirt className="w-5 h-5" />}
+                  subtitle={`من ${totalDresses}`}
+                  variant="primary"
+                />
+              </Link>
+              <Link href="/dashboard/rentals/bookings">
+                <AnimatedKPICounter
+                  title="مؤجرة الآن"
+                  value={rented}
+                  format="number"
+                  icon={<Calendar className="w-5 h-5" />}
+                  subtitle="حجز نشط"
+                  variant="success"
+                  delay={0.1}
+                />
+              </Link>
+              <Link href="/dashboard/rentals/bookings">
+                <AnimatedKPICounter
+                  title="إجمالي الإيرادات"
+                  value={revenue}
+                  format="currency"
+                  currency={CURRENCY}
+                  icon={<TrendingUp className="w-5 h-5" />}
+                  subtitle="كل الوقت"
+                  variant="default"
+                  delay={0.15}
+                />
+              </Link>
+              <Link href="/dashboard/rentals/returns">
+                <AnimatedKPICounter
+                  title="مدفوعات معلقة"
+                  value={pending}
+                  format="currency"
+                  currency={CURRENCY}
+                  icon={<DollarSign className="w-5 h-5" />}
+                  subtitle="غير محصّلة"
+                  variant="warning"
+                  delay={0.2}
+                />
+              </Link>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -282,29 +283,15 @@ export default async function DashboardPage() {
   return (
     <DashboardShell greeting={greeting} staffName={staffName}>
       {hasNoProducts ? (
-        <div className="premium-card p-12 text-center">
-          <div className="text-6xl mb-4">{features.icon}</div>
-          <h2 className="text-xl font-bold mb-2">مرحباً في {features.label}!</h2>
-          <p className="text-muted-foreground text-sm mb-6 max-w-sm mx-auto">
-            لم تُضف أي منتجات بعد. ابدأ بإضافة منتجاتك لتتمكن من البيع والتتبع
-          </p>
-          <div className="flex justify-center gap-3 flex-wrap">
-            <Link
-              href="/dashboard/inventory"
-              className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-xl font-bold text-sm hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
-            >
-              <Plus className="w-4 h-4" /> أضف أول منتج
-            </Link>
-            {features.showPOS && (
-              <Link
-                href="/dashboard/pos"
-                className="inline-flex items-center gap-2 border border-border/50 px-6 py-3 rounded-xl font-medium text-sm hover:bg-secondary transition-all"
-              >
-                <ShoppingCart className="w-4 h-4" /> افتح نقطة البيع
-              </Link>
-            )}
-          </div>
-        </div>
+        <EmptyState
+          icon={<Package className="w-full h-full" />}
+          title={`مرحباً في ${features.label}!`}
+          description="لم تُضف أي منتجات بعد. ابدأ بإضافة منتجاتك لتتمكن من البيع والتتبع"
+          action={{ label: 'أضف أول منتج', href: '/dashboard/inventory' }}
+          secondaryAction={features.showPOS ? { label: 'افتح نقطة البيع', href: '/dashboard/pos' } : undefined}
+          variant="premium"
+          size="lg"
+        />
       ) : (
         <>
           <div className="flex items-center justify-between mb-1">
@@ -323,42 +310,53 @@ export default async function DashboardPage() {
           </div>
 
           <div data-tour="dashboard-stats" className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <KpiCard
-              label="مبيعات اليوم"
-              value={formatCurrency(todayTotal, CURRENCY)}
-              sub={`${todaySales?.length || 0} فاتورة`}
-              icon={Receipt}
-              href="/dashboard/sales"
-              color="blue"
-              isText
-            />
-            <KpiCard
-              label="مبيعات الشهر"
-              value={formatCurrency(monthTotal, CURRENCY)}
-              sub="هذا الشهر"
-              icon={TrendingUp}
-              href="/dashboard/sales"
-              color="green"
-              isText
-            />
-            <KpiCard
-              label="صافي الربح"
-              value={formatCurrency(monthProfit, CURRENCY)}
-              sub="بعد المصروفات"
-              icon={monthProfit >= 0 ? TrendingUp : TrendingDown}
-              href="/dashboard/reports"
-              color={monthProfit >= 0 ? 'emerald' : 'red'}
-              isText
-            />
-            <KpiCard
-              label="المصروفات"
-              value={formatCurrency(monthExpTot, CURRENCY)}
-              sub="هذا الشهر"
-              icon={DollarSign}
-              href="/dashboard/expenses"
-              color="red"
-              isText
-            />
+            <Link href="/dashboard/sales">
+              <AnimatedKPICounter
+                title="مبيعات اليوم"
+                value={todayTotal}
+                format="currency"
+                currency={CURRENCY}
+                icon={<Receipt className="w-5 h-5" />}
+                subtitle={`${todaySales?.length || 0} فاتورة`}
+                variant="primary"
+              />
+            </Link>
+            <Link href="/dashboard/sales">
+              <AnimatedKPICounter
+                title="مبيعات الشهر"
+                value={monthTotal}
+                format="currency"
+                currency={CURRENCY}
+                icon={<TrendingUp className="w-5 h-5" />}
+                subtitle="هذا الشهر"
+                variant="success"
+                delay={0.1}
+              />
+            </Link>
+            <Link href="/dashboard/reports">
+              <AnimatedKPICounter
+                title="صافي الربح"
+                value={monthProfit}
+                format="currency"
+                currency={CURRENCY}
+                icon={monthProfit >= 0 ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
+                subtitle="بعد المصروفات"
+                variant={monthProfit >= 0 ? 'default' : 'danger'}
+                delay={0.15}
+              />
+            </Link>
+            <Link href="/dashboard/expenses">
+              <AnimatedKPICounter
+                title="المصروفات"
+                value={monthExpTot}
+                format="currency"
+                currency={CURRENCY}
+                icon={<DollarSign className="w-5 h-5" />}
+                subtitle="هذا الشهر"
+                variant="danger"
+                delay={0.2}
+              />
+            </Link>
           </div>
 
           <DashboardOnboarding
@@ -382,19 +380,14 @@ export default async function DashboardPage() {
                 </Link>
               </div>
               {hasNoSales ? (
-                <div className="px-5 py-10 text-center">
-                  <ShoppingCart className="w-10 h-10 mx-auto mb-3 text-muted-foreground/20" />
-                  <p className="text-sm font-medium text-foreground mb-1">لا توجد مبيعات بعد</p>
-                  <p className="text-xs text-muted-foreground mb-4">ابدأ بإنشاء أول عملية بيع</p>
-                  {features.showPOS && (
-                    <Link
-                      href="/dashboard/pos"
-                      className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 shadow-sm shadow-primary/10"
-                    >
-                      <ShoppingCart className="w-3.5 h-3.5" /> افتح نقطة البيع
-                    </Link>
-                  )}
-                </div>
+                <EmptyState
+                  icon={<ShoppingCart className="w-full h-full" />}
+                  title="لا توجد مبيعات بعد"
+                  description="ابدأ بإنشاء أول عملية بيع"
+                  action={features.showPOS ? { label: 'افتح نقطة البيع', href: '/dashboard/pos' } : undefined}
+                  variant="minimal"
+                  size="sm"
+                />
               ) : (
                 <div className="divide-y divide-border/30">
                   {recentSales!.map((sale) => (

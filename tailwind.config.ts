@@ -176,6 +176,31 @@ module.exports = {
           '0%, 100%': { boxShadow: '0 0 20px rgba(29,185,84,0.1)' },
           '50%': { boxShadow: '0 0 40px rgba(29,185,84,0.2)' },
         },
+        'fade-in-left': {
+          from: { opacity: '0', transform: 'translateX(-12px)' },
+          to: { opacity: '1', transform: 'translateX(0)' },
+        },
+        'fade-in-right': {
+          from: { opacity: '0', transform: 'translateX(12px)' },
+          to: { opacity: '1', transform: 'translateX(0)' },
+        },
+        'scale-up': {
+          from: { transform: 'scale(0.95)', opacity: '0' },
+          to: { transform: 'scale(1)', opacity: '1' },
+        },
+        'slide-up-fade': {
+          from: { transform: 'translateY(20px)', opacity: '0' },
+          to: { transform: 'translateY(0)', opacity: '1' },
+        },
+        'bounce-in': {
+          '0%': { transform: 'scale(0)', opacity: '0' },
+          '50%': { transform: 'scale(1.05)' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+        'shimmer-subtle': {
+          '0%': { backgroundPosition: '-100% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -195,6 +220,12 @@ module.exports = {
         'pulse-soft': 'pulse-soft 2s ease-in-out infinite',
         float: 'float 3s ease-in-out infinite',
         'glow-pulse': 'glow-pulse 2s ease-in-out infinite',
+        'fade-in-left': 'fade-in-left 0.3s ease-out',
+        'fade-in-right': 'fade-in-right 0.3s ease-out',
+        'scale-up': 'scale-up 0.2s ease-out',
+        'slide-up-fade': 'slide-up-fade 0.4s ease-out',
+        'bounce-in': 'bounce-in 0.4s ease-out',
+        'shimmer-subtle': 'shimmer-subtle 2s infinite linear',
       },
     },
   },

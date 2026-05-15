@@ -28,16 +28,7 @@ export {
 } from './dialog'
 
 // Table
-export {
-  Table,
-  TableHeader,
-  TableBody,
-  TableFooter,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableCaption,
-} from './table'
+export { Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell, TableCaption } from './table'
 
 // Badge
 export { Badge, badgeVariants } from './badge'
@@ -91,3 +82,31 @@ export {
   CommandShortcut,
   CommandSeparator,
 } from './command'
+
+// Micro-interactions
+export {
+  HoverLift,
+  CardElevation,
+  MagneticButton,
+  GlowFocus,
+  SuccessFeedback,
+  LoadingMorph,
+  ScalePress,
+  SaveIndicator,
+  AnimatedCheck,
+} from './micro-interactions'
+
+// Empty State
+export { EmptyState, SmartEmptyState } from './empty-state'
+
+// Premium Skeleton
+export {
+  PremiumSkeleton,
+  KPISkeleton,
+  ChartSkeletonPremium,
+  TableSkeletonPremium,
+  ListSkeleton,
+} from './premium-skeleton'
+
+// Onboarding Tip
+export { OnboardingTip } from './onboarding-tip'
