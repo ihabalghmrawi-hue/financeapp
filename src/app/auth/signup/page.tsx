@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Eye, EyeOff, Loader2, Mail, Lock, Building2, User, Sparkles, ArrowLeft, Check } from 'lucide-react'
-import { generateSlug } from '@/lib/utils'
+import { cn, generateSlug } from '@/lib/utils'
 import { BUSINESS_TYPE_COOKIE } from '@/lib/features'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -137,282 +137,260 @@ export default function SignupPage() {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="relative"
-    >
-      <div className="relative backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-8 shadow-premium-lg">
-        <div className="absolute -inset-0.5 bg-gradient-to-b from-primary/10 to-transparent rounded-3xl opacity-50 pointer-events-none" />
-
-        <div className="relative">
-          {/* Steps indicator */}
-          <div className="flex items-center justify-center gap-3 mb-8">
-            {[1, 2, 3].map((s) => (
-              <div key={s} className="flex items-center gap-3">
-                <motion.div
-                  animate={
-                    step >= s
-                      ? { scale: 1, backgroundColor: 'hsl(var(--primary))' }
-                      : { scale: 0.9, backgroundColor: 'rgba(255,255,255,0.1)' }
-                  }
-                  className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold transition-all duration-300"
-                >
-                  {step > s ? (
-                    <Check className="w-4 h-4 text-white" />
-                  ) : (
-                    <span className={step >= s ? 'text-white' : 'text-white/40'}>{s}</span>
-                  )}
-                </motion.div>
-                {s < 3 && (
-                  <div
-                    className={`h-0.5 w-14 rounded-full transition-all duration-300 ${step > s ? 'bg-primary' : 'bg-white/10'}`}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-
-          <AnimatePresence mode="wait">
+    <>
+      {/* Steps indicator */}
+      <div className="flex items-center justify-center gap-2 mb-7">
+        {[1, 2, 3].map((s, i) => (
+          <div key={s} className="flex items-center gap-2">
             <motion.div
-              key={step}
-              variants={stepVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.3 }}
+              animate={
+                step >= s
+                  ? { scale: 1, backgroundColor: 'rgb(16 185 129 / 0.2)', borderColor: 'rgb(52 211 153 / 0.5)' }
+                  : { scale: 0.9, backgroundColor: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.08)' }
+              }
+              className={cn(
+                'w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold border transition-all duration-300',
+                step >= s ? 'border-emerald-400/50 text-emerald-400' : 'border-white/10 text-white/30',
+              )}
             >
-              <div className="mb-6">
-                <h2 className="text-xl font-bold text-white">
-                  {step === 1 ? 'إنشاء حساب جديد' : step === 2 ? 'معلومات الشركة' : 'نوع النشاط التجاري'}
-                </h2>
-                <p className="text-white/50 text-sm mt-1">
-                  {step === 1 ? 'أدخل بياناتك الشخصية' : step === 2 ? 'أدخل بيانات شركتك' : 'اختر ما يناسب نشاطك'}
-                </p>
+              {step > s ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <span>{s}</span>}
+            </motion.div>
+            {i < 2 && (
+              <div
+                className={`h-px w-10 rounded-full transition-all duration-300 ${step > s ? 'bg-emerald-400/30' : 'bg-white/5'}`}
+              />
+            )}
+          </div>
+        ))}
+      </div>
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={step}
+          variants={stepVariants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          transition={{ duration: 0.25 }}
+        >
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-4 bg-red-500/10 text-red-400 text-sm p-3 rounded-xl border border-red-500/20"
+            >
+              {error}
+            </motion.div>
+          )}
+
+          {step === 1 ? (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1.5">الاسم الكامل</label>
+                <div className="relative group">
+                  <User className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-emerald-400 transition-colors" />
+                  <input
+                    type="text"
+                    value={formData.fullName}
+                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                    placeholder="محمد أحمد"
+                    className="auth-input pr-11"
+                  />
+                </div>
               </div>
 
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  className="mb-4 bg-destructive/10 text-destructive text-sm p-3 rounded-xl border border-destructive/20"
-                >
-                  {error}
-                </motion.div>
-              )}
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1.5">البريد الإلكتروني</label>
+                <div className="relative group">
+                  <Mail className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-emerald-400 transition-colors" />
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="example@email.com"
+                    dir="ltr"
+                    className="auth-input pr-11"
+                  />
+                </div>
+              </div>
 
-              {step === 1 ? (
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-white/80 mb-1.5 block">الاسم الكامل</label>
-                    <div className="relative group">
-                      <User className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 group-focus-within:text-primary transition-colors" />
-                      <input
-                        type="text"
-                        value={formData.fullName}
-                        onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                        placeholder="محمد أحمد"
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-11 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-200"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium text-white/80 mb-1.5 block">البريد الإلكتروني</label>
-                    <div className="relative group">
-                      <Mail className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 group-focus-within:text-primary transition-colors" />
-                      <input
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        placeholder="example@email.com"
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-11 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-200"
-                        dir="ltr"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium text-white/80 mb-1.5 block">كلمة المرور</label>
-                    <div className="relative group">
-                      <Lock className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 group-focus-within:text-primary transition-colors" />
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        value={formData.password}
-                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        placeholder="••••••••"
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-11 pl-11 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-200"
-                        dir="ltr"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70"
-                      >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium text-white/80 mb-1.5 block">تأكيد كلمة المرور</label>
-                    <div className="relative group">
-                      <Lock className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 group-focus-within:text-primary transition-colors" />
-                      <input
-                        type="password"
-                        value={formData.confirmPassword}
-                        onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                        placeholder="••••••••"
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-11 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-200"
-                        dir="ltr"
-                      />
-                    </div>
-                  </div>
-
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1.5">كلمة المرور</label>
+                <div className="relative group">
+                  <Lock className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-emerald-400 transition-colors" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    placeholder="••••••••"
+                    dir="ltr"
+                    className="auth-input pr-11 pl-11"
+                  />
                   <button
                     type="button"
-                    onClick={handleNext}
-                    className="w-full bg-primary text-primary-foreground rounded-xl py-3 text-sm font-medium hover:bg-primary/90 transition-all duration-200 shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
                   >
-                    التالي <ArrowLeft className="w-4 h-4" />
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-              ) : step === 2 ? (
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-white/80 mb-1.5 block">اسم الشركة أو المتجر</label>
-                    <div className="relative group">
-                      <Building2 className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 group-focus-within:text-primary transition-colors" />
-                      <input
-                        type="text"
-                        value={formData.companyName}
-                        onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                        placeholder="متجري / شركتي"
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-11 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-200"
-                      />
-                    </div>
-                  </div>
+              </div>
 
-                  <div>
-                    <label className="text-sm font-medium text-white/80 mb-1.5 block">العملة الافتراضية</label>
-                    <select
-                      value={formData.currency}
-                      onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-200 appearance-none"
-                    >
-                      <option value="USD" className="bg-[#0a0a0a]">
-                        دولار أمريكي (USD)
-                      </option>
-                      <option value="SAR" className="bg-[#0a0a0a]">
-                        ريال سعودي (SAR)
-                      </option>
-                      <option value="AED" className="bg-[#0a0a0a]">
-                        درهم إماراتي (AED)
-                      </option>
-                      <option value="EGP" className="bg-[#0a0a0a]">
-                        جنيه مصري (EGP)
-                      </option>
-                      <option value="KWD" className="bg-[#0a0a0a]">
-                        دينار كويتي (KWD)
-                      </option>
-                      <option value="EUR" className="bg-[#0a0a0a]">
-                        يورو (EUR)
-                      </option>
-                    </select>
-                  </div>
-
-                  <div className="flex gap-3 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => setStep(1)}
-                      className="flex-1 border border-white/10 bg-white/5 rounded-xl py-3 text-sm font-medium text-white/70 hover:bg-white/10 transition-all duration-200"
-                    >
-                      رجوع
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleNextStep2}
-                      className="flex-1 bg-primary text-primary-foreground rounded-xl py-3 text-sm font-medium hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all duration-200 flex items-center justify-center gap-2"
-                    >
-                      التالي <ArrowLeft className="w-4 h-4" />
-                    </button>
-                  </div>
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1.5">تأكيد كلمة المرور</label>
+                <div className="relative group">
+                  <Lock className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-emerald-400 transition-colors" />
+                  <input
+                    type="password"
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                    placeholder="••••••••"
+                    dir="ltr"
+                    className="auth-input pr-11"
+                  />
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 gap-3">
-                    {BUSINESS_TYPE_OPTIONS.map((bt) => (
-                      <button
-                        key={bt.value}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, businessType: bt.value })}
-                        className={`flex items-center gap-3 p-4 rounded-2xl border text-right transition-all duration-200 ${
-                          formData.businessType === bt.value
-                            ? 'border-primary bg-primary/10'
-                            : 'border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20'
-                        }`}
+              </div>
+
+              <button
+                type="button"
+                onClick={handleNext}
+                className="auth-gradient-btn w-full text-white font-semibold rounded-xl py-3.5 text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-200"
+              >
+                التالي <ArrowLeft className="w-4 h-4" />
+              </button>
+            </div>
+          ) : step === 2 ? (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1.5">اسم الشركة أو المتجر</label>
+                <div className="relative group">
+                  <Building2 className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-emerald-400 transition-colors" />
+                  <input
+                    type="text"
+                    value={formData.companyName}
+                    onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                    placeholder="متجري / شركتي"
+                    className="auth-input pr-11"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1.5">العملة الافتراضية</label>
+                <select
+                  value={formData.currency}
+                  onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                  className="auth-input appearance-none"
+                >
+                  <option value="USD" className="bg-[#0d1117]">
+                    دولار أمريكي (USD)
+                  </option>
+                  <option value="SAR" className="bg-[#0d1117]">
+                    ريال سعودي (SAR)
+                  </option>
+                  <option value="AED" className="bg-[#0d1117]">
+                    درهم إماراتي (AED)
+                  </option>
+                  <option value="EGP" className="bg-[#0d1117]">
+                    جنيه مصري (EGP)
+                  </option>
+                  <option value="KWD" className="bg-[#0d1117]">
+                    دينار كويتي (KWD)
+                  </option>
+                  <option value="EUR" className="bg-[#0d1117]">
+                    يورو (EUR)
+                  </option>
+                </select>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="flex-1 border border-white/10 bg-white/5 rounded-xl py-3.5 text-sm font-medium text-white/60 hover:bg-white/10 hover:text-white/80 transition-all duration-200"
+                >
+                  رجوع
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNextStep2}
+                  className="auth-gradient-btn flex-1 text-white font-semibold rounded-xl py-3.5 text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-200"
+                >
+                  التالي <ArrowLeft className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 gap-2.5 max-h-[360px] overflow-y-auto thin-scrollbar">
+                {BUSINESS_TYPE_OPTIONS.map((bt) => (
+                  <button
+                    key={bt.value}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, businessType: bt.value })}
+                    className={`flex items-center gap-3 p-3.5 rounded-2xl border text-right transition-all duration-200 ${
+                      formData.businessType === bt.value
+                        ? 'border-emerald-400/30 bg-emerald-500/8'
+                        : 'border-white/5 bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/10'
+                    }`}
+                  >
+                    <span className="text-xl">{bt.icon}</span>
+                    <div className="flex-1">
+                      <p
+                        className={`font-semibold text-sm ${formData.businessType === bt.value ? 'text-emerald-400' : 'text-white'}`}
                       >
-                        <span className="text-2xl">{bt.icon}</span>
-                        <div>
-                          <p
-                            className={`font-semibold text-sm ${formData.businessType === bt.value ? 'text-primary' : 'text-white'}`}
-                          >
-                            {bt.label}
-                          </p>
-                          <p className="text-xs text-white/40 mt-0.5">{bt.description}</p>
+                        {bt.label}
+                      </p>
+                      <p className="text-xs text-white/30 mt-0.5">{bt.description}</p>
+                    </div>
+                    {formData.businessType === bt.value && (
+                      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                        <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
+                          <Check className="w-3 h-3 text-white" />
                         </div>
-                        {formData.businessType === bt.value && (
-                          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="mr-auto">
-                            <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                              <Check className="w-3.5 h-3.5 text-white" />
-                            </div>
-                          </motion.div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
+                      </motion.div>
+                    )}
+                  </button>
+                ))}
+              </div>
 
-                  <div className="flex gap-3 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => setStep(2)}
-                      className="flex-1 border border-white/10 bg-white/5 rounded-xl py-3 text-sm font-medium text-white/70 hover:bg-white/10 transition-all duration-200"
-                    >
-                      رجوع
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleSignup}
-                      disabled={loading}
-                      className="flex-1 bg-primary text-primary-foreground rounded-xl py-3 text-sm font-medium hover:bg-primary/90 disabled:opacity-50 shadow-lg shadow-primary/20 transition-all duration-200 flex items-center justify-center gap-2"
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" /> جاري الإنشاء...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="w-4 h-4" /> إنشاء الحساب
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </motion.div>
-          </AnimatePresence>
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setStep(2)}
+                  className="flex-1 border border-white/10 bg-white/5 rounded-xl py-3.5 text-sm font-medium text-white/60 hover:bg-white/10 hover:text-white/80 transition-all duration-200"
+                >
+                  رجوع
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSignup}
+                  disabled={loading}
+                  className="auth-gradient-btn flex-1 text-white font-semibold rounded-xl py-3.5 text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-200 disabled:opacity-50"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" /> جاري الإنشاء...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4" /> إنشاء الحساب
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm text-white/40">
-              لديك حساب بالفعل؟{' '}
-              <Link href="/auth/login" className="text-primary font-medium hover:text-primary/80 transition-colors">
-                تسجيل الدخول
-              </Link>
-            </p>
-          </div>
-        </div>
-      </div>
-    </motion.div>
+      <p className="mt-6 text-center text-xs text-white/40">
+        لديك حساب بالفعل؟{' '}
+        <Link href="/auth/login" className="text-emerald-400 font-medium hover:text-emerald-300 transition-colors">
+          تسجيل الدخول
+        </Link>
+      </p>
+    </>
   )
 }
