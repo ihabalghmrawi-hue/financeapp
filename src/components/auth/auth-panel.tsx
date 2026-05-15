@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { BrandLogo } from '@/components/ui/brand-logo'
 import { ErpVisualization } from './erp-visualization'
-import { Moon, Sun, Globe, ChevronDown } from 'lucide-react'
+import { Moon, Sun, Globe } from 'lucide-react'
 
 interface AuthPanelProps {
   children: React.ReactNode
@@ -16,6 +16,7 @@ interface AuthPanelProps {
 
 export function AuthPanel({ children, title, subtitle }: AuthPanelProps) {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+  const [language, setLanguage] = useState<'ar' | 'en'>('ar')
 
   const isDark = theme === 'dark'
 
@@ -41,7 +42,7 @@ export function AuthPanel({ children, title, subtitle }: AuthPanelProps) {
       <div className="flex w-full">
         {/* Left side - ERP Visualization */}
         <div className="hidden lg:flex lg:w-[55%] xl:w-[60%] relative overflow-hidden">
-          <ErpVisualization isDark={isDark} />
+          <ErpVisualization isDark={isDark} language={language} />
         </div>
 
         {/* Right side - Auth panel */}
@@ -60,6 +61,7 @@ export function AuthPanel({ children, title, subtitle }: AuthPanelProps) {
               {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
             <button
+              onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
               className={cn(
                 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all duration-300',
                 isDark
@@ -68,8 +70,7 @@ export function AuthPanel({ children, title, subtitle }: AuthPanelProps) {
               )}
             >
               <Globe className="w-3.5 h-3.5" />
-              AR
-              <ChevronDown className="w-3 h-3" />
+              {language === 'ar' ? 'AR' : 'EN'}
             </button>
           </div>
 

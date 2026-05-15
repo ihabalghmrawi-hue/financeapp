@@ -23,7 +23,7 @@ export function BrandLogo({ size = 'md', variant = 'default', animated = true, c
 
   const Logomark = () => (
     <img
-      src="/3.png"
+      src="/1.png"
       alt="EzyERP"
       className={cn(s.icon, 'flex-shrink-0 object-contain', animated ? 'animate-fade-in-scale' : '')}
     />
