@@ -3,7 +3,9 @@ import { Cairo } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/layout/theme-provider'
 import { Toaster } from '@/components/ui/toaster'
+import { NetworkStatus } from '@/components/ui/network-status'
 import { AppProviders } from '@/lib/mobile'
+import { PerformanceProvider } from '@/hooks/usePerformanceMode'
 import { getBranding, buildThemeCss } from '@/lib/branding'
 
 const cairo = Cairo({
@@ -51,8 +53,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className={`${cairo.variable} font-sans antialiased mobile-text-fix`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          <AppProviders>{children}</AppProviders>
-          <Toaster />
+          <PerformanceProvider>
+            <AppProviders>{children}</AppProviders>
+            <Toaster />
+            <NetworkStatus />
+            <div id="sr-announcer" role="status" aria-live="polite" aria-atomic="true" className="sr-only" />
+          </PerformanceProvider>
         </ThemeProvider>
       </body>
     </html>

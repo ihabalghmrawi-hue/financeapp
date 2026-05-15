@@ -69,3 +69,6 @@ export { useMobileInfo } from './useIsMobile'
 export type { MobileInfo } from './useIsMobile'
 export { useVirtualization, useMobileListOptimization } from './useVirtualization'
 export type { VirtualItem, UseVirtualizationResult } from './useVirtualization'
+
+export { PerformanceProvider, usePerformanceMode, useAnimationConfig } from './usePerformanceMode'
+export type { PerformanceMode } from './usePerformanceMode'
