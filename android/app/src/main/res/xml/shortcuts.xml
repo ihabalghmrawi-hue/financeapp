@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="dashboard"
+        android:enabled="true"
+        android:icon="@drawable/ic_launcher_foreground"
+        android:shortcutShortLabel="@string/shortcut_dashboard"
+        android:shortcutLongLabel="@string/shortcut_dashboard_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.ezy.erp"
+            android:targetClass="com.ezy.erp.MainActivity"
+            android:data="ezyerp://dashboard" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="scan"
+        android:enabled="true"
+        android:icon="@drawable/ic_launcher_foreground"
+        android:shortcutShortLabel="@string/shortcut_scan"
+        android:shortcutLongLabel="@string/shortcut_scan_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.ezy.erp"
+            android:targetClass="com.ezy.erp.MainActivity"
+            android:data="ezyerp://scan" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="new_invoice"
+        android:enabled="true"
+        android:icon="@drawable/ic_launcher_foreground"
+        android:shortcutShortLabel="@string/shortcut_invoice"
+        android:shortcutLongLabel="@string/shortcut_invoice_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.ezy.erp"
+            android:targetClass="com.ezy.erp.MainActivity"
+            android:data="ezyerp://invoices/new" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="pos"
+        android:enabled="true"
+        android:icon="@drawable/ic_launcher_foreground"
+        android:shortcutShortLabel="@string/shortcut_pos"
+        android:shortcutLongLabel="@string/shortcut_pos_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.ezy.erp"
+            android:targetClass="com.ezy.erp.MainActivity"
+            android:data="ezyerp://pos" />
+    </shortcut>
+</shortcuts>

@@ -1,7 +1,8 @@
 'use client'
 
 import { useReducer, useCallback, useEffect, useRef, useContext } from 'react'
-import { WorkspaceContext, WorkspaceState, WorkspaceAction, Tab, DockablePanel } from './types'
+import type { WorkspaceState, Tab, DockablePanel } from './types'
+import { WorkspaceContext, WorkspaceAction } from './types'
 import { workspaceReducer, createInitialState, saveLayout, loadLayout } from './reducer'
 
 interface WorkspaceProviderProps {
@@ -18,21 +19,25 @@ export function WorkspaceProvider({ children, defaultWorkspaceId }: WorkspacePro
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    if (saveTimer.current) clearTimeout(saveTimer.current)
+    if (saveTimer.current) {
+      clearTimeout(saveTimer.current)
+    }
     saveTimer.current = setTimeout(() => saveLayout(state), 1000)
-    return () => { if (saveTimer.current) clearTimeout(saveTimer.current) }
+    return () => {
+      if (saveTimer.current) {
+        clearTimeout(saveTimer.current)
+      }
+    }
   }, [state])
 
-  return (
-    <WorkspaceContext.Provider value={{ state, dispatch }}>
-      {children}
-    </WorkspaceContext.Provider>
-  )
+  return <WorkspaceContext.Provider value={{ state, dispatch }}>{children}</WorkspaceContext.Provider>
 }
 
 export function useWorkspace() {
   const ctx = useContext(WorkspaceContext)
-  if (!ctx) throw new Error('useWorkspace must be used within WorkspaceProvider')
+  if (!ctx) {
+    throw new Error('useWorkspace must be used within WorkspaceProvider')
+  }
   return ctx
 }
 
@@ -41,41 +46,65 @@ export function useWorkspaceActions(workspaceId: string) {
 
   const workspace: WorkspaceState['workspaces'][string] | undefined = state.workspaces[workspaceId]
 
-  const register = useCallback((title: string, icon?: string, route?: string) => {
-    dispatch({ type: 'REGISTER_WORKSPACE', id: workspaceId, title, icon, route })
-  }, [workspaceId, dispatch])
+  const register = useCallback(
+    (title: string, icon?: string, route?: string) => {
+      dispatch({ type: 'REGISTER_WORKSPACE', id: workspaceId, title, icon, route })
+    },
+    [workspaceId, dispatch],
+  )
 
-  const openTab = useCallback((tab: Tab) => {
-    dispatch({ type: 'OPEN_TAB', workspaceId, tab })
-  }, [workspaceId, dispatch])
+  const openTab = useCallback(
+    (tab: Tab) => {
+      dispatch({ type: 'OPEN_TAB', workspaceId, tab })
+    },
+    [workspaceId, dispatch],
+  )
 
-  const closeTab = useCallback((tabId: string) => {
-    dispatch({ type: 'CLOSE_TAB', workspaceId, tabId })
-  }, [workspaceId, dispatch])
+  const closeTab = useCallback(
+    (tabId: string) => {
+      dispatch({ type: 'CLOSE_TAB', workspaceId, tabId })
+    },
+    [workspaceId, dispatch],
+  )
 
-  const setActiveTab = useCallback((tabId: string) => {
-    dispatch({ type: 'SET_ACTIVE_TAB', workspaceId, tabId })
-  }, [workspaceId, dispatch])
+  const setActiveTab = useCallback(
+    (tabId: string) => {
+      dispatch({ type: 'SET_ACTIVE_TAB', workspaceId, tabId })
+    },
+    [workspaceId, dispatch],
+  )
 
-  const openPanel = useCallback((panel: DockablePanel) => {
-    dispatch({ type: 'OPEN_PANEL', workspaceId, panel })
-  }, [workspaceId, dispatch])
+  const openPanel = useCallback(
+    (panel: DockablePanel) => {
+      dispatch({ type: 'OPEN_PANEL', workspaceId, panel })
+    },
+    [workspaceId, dispatch],
+  )
 
-  const closePanel = useCallback((panelId: string) => {
-    dispatch({ type: 'CLOSE_PANEL', workspaceId, panelId })
-  }, [workspaceId, dispatch])
+  const closePanel = useCallback(
+    (panelId: string) => {
+      dispatch({ type: 'CLOSE_PANEL', workspaceId, panelId })
+    },
+    [workspaceId, dispatch],
+  )
 
-  const togglePanel = useCallback((panelId: string) => {
-    dispatch({ type: 'TOGGLE_PANEL', workspaceId, panelId })
-  }, [workspaceId, dispatch])
+  const togglePanel = useCallback(
+    (panelId: string) => {
+      dispatch({ type: 'TOGGLE_PANEL', workspaceId, panelId })
+    },
+    [workspaceId, dispatch],
+  )
 
   const toggleContextualSidebar = useCallback(() => {
     dispatch({ type: 'TOGGLE_CONTEXTUAL_SIDEBAR', workspaceId })
   }, [workspaceId, dispatch])
 
-  const setContextualSidebarContent = useCallback((component: string | null, props?: Record<string, unknown>) => {
-    dispatch({ type: 'SET_CONTEXTUAL_SIDEBAR_CONTENT', workspaceId, component, props })
-  }, [workspaceId, dispatch])
+  const setContextualSidebarContent = useCallback(
+    (component: string | null, props?: Record<string, unknown>) => {
+      dispatch({ type: 'SET_CONTEXTUAL_SIDEBAR_CONTENT', workspaceId, component, props })
+    },
+    [workspaceId, dispatch],
+  )
 
   return {
     workspace,
@@ -88,16 +117,19 @@ export function useWorkspaceActions(workspaceId: string) {
     togglePanel,
     toggleContextualSidebar,
     setContextualSidebarContent,
-    activeTab: workspace?.tabs.find(t => t.id === workspace.activeTabId) ?? null,
+    activeTab: workspace?.tabs.find((t) => t.id === workspace.activeTabId) ?? null,
   }
 }
 
 export function useGlobalWorkspaceActions() {
   const { state, dispatch } = useWorkspace()
 
-  const setActiveWorkspace = useCallback((id: string) => {
-    dispatch({ type: 'SET_ACTIVE_WORKSPACE', id })
-  }, [dispatch])
+  const setActiveWorkspace = useCallback(
+    (id: string) => {
+      dispatch({ type: 'SET_ACTIVE_WORKSPACE', id })
+    },
+    [dispatch],
+  )
 
   const openCommandPalette = useCallback(() => {
     dispatch({ type: 'OPEN_COMMAND_PALETTE' })
@@ -123,17 +155,55 @@ export function useGlobalWorkspaceActions() {
     dispatch({ type: 'TOGGLE_NOTIFICATION_CENTER' })
   }, [dispatch])
 
-  const addRecentEntity = useCallback((entity: { id: string; type: string; title: string; path: string }) => {
-    dispatch({ type: 'ADD_RECENT_ENTITY', entity })
+  const addRecentEntity = useCallback(
+    (entity: { id: string; type: string; title: string; path: string }) => {
+      dispatch({ type: 'ADD_RECENT_ENTITY', entity })
+    },
+    [dispatch],
+  )
+
+  const pinWorkflow = useCallback(
+    (workflow: { id: string; title: string; icon: string; path: string }) => {
+      dispatch({ type: 'PIN_WORKFLOW', workflow })
+    },
+    [dispatch],
+  )
+
+  const unpinWorkflow = useCallback(
+    (id: string) => {
+      dispatch({ type: 'UNPIN_WORKFLOW', id })
+    },
+    [dispatch],
+  )
+
+  const setMobileViewMode = useCallback(
+    (workspaceId: string, mode: import('./types').MobileViewMode) => {
+      dispatch({ type: 'SET_MOBILE_VIEW_MODE', workspaceId, mode })
+    },
+    [dispatch],
+  )
+
+  const setMobileSidebar = useCallback(
+    (workspaceId: string, open: boolean) => {
+      dispatch({ type: 'SET_MOBILE_SIDEBAR', workspaceId, open })
+    },
+    [dispatch],
+  )
+
+  const toggleMobileBottomSheet = useCallback(() => {
+    dispatch({ type: 'TOGGLE_MOBILE_BOTTOM_SHEET' })
   }, [dispatch])
 
-  const pinWorkflow = useCallback((workflow: { id: string; title: string; icon: string; path: string }) => {
-    dispatch({ type: 'PIN_WORKFLOW', workflow })
+  const closeMobileBottomSheet = useCallback(() => {
+    dispatch({ type: 'CLOSE_MOBILE_BOTTOM_SHEET' })
   }, [dispatch])
 
-  const unpinWorkflow = useCallback((id: string) => {
-    dispatch({ type: 'UNPIN_WORKFLOW', id })
-  }, [dispatch])
+  const saveMobileState = useCallback(
+    (workspaceId: string, state: Record<string, unknown>) => {
+      dispatch({ type: 'SAVE_MOBILE_STATE', workspaceId, state })
+    },
+    [dispatch],
+  )
 
   return {
     state,
@@ -147,5 +217,10 @@ export function useGlobalWorkspaceActions() {
     addRecentEntity,
     pinWorkflow,
     unpinWorkflow,
+    setMobileViewMode,
+    setMobileSidebar,
+    toggleMobileBottomSheet,
+    closeMobileBottomSheet,
+    saveMobileState,
   }
 }

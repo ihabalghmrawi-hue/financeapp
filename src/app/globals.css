@@ -6,93 +6,85 @@
 
 @layer base {
   :root {
-    /* Light Theme */
-    --background: 210 40% 98%;
-    --foreground: 222.2 84% 4.9%;
+    --safe-area-top: env(safe-area-inset-top, 0px);
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-area-left: env(safe-area-inset-left, 0px);
+    --safe-area-right: env(safe-area-inset-right, 0px);
+    --bottom-nav-height: 3.5rem;
+    --mobile-header-height: 2.75rem;
+    --mobile-touch-target: 44px;
 
+    /* Spotify-inspired Premium Dark Theme (Light Mode) */
+    --background: 0 0% 98%;
+    --foreground: 0 0% 8%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
+    --card-foreground: 0 0% 8%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --success: 142 76% 36%;
-    --success-foreground: 210 40% 98%;
-
+    --popover-foreground: 0 0% 8%;
+    --primary: 141 73% 42%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 95%;
+    --secondary-foreground: 0 0% 12%;
+    --muted: 0 0% 95%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 141 73% 42%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 141 73% 42%;
+    --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
-    --warning-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-
+    --warning-foreground: 0 0% 100%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 141 73% 42%;
     --radius: 0.75rem;
-
-    /* Sidebar */
     --sidebar-width: 260px;
     --sidebar-bg: 0 0% 100%;
-    --sidebar-border: 214.3 31.8% 91.4%;
-
-    /* Chart Colors */
-    --chart-1: 221.2 83.2% 53.3%;
-    --chart-2: 142 76% 36%;
-    --chart-3: 0 84.2% 60.2%;
+    --sidebar-border: 0 0% 90%;
+    --chart-1: 141 73% 42%;
+    --chart-2: 221 83% 53%;
+    --chart-3: 0 84% 60%;
     --chart-4: 38 92% 50%;
     --chart-5: 263 90% 51%;
+
+    /* Elevation */
+    --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 4px rgba(0, 0, 0, 0.02);
+    --elevation-2: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.04);
+    --elevation-3: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+    --elevation-4: 0 8px 32px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06);
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 8%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 8%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --success: 142 76% 36%;
-    --success-foreground: 210 40% 98%;
-
+    --background: 0 0% 4%;
+    --foreground: 0 0% 95%;
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 141 73% 42%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 90%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 55%;
+    --accent: 141 73% 42%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 141 73% 42%;
+    --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
-    --warning-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
-
-    --sidebar-bg: 222.2 84% 6%;
-    --sidebar-border: 217.2 32.6% 17.5%;
+    --warning-foreground: 0 0% 100%;
+    --border: 0 0% 14%;
+    --input: 0 0% 14%;
+    --ring: 141 73% 42%;
+    --sidebar-bg: 0 0% 6%;
+    --sidebar-border: 0 0% 14%;
+    --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.2), 0 1px 4px rgba(0, 0, 0, 0.1);
+    --elevation-2: 0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.15);
+    --elevation-3: 0 4px 16px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.2);
+    --elevation-4: 0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.25);
   }
 }
 
@@ -108,20 +100,20 @@
 
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings:
+      'rlig' 1,
+      'calt' 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Arabic font support */
-  [lang="ar"] {
+  [lang='ar'] {
     font-family: 'Cairo', system-ui, sans-serif;
   }
 
-  /* Custom scrollbar */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 4px;
+    height: 4px;
   }
 
   ::-webkit-scrollbar-track {
@@ -129,60 +121,66 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-border rounded-full;
+    @apply bg-muted-foreground/20 rounded-full;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-muted-foreground/30;
+    @apply bg-muted-foreground/40;
+  }
+
+  ::selection {
+    @apply bg-primary/20 text-foreground;
   }
 }
 
 @layer components {
-  /* Finance specific styles */
+  /* Premium Stat Cards */
   .stat-card {
-    @apply bg-card rounded-xl border p-6 shadow-sm hover:shadow-md transition-all duration-200;
+    @apply bg-card rounded-2xl border border-border/50 p-5 transition-all duration-300;
   }
 
-  .stat-card-blue {
-    @apply bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-xl p-6 shadow-lg;
+  .stat-card:hover {
+    @apply border-primary/20;
+    box-shadow: var(--elevation-2);
   }
 
+  /* Income/Expense Badges */
   .income-badge {
-    @apply inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700;
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-success/10 text-success;
   }
 
   .expense-badge {
-    @apply inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700;
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-destructive/10 text-destructive;
   }
 
   .amount-positive {
-    @apply text-emerald-600 font-semibold;
+    @apply text-success font-semibold;
   }
 
   .amount-negative {
-    @apply text-red-600 font-semibold;
+    @apply text-destructive font-semibold;
   }
 
-  /* Sidebar */
+  /* Premium Sidebar Link */
   .sidebar-link {
-    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-150 cursor-pointer;
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-all duration-200 cursor-pointer;
   }
 
   .sidebar-link.active {
-    @apply bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground shadow-sm;
+    @apply bg-primary/10 text-primary font-semibold hover:bg-primary/15 hover:text-primary shadow-none;
   }
 
-  /* Table styles */
+  /* Premium Data Table */
   .data-table {
     @apply w-full text-sm;
   }
 
   .data-table th {
-    @apply text-right font-medium text-muted-foreground py-3 px-4 bg-muted/50 border-b first:rounded-tl-lg last:rounded-tr-lg;
+    @apply text-right font-medium text-muted-foreground/70 py-3 px-4 bg-muted/30 border-b border-border/50 text-xs uppercase tracking-wider;
   }
 
   .data-table td {
-    @apply py-3 px-4 border-b text-right;
+    @apply py-3.5 px-4 border-b border-border/30 text-right;
   }
 
   .data-table tr:last-child td {
@@ -190,10 +188,10 @@
   }
 
   .data-table tr:hover td {
-    @apply bg-muted/30;
+    @apply bg-secondary/30;
   }
 
-  /* Page header */
+  /* Page Header */
   .page-header {
     @apply flex items-center justify-between mb-6;
   }
@@ -206,26 +204,51 @@
     @apply text-muted-foreground text-sm mt-0.5;
   }
 
-  /* Cards */
-  .finance-card {
-    @apply bg-card rounded-xl border shadow-sm p-6;
+  /* Premium Card Container */
+  .premium-card {
+    @apply bg-card rounded-2xl border border-border/50;
   }
 
-  /* Form styles */
+  /* Form Section */
   .form-section {
-    @apply space-y-4;
+    @apply space-y-5;
   }
 
   .form-label {
     @apply block text-sm font-medium text-foreground mb-1.5;
   }
 
-  /* Shimmer loading */
+  /* Glass effect */
+  .glass-panel {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl;
+  }
+
+  .dark .glass-panel {
+    @apply bg-black/20 backdrop-blur-xl border border-white/5;
+  }
+
+  /* Glow effects */
+  .glow-green {
+    box-shadow:
+      0 0 30px rgba(29, 185, 84, 0.15),
+      0 0 60px rgba(29, 185, 84, 0.05);
+  }
+
+  .glow-subtle {
+    box-shadow: 0 0 40px rgba(255, 255, 255, 0.03);
+  }
+
+  /* Premium gradient text */
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60;
+  }
+
+  /* Shimmer loading enhanced */
   .shimmer {
     background: linear-gradient(
       90deg,
       hsl(var(--muted)) 25%,
-      hsl(var(--muted-foreground) / 0.15) 50%,
+      hsl(var(--muted-foreground) / 0.1) 50%,
       hsl(var(--muted)) 75%
     );
     background-size: 200% 100%;
@@ -247,21 +270,115 @@
     scrollbar-width: none;
   }
 
-  /* RTL utilities */
   .rtl {
     direction: rtl;
   }
-
   .ltr {
     direction: ltr;
   }
 
-  /* Glass morphism */
+  /* Premium Glass */
   .glass {
-    @apply bg-white/80 backdrop-blur-md border border-white/20;
+    @apply bg-white/70 backdrop-blur-xl border border-white/20;
   }
 
   .dark .glass {
-    @apply bg-gray-900/80;
+    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+  }
+
+  /* Strong glass for cards */
+  .glass-strong {
+    @apply bg-white/80 backdrop-blur-2xl border border-white/30 shadow-lg;
+  }
+
+  .dark .glass-strong {
+    @apply bg-black/40 backdrop-blur-2xl border border-white/10 shadow-lg;
+  }
+
+  /* Safe area utilities */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .safe-area-left {
+    padding-left: env(safe-area-inset-left, 0px);
+  }
+  .safe-area-right {
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+
+  /* Touch targets */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  .touch-target-sm {
+    @apply min-h-[36px] min-w-[36px];
+  }
+
+  /* Mobile */
+  .mobile-card-press {
+    @apply active:scale-[0.98] transition-transform;
+  }
+  .mobile-text-fix {
+    -webkit-text-size-adjust: 100%;
+  }
+  .mobile-bottom-safe {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 3.5rem);
+  }
+  .mobile-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  .mobile-scrollbar-none {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .mobile-scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  .orientation-portrait .orientation-hidden-portrait {
+    display: none;
+  }
+  .orientation-landscape .orientation-hidden-landscape {
+    display: none;
+  }
+
+  /* RTL slide animations */
+  [dir='rtl'] .mobile-slide-in {
+    animation: slide-in-rtl 0.3s ease-out;
+  }
+
+  @keyframes slide-in-rtl {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slide-in-ltr {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes sheet-up {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  .sheet-animation {
+    animation: sheet-up 0.3s ease-out;
   }
 }

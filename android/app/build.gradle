@@ -1,0 +1,265 @@
+apply plugin: 'com.android.application'
+
+// Load signing config from environment variables (CI/CD) or project properties
+def signingConfigScript = file('../../scripts/deploy/signing-config.gradle')
+if (signingConfigScript.exists()) {
+    apply from: signingConfigScript
+}
+
+def loadVersionCode = { ->
+    try {
+        def versionFile = file('version.properties')
+        if (versionFile.exists()) {
+            def props = new Properties()
+            versionFile.withInputStream { props.load(it) }
+            return (props.getProperty('versionCode') ?: '1').toInteger()
+        }
+    } catch (ignored) {}
+    return 1
+}
+
+def loadVersionName = { ->
+    try {
+        def versionFile = file('version.properties')
+        if (versionFile.exists()) {
+            def props = new Properties()
+            versionFile.withInputStream { props.load(it) }
+            return props.getProperty('versionName') ?: '1.0.0'
+        }
+    } catch (ignored) {}
+    return '1.0.0'
+}
+
+android {
+    namespace = "com.ezy.erp"
+    compileSdk = rootProject.ext.compileSdkVersion
+    buildFeatures {
+        buildConfig = true
+    }
+
+    defaultConfig {
+        applicationId "com.ezy.erp"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode loadVersionCode()
+        versionName loadVersionName()
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField 'String', 'BUILD_ENVIRONMENT', "\"${getBuildEnvironment()}\""
+        buildConfigField 'String', 'BUILD_TIME', "\"${new Date().format('yyyy-MM-dd HH:mm:ss', TimeZone.getTimeZone('UTC'))}\""
+        buildConfigField 'String', 'GIT_HASH', "\"${getGitHash()}\""
+        buildConfigField 'String', 'GIT_BRANCH', "\"${getGitBranch()}\""
+        buildConfigField 'String', 'COMMIT_COUNT', "\"${getCommitCount()}\""
+
+        aaptOptions {
+            ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+
+    flavorDimensions = ['environment']
+    signingConfigs {
+        devRelease {
+            storeFile file(project.hasProperty('dev.keystore') ? project.property('dev.keystore') : '../dev.keystore')
+            storePassword project.hasProperty('dev.keystore.password') ? project.property('dev.keystore.password') : 'android'
+            keyAlias project.hasProperty('dev.key.alias') ? project.property('dev.key.alias') : 'dev'
+            keyPassword project.hasProperty('dev.key.password') ? project.property('dev.key.password') : 'android'
+        }
+        stagingRelease {
+            storeFile file(project.hasProperty('staging.keystore') ? project.property('staging.keystore') : '../staging.keystore')
+            storePassword project.hasProperty('staging.keystore.password') ? project.property('staging.keystore.password') : ''
+            keyAlias project.hasProperty('staging.key.alias') ? project.property('staging.key.alias') : 'staging'
+            keyPassword project.hasProperty('staging.key.password') ? project.property('staging.key.password') : ''
+        }
+        productionRelease {
+            storeFile file(project.hasProperty('production.keystore') ? project.property('production.keystore') : '../production.keystore')
+            storePassword project.hasProperty('production.keystore.password') ? project.property('production.keystore.password') : ''
+            keyAlias project.hasProperty('production.key.alias') ? project.property('production.key.alias') : 'production'
+            keyPassword project.hasProperty('production.key.password') ? project.property('production.key.password') : ''
+        }
+    }
+
+    productFlavors {
+        dev {
+            dimension 'environment'
+            signingConfig signingConfigs.devRelease
+            applicationIdSuffix '.dev'
+            versionNameSuffix '-dev'
+            resValue 'string', 'app_name', 'Ezy Dev'
+            buildConfigField 'String', 'API_BASE_URL', "\"http://localhost:3000\""
+            buildConfigField 'boolean', 'ENABLE_CRASH_REPORTING', 'false'
+            buildConfigField 'boolean', 'ENABLE_TELEMETRY', 'false'
+            buildConfigField 'boolean', 'ENABLE_LOGGING', 'true'
+            buildConfigField 'boolean', 'ENABLE_STRICT_MODE', 'true'
+            buildConfigField 'boolean', 'ENABLE_DEBUG_OVERLAY', 'true'
+        }
+        staging {
+            dimension 'environment'
+            signingConfig signingConfigs.stagingRelease
+            applicationIdSuffix '.staging'
+            versionNameSuffix '-staging'
+            resValue 'string', 'app_name', 'Ezy Staging'
+            buildConfigField 'String', 'API_BASE_URL', "\"https://staging-api.ezyerp.com\""
+            buildConfigField 'boolean', 'ENABLE_CRASH_REPORTING', 'false'
+            buildConfigField 'boolean', 'ENABLE_TELEMETRY', 'true'
+            buildConfigField 'boolean', 'ENABLE_LOGGING', 'true'
+            buildConfigField 'boolean', 'ENABLE_STRICT_MODE', 'false'
+            buildConfigField 'boolean', 'ENABLE_DEBUG_OVERLAY', 'false'
+        }
+        production {
+            dimension 'environment'
+            signingConfig signingConfigs.productionRelease
+            resValue 'string', 'app_name', 'Ezy ERP'
+            buildConfigField 'String', 'API_BASE_URL', "\"https://api.ezyerp.com\""
+            buildConfigField 'boolean', 'ENABLE_CRASH_REPORTING', 'true'
+            buildConfigField 'boolean', 'ENABLE_TELEMETRY', 'true'
+            buildConfigField 'boolean', 'ENABLE_LOGGING', 'false'
+            buildConfigField 'boolean', 'ENABLE_STRICT_MODE', 'false'
+            buildConfigField 'boolean', 'ENABLE_DEBUG_OVERLAY', 'false'
+        }
+    }
+
+    buildTypes {
+        debug {
+            applicationIdSuffix '.debug'
+            versionNameSuffix '-debug'
+            debuggable true
+            minifyEnabled false
+            shrinkResources false
+            signingConfig signingConfigs.debug
+        }
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
+                    'proguard-rules.pro'
+
+            ndk {
+                abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86_64'
+            }
+        }
+    }
+
+    bundle {
+        language {
+            enableSplit = false
+        }
+        density {
+            enableSplit = true
+        }
+        abi {
+            enableSplit = true
+        }
+    }
+
+    applicationVariants.configureEach { variant ->
+        variant.outputs.each { output ->
+            def flavor = variant.productFlavors[0]?.name ?: 'unknown'
+            def buildType = variant.buildType.name
+            def version = variant.versionName
+            def date = new Date().format('yyyyMMdd')
+            def time = new Date().format('HHmmss')
+            def ext = buildType == 'release' ? (project.hasProperty('aab') ? '.aab' : '.apk') : '.apk'
+            output.outputFileName = "Ezy-${flavor}-${buildType}-v${version}-${date}-${time}${ext}"
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    packaging {
+        resources {
+            excludes += ['META-INF/NOTICE', 'META-INF/LICENSE', 'META-INF/DEPENDENCIES']
+        }
+    }
+
+    lint {
+        abortOnError false
+        checkReleaseBuilds true
+        warningsAsErrors false
+    }
+}
+
+repositories {
+    flatDir {
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation 'androidx.browser:browser:1.8.0'
+    implementation 'androidx.security:security-crypto:1.1.0-alpha06'
+    implementation 'com.google.android.play:integrity:1.6.0'
+    implementation 'com.google.android.gms:play-services-tasks:18.2.0'
+
+    implementation project(':capacitor-android')
+    implementation project(':capacitor-cordova-android-plugins')
+
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+}
+
+apply from: 'capacitor.build.gradle'
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}
+
+def getBuildEnvironment() {
+    return project.hasProperty('env') ? project.property('env') : 'dev'
+}
+
+def getGitHash() {
+    try {
+        def stdout = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'rev-parse', '--short', 'HEAD'
+            standardOutput = stdout
+            ignoreExitValue = true
+        }
+        return stdout.toString().trim()
+    } catch (Exception e) {
+        return 'unknown'
+    }
+}
+
+def getGitBranch() {
+    try {
+        def stdout = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'rev-parse', '--abbrev-ref', 'HEAD'
+            standardOutput = stdout
+            ignoreExitValue = true
+        }
+        return stdout.toString().trim()
+    } catch (Exception e) {
+        return 'unknown'
+    }
+}
+
+def getCommitCount() {
+    try {
+        def stdout = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'rev-list', '--count', 'HEAD'
+            standardOutput = stdout
+            ignoreExitValue = true
+        }
+        return stdout.toString().trim()
+    } catch (Exception e) {
+        return '0'
+    }
+}

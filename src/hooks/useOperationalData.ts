@@ -2,29 +2,23 @@
 
 import { useRealtimeQuery } from './useRealtimeQuery'
 import { useRealtimeMutation } from './useRealtimeMutation'
-import {
-  accountsRepo,
-  journalEntriesRepo,
-  invoicesRepo,
-} from '@/lib/supabase/repositories/financial-repository'
-import {
-  inventoryItemsRepo,
-  stockMovementsRepo,
-} from '@/lib/supabase/repositories/inventory-repository'
-import {
-  purchaseOrdersRepo,
-  suppliersRepo,
-} from '@/lib/supabase/repositories/procurement-repository'
-import {
-  salesOrdersRepo,
-  customersRepo,
-} from '@/lib/supabase/repositories/sales-repository'
-import {
-  payrollRunsRepo,
-  payrollEmployeesRepo,
-} from '@/lib/supabase/repositories/payroll-repository'
+import { accountsRepo, journalEntriesRepo, invoicesRepo } from '@/lib/supabase/repositories/financial-repository'
+import { inventoryItemsRepo, stockMovementsRepo } from '@/lib/supabase/repositories/inventory-repository'
+import { purchaseOrdersRepo, suppliersRepo } from '@/lib/supabase/repositories/procurement-repository'
+import { salesOrdersRepo, customersRepo } from '@/lib/supabase/repositories/sales-repository'
+import { payrollRunsRepo, payrollEmployeesRepo } from '@/lib/supabase/repositories/payroll-repository'
 import { approvalRequestsRepo } from '@/lib/supabase/repositories/workflow-repository'
-import type { AccountSummary, TransactionEntry, Invoice, InventoryItem, PurchaseOrder, SalesOrder, PayrollRun } from '@/lib/workbench/types'
+import { useOfflineQuery } from '@/lib/offline/react/use-offline-query'
+import { useOfflineMutation } from '@/lib/offline/react/use-offline-mutation'
+import type {
+  AccountSummary,
+  TransactionEntry,
+  Invoice,
+  InventoryItem,
+  PurchaseOrder,
+  SalesOrder,
+  PayrollRun,
+} from '@/lib/workbench/types'
 import type { ApprovalRequest } from '@/lib/workflow/types'
 
 export function useAccounts(filters?: Record<string, unknown>) {
@@ -127,4 +121,72 @@ export function useApprovalsPending(userId?: string) {
 
 export function useApprovalMutations() {
   return useRealtimeMutation<ApprovalRequest>({ repository: approvalRequestsRepo })
+}
+
+export function useOfflineAccounts(companyId: string, filters?: Record<string, unknown>) {
+  return useOfflineQuery<AccountSummary>({ entityType: 'accounts', companyId, filters })
+}
+
+export function useOfflineJournalEntries(companyId: string, filters?: Record<string, unknown>) {
+  return useOfflineQuery<TransactionEntry>({ entityType: 'journal_entries', companyId, filters })
+}
+
+export function useOfflineJournalMutations(companyId: string) {
+  return useOfflineMutation<TransactionEntry>({ entityType: 'journal_entries', companyId, optimistic: true })
+}
+
+export function useOfflineInvoices(companyId: string, type?: 'payable' | 'receivable') {
+  return useOfflineQuery<Invoice>({ entityType: 'invoices', companyId, filters: type ? { type } : undefined })
+}
+
+export function useOfflineInvoiceMutations(companyId: string) {
+  return useOfflineMutation<Invoice>({ entityType: 'invoices', companyId, optimistic: true })
+}
+
+export function useOfflineInventoryItems(companyId: string, filters?: Record<string, unknown>) {
+  return useOfflineQuery<InventoryItem>({ entityType: 'inventory_items', companyId, filters })
+}
+
+export function useOfflineInventoryMutations(companyId: string) {
+  return useOfflineMutation<InventoryItem>({ entityType: 'inventory_items', companyId, optimistic: true })
+}
+
+export function useOfflineStockMovements(companyId: string, itemId?: string) {
+  return useOfflineQuery<any>({ entityType: 'stock_movements', companyId, filters: itemId ? { itemId } : undefined })
+}
+
+export function useOfflinePurchaseOrders(companyId: string, filters?: Record<string, unknown>) {
+  return useOfflineQuery<PurchaseOrder>({ entityType: 'purchase_orders', companyId, filters })
+}
+
+export function useOfflinePOMutations(companyId: string) {
+  return useOfflineMutation<PurchaseOrder>({ entityType: 'purchase_orders', companyId, optimistic: true })
+}
+
+export function useOfflineSalesOrders(companyId: string, filters?: Record<string, unknown>) {
+  return useOfflineQuery<SalesOrder>({ entityType: 'sales_orders', companyId, filters })
+}
+
+export function useOfflineSalesMutations(companyId: string) {
+  return useOfflineMutation<SalesOrder>({ entityType: 'sales_orders', companyId, optimistic: true })
+}
+
+export function useOfflinePayrollRuns(companyId: string, filters?: Record<string, unknown>) {
+  return useOfflineQuery<PayrollRun>({ entityType: 'payroll_runs', companyId, filters })
+}
+
+export function useOfflinePayrollMutations(companyId: string) {
+  return useOfflineMutation<PayrollRun>({ entityType: 'payroll_runs', companyId, optimistic: true })
+}
+
+export function useOfflineApprovalsPending(companyId: string, userId?: string) {
+  return useOfflineQuery<ApprovalRequest>({
+    entityType: 'approval_requests',
+    companyId,
+    filters: { decision: 'pending' },
+  })
+}
+
+export function useOfflineApprovalMutations(companyId: string) {
+  return useOfflineMutation<ApprovalRequest>({ entityType: 'approval_requests', companyId, optimistic: true })
 }

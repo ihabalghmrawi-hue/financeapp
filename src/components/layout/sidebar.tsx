@@ -34,11 +34,13 @@ import {
   CheckSquare,
   PackageOpen,
   CreditCard,
+  ChevronLeft,
 } from 'lucide-react'
 import { cn, getInitials } from '@/lib/utils'
 import type { Features } from '@/lib/features'
 import type { Branding } from '@/lib/branding'
 import type { Company } from '@/types/database'
+import { motion } from 'framer-motion'
 
 interface StaffInfo {
   name: string
@@ -161,7 +163,6 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
           icon: Warehouse,
           show: features.showInventory && can(staff, 'inventory.view'),
         },
-        { label: 'متغيرات المنتجات', href: '/dashboard/inventory/variants', icon: Layers, show: false },
       ],
     },
     {
@@ -275,18 +276,18 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
   }
 
   return (
-    <aside className="w-60 bg-card border-l flex flex-col h-screen shrink-0 shadow-sm">
+    <aside className="w-60 bg-card border-l border-border/50 flex flex-col h-screen shrink-0">
       {/* Company Header */}
-      <div className="p-4 border-b bg-primary/5">
+      <div className="p-4 border-b border-border/50">
         <div className="flex items-center gap-3">
           {branding?.logo_url ? (
             <img
               src={branding.logo_url}
               alt="logo"
-              className="w-9 h-9 rounded-xl object-contain bg-white p-0.5 shadow-sm shrink-0"
+              className="w-9 h-9 rounded-xl object-contain bg-card p-0.5 shadow-sm shrink-0"
             />
           ) : (
-            <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-sm shrink-0">
+            <div className="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold text-sm shadow-sm shrink-0">
               {getInitials(branding?.name_ar || company?.name || 'ش')}
             </div>
           )}
@@ -303,7 +304,7 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-2">
+      <nav className="flex-1 overflow-y-auto py-3 no-scrollbar">
         {navGroups.map((group) => {
           const visibleItems = group.items.filter((i) => i.show)
           if (visibleItems.length === 0) {
@@ -311,7 +312,7 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
           }
           return (
             <div key={group.label} className="mb-1">
-              <p className="text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-widest px-4 py-1.5">
+              <p className="text-[10px] font-semibold text-muted-foreground/40 uppercase tracking-widest px-4 py-1.5">
                 {group.label}
               </p>
               {visibleItems.map((item) => {
@@ -322,14 +323,17 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      'flex items-center gap-2.5 px-4 py-2 mx-2 rounded-lg text-sm transition-all',
+                      'flex items-center gap-2.5 px-4 py-2 mx-2 rounded-xl text-sm transition-all duration-200',
                       active
-                        ? 'bg-primary text-primary-foreground font-medium shadow-sm'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-accent',
+                        ? 'bg-primary/10 text-primary font-semibold'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-secondary/70',
                     )}
                   >
                     <Icon className="w-4 h-4 shrink-0" />
                     <span className="truncate">{item.label}</span>
+                    {active && (
+                      <motion.div layoutId="sidebar-active" className="w-1 h-1 rounded-full bg-primary mr-auto" />
+                    )}
                   </Link>
                 )
               })}
@@ -339,9 +343,9 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
       </nav>
 
       {/* Staff Footer */}
-      <div className="p-3 border-t">
+      <div className="p-3 border-t border-border/50">
         <div className="flex items-center gap-2 px-2">
-          <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/60 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0">
+          <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/60 rounded-xl flex items-center justify-center text-white text-xs font-bold shrink-0">
             {(staff?.name || 'م')[0]}
           </div>
           <div className="flex-1 min-w-0">
@@ -351,7 +355,7 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
           <button
             onClick={handleLogout}
             title="تسجيل خروج"
-            className="p-1.5 text-muted-foreground hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+            className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
           >
             <LogOut className="w-3.5 h-3.5" />
           </button>

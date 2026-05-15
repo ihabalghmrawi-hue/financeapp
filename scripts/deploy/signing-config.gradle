@@ -1,0 +1,49 @@
+// ── Ezy ERP Signing Configuration Template ────────────────────────────────
+//
+// Usage:
+//   Set environment variables in CI/CD and apply this file before building.
+//   Local builds use default keystore paths and passwords automatically.
+//
+// Environment Variables (CI/CD):
+//   EZY_DEV_KEYSTORE_PATH         EZY_DEV_KEYSTORE_PASSWORD
+//   EZY_DEV_KEY_ALIAS             EZY_DEV_KEY_PASSWORD
+//   EZY_STAGING_KEYSTORE_PATH     EZY_STAGING_KEYSTORE_PASSWORD
+//   EZY_STAGING_KEY_ALIAS         EZY_STAGING_KEY_PASSWORD
+//   EZY_PRODUCTION_KEYSTORE_PATH  EZY_PRODUCTION_KEYSTORE_PASSWORD
+//   EZY_PRODUCTION_KEY_ALIAS      EZY_PRODUCTION_KEY_PASSWORD
+//
+// Example local build:
+//   ./gradlew assembleDevRelease
+//
+// Example CI build:
+//   ./gradlew assembleProductionRelease \
+//     -Pproduction.keystore=/path/to/prod.keystore \
+//     -Pproduction.keystore.password=...
+//
+// Security notes:
+//   - NEVER commit keystore files or real credentials to version control
+//   - Use CI/CD secrets for automated builds
+//   - Rotate keystore passwords periodically
+//   - Store keystore files in hardware-backed keystore or secure vault
+
+def setPropIfEnv = { String propName, String envName ->
+    def val = System.getenv(envName)
+    if (val != null && !val.isEmpty()) {
+        project.ext.set(propName, val)
+    }
+}
+
+setPropIfEnv('dev.keystore', 'EZY_DEV_KEYSTORE_PATH')
+setPropIfEnv('dev.keystore.password', 'EZY_DEV_KEYSTORE_PASSWORD')
+setPropIfEnv('dev.key.alias', 'EZY_DEV_KEY_ALIAS')
+setPropIfEnv('dev.key.password', 'EZY_DEV_KEY_PASSWORD')
+
+setPropIfEnv('staging.keystore', 'EZY_STAGING_KEYSTORE_PATH')
+setPropIfEnv('staging.keystore.password', 'EZY_STAGING_KEYSTORE_PASSWORD')
+setPropIfEnv('staging.key.alias', 'EZY_STAGING_KEY_ALIAS')
+setPropIfEnv('staging.key.password', 'EZY_STAGING_KEY_PASSWORD')
+
+setPropIfEnv('production.keystore', 'EZY_PRODUCTION_KEYSTORE_PATH')
+setPropIfEnv('production.keystore.password', 'EZY_PRODUCTION_KEYSTORE_PASSWORD')
+setPropIfEnv('production.key.alias', 'EZY_PRODUCTION_KEY_ALIAS')
+setPropIfEnv('production.key.password', 'EZY_PRODUCTION_KEY_PASSWORD')

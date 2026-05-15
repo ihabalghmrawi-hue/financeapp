@@ -1,0 +1,8 @@
+export { offlineService } from './services/offline-service'
+export type { OfflineTelemetry } from './services/offline-service'
+export { syncEngine, syncQueue, syncTracker, conflictResolver, retryEngine, batchSync, deltaSync } from './sync'
+export type { SyncStatus, SyncMode, SyncProgress } from './sync'
+export { connectivityMonitor, networkOrchestrator } from './network'
+export type { ConnectionStatus, ConnectionQuality } from './network'
+export { entityStore, queryCache, draftStore, workspaceStore, encryptedStore } from './storage'
+export type { StoredEntity, StoredDraft, SyncQueueItem, ConflictEntry } from './storage'

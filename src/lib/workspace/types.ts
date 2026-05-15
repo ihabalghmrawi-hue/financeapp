@@ -61,6 +61,9 @@ export interface Workspace {
   activeTabId: string | null
   panels: DockablePanel[]
   contextualSidebar: ContextualSidebarState
+  mobileViewMode?: MobileViewMode
+  mobileSidebarOpen?: boolean
+  mobileState?: Record<string, unknown>
 }
 
 export interface WorkspaceLayout {
@@ -80,7 +83,10 @@ export interface WorkspaceState {
   notificationCenter: NotificationCenterState
   recentEntities: Array<{ id: string; type: string; title: string; path: string }>
   pinnedWorkflows: Array<{ id: string; title: string; icon: string; path: string }>
+  mobileBottomSheetOpen: boolean
 }
+
+export type MobileViewMode = 'list' | 'detail' | 'card' | 'compact' | 'split'
 
 export type WorkspaceAction =
   | { type: 'REGISTER_WORKSPACE'; id: string; title: string; icon?: string; route?: string }
@@ -95,7 +101,12 @@ export type WorkspaceAction =
   | { type: 'SET_PANEL_POSITION'; workspaceId: string; panelId: string; position: PanelPosition }
   | { type: 'TOGGLE_CONTEXTUAL_SIDEBAR'; workspaceId: string }
   | { type: 'PIN_CONTEXTUAL_SIDEBAR'; workspaceId: string }
-  | { type: 'SET_CONTEXTUAL_SIDEBAR_CONTENT'; workspaceId: string; component: string | null; props?: Record<string, unknown> }
+  | {
+      type: 'SET_CONTEXTUAL_SIDEBAR_CONTENT'
+      workspaceId: string
+      component: string | null
+      props?: Record<string, unknown>
+    }
   | { type: 'OPEN_COMMAND_PALETTE' }
   | { type: 'CLOSE_COMMAND_PALETTE' }
   | { type: 'SET_COMMAND_QUERY'; query: string }
@@ -111,6 +122,11 @@ export type WorkspaceAction =
   | { type: 'PIN_WORKFLOW'; workflow: { id: string; title: string; icon: string; path: string } }
   | { type: 'UNPIN_WORKFLOW'; id: string }
   | { type: 'RESTORE_LAYOUT'; layout: WorkspaceLayout }
+  | { type: 'SET_MOBILE_VIEW_MODE'; workspaceId: string; mode: MobileViewMode }
+  | { type: 'SET_MOBILE_SIDEBAR'; workspaceId: string; open: boolean }
+  | { type: 'TOGGLE_MOBILE_BOTTOM_SHEET' }
+  | { type: 'CLOSE_MOBILE_BOTTOM_SHEET' }
+  | { type: 'SAVE_MOBILE_STATE'; workspaceId: string; state: Record<string, unknown> }
 
 export interface WorkspaceContextType {
   state: WorkspaceState
@@ -121,6 +137,8 @@ export const WorkspaceContext = createContext<WorkspaceContextType | null>(null)
 
 export function useWorkspaceContext(): WorkspaceContextType {
   const ctx = useContext(WorkspaceContext)
-  if (!ctx) throw new Error('useWorkspaceContext must be used within WorkspaceProvider')
+  if (!ctx) {
+    throw new Error('useWorkspaceContext must be used within WorkspaceProvider')
+  }
   return ctx
 }

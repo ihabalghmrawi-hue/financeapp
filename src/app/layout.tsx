@@ -1,8 +1,9 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Cairo } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/layout/theme-provider'
 import { Toaster } from '@/components/ui/toaster'
+import { AppProviders } from '@/lib/mobile'
 import { getBranding, buildThemeCss } from '@/lib/branding'
 
 const cairo = Cairo({
@@ -13,10 +14,26 @@ const cairo = Cairo({
 
 export const metadata: Metadata = {
   title: {
-    default: 'نظام ERP',
-    template: '%s | ERP',
+    default: 'Ezy ERP',
+    template: '%s | Ezy ERP',
   },
   description: 'نظام إدارة متكامل للأعمال التجارية',
+  other: {
+    'mobile-web-app-capable': 'yes',
+    'apple-touch-fullscreen': 'yes',
+  },
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' },
+  ],
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -28,10 +45,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <head>
         <style dangerouslySetInnerHTML={{ __html: themeCss }} />
         {branding.logo_url && <link rel="icon" href={branding.logo_url} />}
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
-      <body className={`${cairo.variable} font-sans antialiased`}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          {children}
+      <body className={`${cairo.variable} font-sans antialiased mobile-text-fix`}>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+          <AppProviders>{children}</AppProviders>
           <Toaster />
         </ThemeProvider>
       </body>

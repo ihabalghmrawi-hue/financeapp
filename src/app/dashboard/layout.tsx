@@ -5,76 +5,85 @@ import { createClient } from '@/lib/supabase/server'
 import { Sidebar } from '@/components/layout/sidebar'
 import { TopBar } from '@/components/layout/topbar'
 import { QuickActionBar } from '@/components/layout/quick-action-bar'
+import { DashboardMobileLayout } from '@/components/layout/dashboard-mobile-layout'
+import { PageTransitionWrapper } from '@/components/layout/page-transition-wrapper'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const h = await headers()
 
-  const dec = (v: string | null, fallback = '') => { try { return decodeURIComponent(v || fallback) } catch { return v || fallback } }
+  const dec = (v: string | null, fallback = '') => {
+    try {
+      return decodeURIComponent(v || fallback)
+    } catch {
+      return v || fallback
+    }
+  }
 
-  const staffName        = dec(h.get('x-staff-name'),         'المدير')
-  const staffRole        = dec(h.get('x-staff-role'),         'admin')
-  const staffPermissions = dec(h.get('x-staff-permissions'),  '').split(',').filter(Boolean)
-  const businessType     = dec(h.get('x-business-type'),      'retail')
-  const tenantId         = dec(h.get('x-tenant-id'),          process.env.NEXT_PUBLIC_COMPANY_ID || 'default')
-  const companyNameHdr   = dec(h.get('x-company-name'),       '')
-  const companyCurrHdr   = dec(h.get('x-company-currency'),   'SAR')
+  const staffId = dec(h.get('x-staff-id'), '')
+  const staffName = dec(h.get('x-staff-name'), 'المدير')
+  const staffRole = dec(h.get('x-staff-role'), 'admin')
+  const staffPermissions = dec(h.get('x-staff-permissions'), '').split(',').filter(Boolean)
+  const businessType = dec(h.get('x-business-type'), 'retail')
+  const tenantId = dec(h.get('x-tenant-id'), process.env.NEXT_PUBLIC_COMPANY_ID || 'default')
+  const companyNameHdr = dec(h.get('x-company-name'), '')
+  const companyCurrHdr = dec(h.get('x-company-currency'), 'SAR')
 
-  const staff    = { name: staffName, role: staffRole, permissions: staffPermissions }
+  const staff = { name: staffName, role: staffRole, permissions: staffPermissions }
   const features = getFeatures(businessType)
 
   let companyRow: any = null
-  let branding: any   = null
+  let branding: any = null
 
   try {
     const supabase = createClient()
-    const { data } = await supabase
-      .from('companies')
-      .select('id, name, currency')
-      .eq('id', tenantId)
-      .maybeSingle()
+    const { data } = await supabase.from('companies').select('id, name, currency').eq('id', tenantId).maybeSingle()
     companyRow = data
-  } catch { /* fallback */ }
+  } catch {
+    /* fallback */
+  }
 
   try {
     branding = await getBranding()
-  } catch { /* fallback */ }
+  } catch {
+    /* fallback */
+  }
 
   const company = {
-    id:                companyRow?.id       || tenantId,
-    name:              companyRow?.name     || companyNameHdr || process.env.NEXT_PUBLIC_COMPANY_NAME || 'شركتي',
-    name_ar:           companyRow?.name     || companyNameHdr || process.env.NEXT_PUBLIC_COMPANY_NAME || 'شركتي',
-    slug:              'default',
-    currency:          companyRow?.currency || companyCurrHdr || process.env.NEXT_PUBLIC_CURRENCY     || 'SAR',
-    language:          'ar',
-    timezone:          'Asia/Riyadh',
+    id: companyRow?.id || tenantId,
+    name: companyRow?.name || companyNameHdr || process.env.NEXT_PUBLIC_COMPANY_NAME || 'شركتي',
+    name_ar: companyRow?.name || companyNameHdr || process.env.NEXT_PUBLIC_COMPANY_NAME || 'شركتي',
+    slug: 'default',
+    currency: companyRow?.currency || companyCurrHdr || process.env.NEXT_PUBLIC_CURRENCY || 'SAR',
+    language: 'ar',
+    timezone: 'Asia/Riyadh',
     fiscal_year_start: 1,
-    is_active:         true,
-    created_at:        new Date().toISOString(),
-    updated_at:        new Date().toISOString(),
-    logo_url:          null,
-    address:           null,
-    phone:             null,
-    email:             null,
-    tax_number:        null,
-    settings:          null,
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    logo_url: null,
+    address: null,
+    phone: null,
+    email: null,
+    tax_number: null,
+    settings: null,
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <Sidebar
-        company={company as any}
-        user={null}
-        staff={staff}
-        features={features}
-        branding={branding}
-      />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <TopBar company={company} user={null} staff={staff} features={features} />
-        <QuickActionBar features={features} />
-        <main className="flex-1 overflow-y-auto p-6">
-          {children}
-        </main>
+    <DashboardMobileLayout companyId={company.id} userId={staffId}>
+      <div className="flex h-screen overflow-hidden bg-background">
+        <div className="hidden lg:block">
+          <Sidebar company={company as any} user={null} staff={staff} features={features} branding={branding} />
+        </div>
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="hidden md:block">
+            <TopBar company={company} user={null} staff={staff} features={features} />
+            <QuickActionBar features={features} />
+          </div>
+          <main className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">
+            <PageTransitionWrapper>{children}</PageTransitionWrapper>
+          </main>
+        </div>
       </div>
-    </div>
+    </DashboardMobileLayout>
   )
 }

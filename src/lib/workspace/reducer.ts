@@ -1,11 +1,13 @@
-import { WorkspaceState, WorkspaceAction, WorkspaceLayout } from './types'
+import type { WorkspaceState, WorkspaceAction, WorkspaceLayout } from './types'
 
 const STORAGE_KEY = 'erp-workspace-layout'
 
 export function workspaceReducer(state: WorkspaceState, action: WorkspaceAction): WorkspaceState {
   switch (action.type) {
     case 'REGISTER_WORKSPACE': {
-      if (state.workspaces[action.id]) return state
+      if (state.workspaces[action.id]) {
+        return state
+      }
       return {
         ...state,
         workspaces: {
@@ -29,9 +31,14 @@ export function workspaceReducer(state: WorkspaceState, action: WorkspaceAction)
 
     case 'OPEN_TAB': {
       const ws = state.workspaces[action.workspaceId]
-      if (!ws) return state
-      if (ws.tabs.some(t => t.id === action.tab.id)) {
-        return { ...state, workspaces: { ...state.workspaces, [action.workspaceId]: { ...ws, activeTabId: action.tab.id } } }
+      if (!ws) {
+        return state
+      }
+      if (ws.tabs.some((t) => t.id === action.tab.id)) {
+        return {
+          ...state,
+          workspaces: { ...state.workspaces, [action.workspaceId]: { ...ws, activeTabId: action.tab.id } },
+        }
       }
       return {
         ...state,
@@ -48,11 +55,13 @@ export function workspaceReducer(state: WorkspaceState, action: WorkspaceAction)
 
     case 'CLOSE_TAB': {
       const ws = state.workspaces[action.workspaceId]
-      if (!ws) return state
-      const remaining = ws.tabs.filter(t => t.id !== action.tabId)
+      if (!ws) {
+        return state
+      }
+      const remaining = ws.tabs.filter((t) => t.id !== action.tabId)
       let newActive = ws.activeTabId
       if (newActive === action.tabId) {
-        const idx = ws.tabs.findIndex(t => t.id === action.tabId)
+        const idx = ws.tabs.findIndex((t) => t.id === action.tabId)
         newActive = remaining[Math.min(idx, remaining.length - 1)]?.id ?? null
       }
       return {
@@ -75,14 +84,16 @@ export function workspaceReducer(state: WorkspaceState, action: WorkspaceAction)
 
     case 'PIN_TAB': {
       const ws = state.workspaces[action.workspaceId]
-      if (!ws) return state
+      if (!ws) {
+        return state
+      }
       return {
         ...state,
         workspaces: {
           ...state.workspaces,
           [action.workspaceId]: {
             ...ws,
-            tabs: ws.tabs.map(t => t.id === action.tabId ? { ...t, pinned: !t.pinned } : t),
+            tabs: ws.tabs.map((t) => (t.id === action.tabId ? { ...t, pinned: !t.pinned } : t)),
           },
         },
       }
@@ -90,7 +101,9 @@ export function workspaceReducer(state: WorkspaceState, action: WorkspaceAction)
 
     case 'OPEN_PANEL': {
       const ws = state.workspaces[action.workspaceId]
-      if (!ws || ws.panels.some(p => p.id === action.panel.id)) return state
+      if (!ws || ws.panels.some((p) => p.id === action.panel.id)) {
+        return state
+      }
       return {
         ...state,
         workspaces: {
@@ -102,26 +115,30 @@ export function workspaceReducer(state: WorkspaceState, action: WorkspaceAction)
 
     case 'CLOSE_PANEL': {
       const ws = state.workspaces[action.workspaceId]
-      if (!ws) return state
+      if (!ws) {
+        return state
+      }
       return {
         ...state,
         workspaces: {
           ...state.workspaces,
-          [action.workspaceId]: { ...ws, panels: ws.panels.filter(p => p.id !== action.panelId) },
+          [action.workspaceId]: { ...ws, panels: ws.panels.filter((p) => p.id !== action.panelId) },
         },
       }
     }
 
     case 'TOGGLE_PANEL': {
       const ws = state.workspaces[action.workspaceId]
-      if (!ws) return state
+      if (!ws) {
+        return state
+      }
       return {
         ...state,
         workspaces: {
           ...state.workspaces,
           [action.workspaceId]: {
             ...ws,
-            panels: ws.panels.map(p => p.id === action.panelId ? { ...p, minimized: !p.minimized } : p),
+            panels: ws.panels.map((p) => (p.id === action.panelId ? { ...p, minimized: !p.minimized } : p)),
           },
         },
       }
@@ -129,14 +146,16 @@ export function workspaceReducer(state: WorkspaceState, action: WorkspaceAction)
 
     case 'SET_PANEL_POSITION': {
       const ws = state.workspaces[action.workspaceId]
-      if (!ws) return state
+      if (!ws) {
+        return state
+      }
       return {
         ...state,
         workspaces: {
           ...state.workspaces,
           [action.workspaceId]: {
             ...ws,
-            panels: ws.panels.map(p => p.id === action.panelId ? { ...p, position: action.position } : p),
+            panels: ws.panels.map((p) => (p.id === action.panelId ? { ...p, position: action.position } : p)),
           },
         },
       }
@@ -144,38 +163,55 @@ export function workspaceReducer(state: WorkspaceState, action: WorkspaceAction)
 
     case 'TOGGLE_CONTEXTUAL_SIDEBAR': {
       const ws = state.workspaces[action.workspaceId]
-      if (!ws) return state
-      return {
-        ...state,
-        workspaces: {
-          ...state.workspaces,
-          [action.workspaceId]: { ...ws, contextualSidebar: { ...ws.contextualSidebar, open: !ws.contextualSidebar.open } },
-        },
+      if (!ws) {
+        return state
       }
-    }
-
-    case 'PIN_CONTEXTUAL_SIDEBAR': {
-      const ws = state.workspaces[action.workspaceId]
-      if (!ws) return state
-      return {
-        ...state,
-        workspaces: {
-          ...state.workspaces,
-          [action.workspaceId]: { ...ws, contextualSidebar: { ...ws.contextualSidebar, pinned: !ws.contextualSidebar.pinned } },
-        },
-      }
-    }
-
-    case 'SET_CONTEXTUAL_SIDEBAR_CONTENT': {
-      const ws = state.workspaces[action.workspaceId]
-      if (!ws) return state
       return {
         ...state,
         workspaces: {
           ...state.workspaces,
           [action.workspaceId]: {
             ...ws,
-            contextualSidebar: { ...ws.contextualSidebar, component: action.component, props: action.props, open: action.component !== null },
+            contextualSidebar: { ...ws.contextualSidebar, open: !ws.contextualSidebar.open },
+          },
+        },
+      }
+    }
+
+    case 'PIN_CONTEXTUAL_SIDEBAR': {
+      const ws = state.workspaces[action.workspaceId]
+      if (!ws) {
+        return state
+      }
+      return {
+        ...state,
+        workspaces: {
+          ...state.workspaces,
+          [action.workspaceId]: {
+            ...ws,
+            contextualSidebar: { ...ws.contextualSidebar, pinned: !ws.contextualSidebar.pinned },
+          },
+        },
+      }
+    }
+
+    case 'SET_CONTEXTUAL_SIDEBAR_CONTENT': {
+      const ws = state.workspaces[action.workspaceId]
+      if (!ws) {
+        return state
+      }
+      return {
+        ...state,
+        workspaces: {
+          ...state.workspaces,
+          [action.workspaceId]: {
+            ...ws,
+            contextualSidebar: {
+              ...ws.contextualSidebar,
+              component: action.component,
+              props: action.props,
+              open: action.component !== null,
+            },
           },
         },
       }
@@ -200,7 +236,10 @@ export function workspaceReducer(state: WorkspaceState, action: WorkspaceAction)
       return { ...state, enterpriseSearch: { ...state.enterpriseSearch, query: action.query } }
 
     case 'SET_SEARCH_RESULTS':
-      return { ...state, enterpriseSearch: { ...state.enterpriseSearch, results: action.results, loading: action.loading } }
+      return {
+        ...state,
+        enterpriseSearch: { ...state.enterpriseSearch, results: action.results, loading: action.loading },
+      }
 
     case 'TOGGLE_ACTIVITY_CENTER':
       return { ...state, activityCenter: { ...state.activityCenter, open: !state.activityCenter.open } }
@@ -217,18 +256,68 @@ export function workspaceReducer(state: WorkspaceState, action: WorkspaceAction)
     case 'ADD_RECENT_ENTITY':
       return {
         ...state,
-        recentEntities: [action.entity, ...state.recentEntities.filter(e => e.id !== action.entity.id)].slice(0, 20),
+        recentEntities: [action.entity, ...state.recentEntities.filter((e) => e.id !== action.entity.id)].slice(0, 20),
       }
 
     case 'PIN_WORKFLOW':
-      if (state.pinnedWorkflows.some(w => w.id === action.workflow.id)) return state
+      if (state.pinnedWorkflows.some((w) => w.id === action.workflow.id)) {
+        return state
+      }
       return { ...state, pinnedWorkflows: [...state.pinnedWorkflows, action.workflow] }
 
     case 'UNPIN_WORKFLOW':
-      return { ...state, pinnedWorkflows: state.pinnedWorkflows.filter(w => w.id !== action.id) }
+      return { ...state, pinnedWorkflows: state.pinnedWorkflows.filter((w) => w.id !== action.id) }
 
     case 'RESTORE_LAYOUT':
       return restoreLayout(state, action.layout)
+
+    case 'SET_MOBILE_VIEW_MODE': {
+      const ws = state.workspaces[action.workspaceId]
+      if (!ws) {
+        return state
+      }
+      return {
+        ...state,
+        workspaces: {
+          ...state.workspaces,
+          [action.workspaceId]: { ...ws, mobileViewMode: action.mode },
+        },
+      }
+    }
+
+    case 'SET_MOBILE_SIDEBAR': {
+      const ws = state.workspaces[action.workspaceId]
+      if (!ws) {
+        return state
+      }
+      return {
+        ...state,
+        workspaces: {
+          ...state.workspaces,
+          [action.workspaceId]: { ...ws, mobileSidebarOpen: action.open },
+        },
+      }
+    }
+
+    case 'TOGGLE_MOBILE_BOTTOM_SHEET':
+      return { ...state, mobileBottomSheetOpen: !state.mobileBottomSheetOpen }
+
+    case 'CLOSE_MOBILE_BOTTOM_SHEET':
+      return { ...state, mobileBottomSheetOpen: false }
+
+    case 'SAVE_MOBILE_STATE': {
+      const ws = state.workspaces[action.workspaceId]
+      if (!ws) {
+        return state
+      }
+      return {
+        ...state,
+        workspaces: {
+          ...state.workspaces,
+          [action.workspaceId]: { ...ws, mobileState: action.state },
+        },
+      }
+    }
 
     default:
       return state
@@ -237,13 +326,15 @@ export function workspaceReducer(state: WorkspaceState, action: WorkspaceAction)
 
 function restoreLayout(state: WorkspaceState, layout: WorkspaceLayout): WorkspaceState {
   const ws = state.workspaces[layout.workspaceId]
-  if (!ws) return state
+  if (!ws) {
+    return state
+  }
 
   const reordered = layout.tabOrder
-    .map(id => ws.tabs.find(t => t.id === id))
+    .map((id) => ws.tabs.find((t) => t.id === id))
     .filter((t): t is NonNullable<typeof t> => t !== undefined)
 
-  const remaining = ws.tabs.filter(t => !layout.tabOrder.includes(t.id))
+  const remaining = ws.tabs.filter((t) => !layout.tabOrder.includes(t.id))
 
   return {
     ...state,
@@ -260,25 +351,33 @@ function restoreLayout(state: WorkspaceState, layout: WorkspaceLayout): Workspac
 }
 
 export function saveLayout(state: WorkspaceState): void {
-  if (typeof window === 'undefined') return
+  if (typeof window === 'undefined') {
+    return
+  }
   const ws = state.activeWorkspaceId ? state.workspaces[state.activeWorkspaceId] : null
-  if (!ws) return
+  if (!ws) {
+    return
+  }
   const layout: WorkspaceLayout = {
     workspaceId: ws.id,
-    tabOrder: ws.tabs.map(t => t.id),
+    tabOrder: ws.tabs.map((t) => t.id),
     activeTabId: ws.activeTabId,
-    panelLayout: Object.fromEntries(ws.panels.map(p => [p.id, { position: p.position, minimized: p.minimized ?? false }])),
+    panelLayout: Object.fromEntries(
+      ws.panels.map((p) => [p.id, { position: p.position, minimized: p.minimized ?? false }]),
+    ),
     sidebarPinned: ws.contextualSidebar.pinned,
   }
   try {
     const existing = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
     existing[ws.id] = layout
     localStorage.setItem(STORAGE_KEY, JSON.stringify(existing))
-  } catch { }
+  } catch {}
 }
 
 export function loadLayout(workspaceId: string): WorkspaceLayout | null {
-  if (typeof window === 'undefined') return null
+  if (typeof window === 'undefined') {
+    return null
+  }
   try {
     const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
     return stored[workspaceId] ?? null
@@ -297,5 +396,6 @@ export function createInitialState(): WorkspaceState {
     notificationCenter: { open: false, unread: 0 },
     recentEntities: [],
     pinnedWorkflows: [],
+    mobileBottomSheetOpen: false,
   }
 }

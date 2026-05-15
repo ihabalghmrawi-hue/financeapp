@@ -1,0 +1,47 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Ezy ERP</string>
+    <string name="title_activity_main">Ezy ERP</string>
+    <string name="package_name">com.ezy.erp</string>
+    <string name="custom_url_scheme">com.ezy.erp</string>
+
+    <!-- App Shortcuts -->
+    <string name="shortcut_dashboard">لوحة التحكم</string>
+    <string name="shortcut_dashboard_long">فتح لوحة التحكم</string>
+    <string name="shortcut_scan">مسح باركود</string>
+    <string name="shortcut_scan_long">مسح باركود صنف</string>
+    <string name="shortcut_invoice">فاتورة جديدة</string>
+    <string name="shortcut_invoice_long">إنشاء فاتورة جديدة</string>
+    <string name="shortcut_pos">نقطة البيع</string>
+    <string name="shortcut_pos_long">فتح نقطة البيع</string>
+    <string name="shortcut_disabled">التطبيق غير متاح حالياً</string>
+
+    <!-- Notification Channels -->
+    <string name="channel_default">عام</string>
+    <string name="channel_approvals">الموافقات</string>
+    <string name="channel_inventory">المخزون</string>
+    <string name="channel_payments">المدفوعات</string>
+    <string name="channel_alerts">التنبيهات</string>
+    <string name="channel_sync">المزامنة</string>
+
+    <!-- Maintenance -->
+    <string name="maintenance_title">الصيانة المجدولة</string>
+    <string name="maintenance_message">نظام Ezy تحت الصيانة حاليًا. يرجى المحاولة لاحقًا.</string>
+    <string name="force_logout_title">تم تسجيل الخروج</string>
+    <string name="force_logout_message">تم تسجيل خروجك من جلسة أخرى. يرجى تسجيل الدخول مرة أخرى.</string>
+    <string name="update_available_title">تحديث متاح</string>
+    <string name="update_available_message">يوجد إصدار جديد من Ezy. يرجى التحديث لأفضل أداء.</string>
+    <string name="update_required_title">تحديث إجباري</string>
+    <string name="update_required_message">هذا الإصدار قديم. يرجى التحديث للمتابعة.</string>
+
+    <!-- Accessibility -->
+    <string name="accessibility_service_description">يساعد هذا الخدمة المستخدمين من ذوي الاحتياجات الخاصة في التنقل داخل التطبيق</string>
+
+    <!-- Privacy -->
+    <string name="privacy_policy_url">https://ezyerp.com/privacy</string>
+    <string name="terms_of_service_url">https://ezyerp.com/terms</string>
+    <string name="notification_disclosure">يستخدم التطبيق الإشعارات لإرسال التنبيهات والمعاملات والموافقات</string>
+
+    <!-- Export Compliance -->
+    <string name="export_compliance_encryption">يستخدم التطبيق تشفير AES-256 لحماية البيانات</string>
+</resources>

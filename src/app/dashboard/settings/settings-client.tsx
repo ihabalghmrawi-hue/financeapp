@@ -22,6 +22,7 @@ import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { BUSINESS_TYPES, getFeatures, type BusinessType } from '@/lib/features'
 import { BrandingSettings } from '@/components/branding-settings'
+import { NotificationPreferences } from '@/components/push/NotificationPreferences'
 import type { Company } from '@/types/database'
 
 interface SettingsClientProps {
@@ -436,59 +437,7 @@ export function SettingsClient({ company, user, role, currentBusinessType, brand
           {activeSection === 'notifications' && (
             <div className="space-y-5">
               <h3 className="font-semibold text-foreground">إعدادات الإشعارات</h3>
-              <div className="space-y-4">
-                {[
-                  {
-                    key: 'notifications',
-                    label: 'تفعيل الإشعارات',
-                    desc: 'تلقي إشعارات عند إضافة معاملات جديدة',
-                    value: notifications,
-                    set: setNotifications,
-                  },
-                  {
-                    key: 'backup',
-                    label: 'النسخ الاحتياطي التلقائي',
-                    desc: 'حفظ نسخة احتياطية من بياناتك تلقائياً',
-                    value: backupEnabled,
-                    set: setBackupEnabled,
-                  },
-                ].map((item) => (
-                  <div key={item.key} className="flex items-center justify-between p-4 rounded-xl border bg-muted/20">
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{item.label}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
-                    </div>
-                    <button
-                      onClick={() => item.set(!item.value)}
-                      className={cn(
-                        'relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none',
-                        item.value ? 'bg-primary' : 'bg-muted',
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          'inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform',
-                          item.value ? 'translate-x-6' : 'translate-x-1',
-                        )}
-                      />
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <button
-                onClick={saveNotifications}
-                disabled={saving}
-                className="bg-primary text-primary-foreground px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-50 flex items-center gap-2 transition-colors"
-              >
-                {saving ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    جاري الحفظ...
-                  </>
-                ) : (
-                  'حفظ الإعدادات'
-                )}
-              </button>
+              <NotificationPreferences />
             </div>
           )}
 

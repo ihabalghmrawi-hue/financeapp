@@ -1,0 +1,124 @@
+{
+  "project_info": {
+    "project_number": "69744465484",
+    "project_id": "ezy-erp-8eb27",
+    "storage_bucket": "ezy-erp-8eb27.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:69744465484:android:734529ce081844bf0946e9",
+        "android_client_info": {
+          "package_name": "com.ezy.erp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCFxIGr0s5aBqxV37SUh4x0p-yyQnAzOIU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:69744465484:android:734529ce081844bf0946e9",
+        "android_client_info": {
+          "package_name": "com.ezy.erp.debug"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCFxIGr0s5aBqxV37SUh4x0p-yyQnAzOIU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:69744465484:android:734529ce081844bf0946e9",
+        "android_client_info": {
+          "package_name": "com.ezy.erp.dev"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCFxIGr0s5aBqxV37SUh4x0p-yyQnAzOIU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:69744465484:android:734529ce081844bf0946e9",
+        "android_client_info": {
+          "package_name": "com.ezy.erp.dev.debug"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCFxIGr0s5aBqxV37SUh4x0p-yyQnAzOIU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:69744465484:android:734529ce081844bf0946e9",
+        "android_client_info": {
+          "package_name": "com.ezy.erp.staging"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCFxIGr0s5aBqxV37SUh4x0p-yyQnAzOIU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:69744465484:android:734529ce081844bf0946e9",
+        "android_client_info": {
+          "package_name": "com.ezy.erp.staging.debug"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCFxIGr0s5aBqxV37SUh4x0p-yyQnAzOIU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

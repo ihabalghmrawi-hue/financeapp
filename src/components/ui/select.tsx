@@ -13,14 +13,12 @@ export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElemen
 
 const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
   ({ className, error, label, placeholder, options, id, ...props }, ref) => {
-    const selectId = id || React.useId()
+    const generatedId = React.useId()
+    const selectId = id || generatedId
     return (
       <div className="w-full space-y-1.5">
         {label && (
-          <label
-            htmlFor={selectId}
-            className="text-sm font-medium leading-none text-foreground"
-          >
+          <label htmlFor={selectId} className="text-sm font-medium leading-none text-foreground">
             {label}
           </label>
         )}
@@ -28,11 +26,11 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           <select
             id={selectId}
             className={cn(
-              'flex h-10 w-full rounded-lg border bg-background px-3 py-2 text-sm ring-offset-background appearance-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors pr-8',
+              'flex h-11 w-full rounded-xl border bg-background px-4 py-2.5 text-sm ring-offset-background appearance-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:border-ring transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 pr-10',
               error
-                ? 'border-destructive focus-visible:ring-destructive'
-                : 'border-input',
-              className
+                ? 'border-destructive/50 focus-visible:ring-destructive/30 focus-visible:border-destructive'
+                : 'border-border',
+              className,
             )}
             ref={ref}
             aria-invalid={!!error}
@@ -49,7 +47,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
               </option>
             ))}
           </select>
-          <ChevronDown className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <ChevronDown className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
         </div>
         {error && (
           <p className="text-sm text-destructive" role="alert">
@@ -58,7 +56,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         )}
       </div>
     )
-  }
+  },
 )
 Select.displayName = 'Select'
 

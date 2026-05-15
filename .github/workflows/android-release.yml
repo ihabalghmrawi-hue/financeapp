@@ -1,0 +1,232 @@
+# ── Ezy ERP Android Release CI/CD Pipeline ─────────────────────────────────
+name: Android Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Build environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - dev
+          - staging
+          - production
+      build_aab:
+        description: 'Build Android App Bundle'
+        required: false
+        default: true
+        type: boolean
+      skip_tests:
+        description: 'Skip test execution'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  JAVA_VERSION: '17'
+  JAVA_DISTRIBUTION: 'zulu'
+  NODE_VERSION: '20'
+
+concurrency:
+  group: android-release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.parse-version.outputs.version }}
+      build: ${{ steps.parse-version.outputs.build }}
+      environment: ${{ steps.set-environment.outputs.environment }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Parse version from tag
+        id: parse-version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          else
+            VERSION=$(grep 'versionName=' android/app/version.properties | cut -d= -f2)
+          fi
+          BUILD=$(grep 'versionCode=' android/app/version.properties | cut -d= -f2)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "build=$BUILD" >> "$GITHUB_OUTPUT"
+
+      - name: Set environment
+        id: set-environment
+        run: |
+          if [[ "${{ github.event.inputs.environment }}" != "" ]]; then
+            echo "environment=${{ github.event.inputs.environment }}" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "environment=production" >> "$GITHUB_OUTPUT"
+          else
+            echo "environment=staging" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Validate environment
+        run: |
+          ENV="${{ steps.set-environment.outputs.environment }}"
+          if [[ ! "$ENV" =~ ^(production|staging|dev)$ ]]; then
+            echo "Invalid environment: $ENV"
+            exit 1
+          fi
+
+      - name: Check CHANGELOG
+        run: |
+          if [[ "${{ steps.set-environment.outputs.environment }}" == "production" ]]; then
+            VERSION="${{ steps.parse-version.outputs.version }}"
+            # Check git tag matches version
+            if [[ "${{ github.ref }}" != "refs/tags/v${VERSION}" ]]; then
+              echo "Tag mismatch: expected v${VERSION}, got ${{ github.ref }}"
+              exit 1
+            fi
+          fi
+
+  test:
+    name: Run Tests
+    needs: validate
+    runs-on: ubuntu-latest
+    if: ${{ !github.event.inputs.skip_tests }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run unit tests
+        run: npm run test
+
+  build:
+    name: Build Android (${{ needs.validate.outputs.environment }})
+    needs: [validate, test]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Decode keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        if: ${{ env.KEYSTORE_BASE64 != '' }}
+        run: |
+          ENV="${{ needs.validate.outputs.environment }}"
+          echo "$KEYSTORE_BASE64" | base64 -d > "android/${ENV}.keystore"
+
+      - name: Build AAB
+        env:
+          EZY_DEV_KEYSTORE_PATH: ${{ secrets.EZY_DEV_KEYSTORE_PATH || '' }}
+          EZY_DEV_KEYSTORE_PASSWORD: ${{ secrets.EZY_DEV_KEYSTORE_PASSWORD || '' }}
+          EZY_DEV_KEY_ALIAS: ${{ secrets.EZY_DEV_KEY_ALIAS || '' }}
+          EZY_DEV_KEY_PASSWORD: ${{ secrets.EZY_DEV_KEY_PASSWORD || '' }}
+          EZY_STAGING_KEYSTORE_PATH: ${{ secrets.EZY_STAGING_KEYSTORE_PATH || '' }}
+          EZY_STAGING_KEYSTORE_PASSWORD: ${{ secrets.EZY_STAGING_KEYSTORE_PASSWORD || '' }}
+          EZY_STAGING_KEY_ALIAS: ${{ secrets.EZY_STAGING_KEY_ALIAS || '' }}
+          EZY_STAGING_KEY_PASSWORD: ${{ secrets.EZY_STAGING_KEY_PASSWORD || '' }}
+          EZY_PRODUCTION_KEYSTORE_PATH: ${{ secrets.EZY_PRODUCTION_KEYSTORE_PATH || '' }}
+          EZY_PRODUCTION_KEYSTORE_PASSWORD: ${{ secrets.EZY_PRODUCTION_KEYSTORE_PASSWORD || '' }}
+          EZY_PRODUCTION_KEY_ALIAS: ${{ secrets.EZY_PRODUCTION_KEY_ALIAS || '' }}
+          EZY_PRODUCTION_KEY_PASSWORD: ${{ secrets.EZY_PRODUCTION_KEY_PASSWORD || '' }}
+        run: |
+          ENV="${{ needs.validate.outputs.environment }}"
+          BUILD_AAB="${{ github.event.inputs.build_aab || 'true' }}"
+          VERSION="${{ needs.validate.outputs.version }}"
+          BUILD="${{ needs.validate.outputs.build }}"
+
+          cd android
+          if [[ "$BUILD_AAB" == "true" ]]; then
+            ./gradlew "bundle${ENV^}Release" \
+              -Penv="$ENV" \
+              -PversionName="$VERSION" \
+              -PversionCode="$BUILD"
+          else
+            ./gradlew "assemble${ENV^}Release" \
+              -Penv="$ENV" \
+              -PversionName="$VERSION" \
+              -PversionCode="$BUILD"
+          fi
+
+      - name: Generate checksums
+        run: |
+          ENV="${{ needs.validate.outputs.environment }}"
+          find "android/app/build/outputs" -type f \( -name "*.apk" -o -name "*.aab" \) -exec sha256sum {} \;
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ezy-erp-${{ needs.validate.outputs.environment }}-${{ needs.validate.outputs.version }}
+          path: |
+            android/app/build/outputs/apk/**/*.apk
+            android/app/build/outputs/bundle/**/*.aab
+          retention-days: 90
+
+      - name: Create GitHub Release
+        if: ${{ needs.validate.outputs.environment == 'production' && startsWith(github.ref, 'refs/tags/v') }}
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            android/app/build/outputs/bundle/productionRelease/*.aab
+            android/app/build/outputs/apk/production/release/*.apk
+          generate_release_notes: true
+          draft: true
+
+  notify:
+    name: Send Notification
+    needs: build
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Notify on failure
+        if: ${{ needs.build.result == 'failure' }}
+        run: |
+          echo "Android release build failed for ${{ needs.validate.outputs.environment }}"
+          # Integrate with Slack/Teams/Email here
+
+      - name: Notify on success
+        if: ${{ needs.build.result == 'success' }}
+        run: |
+          echo "Android release build succeeded for ${{ needs.validate.outputs.environment }} v${{ needs.validate.outputs.version }}"
