@@ -5,10 +5,12 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Eye, EyeOff, Loader2, Mail, Lock, Sparkles } from 'lucide-react'
+import { useT } from '@/lib/i18n/language-provider'
 
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { t } = useT()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -31,7 +33,7 @@ function LoginForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, success: false }),
       })
-      setError('Invalid email or password')
+      setError(t('auth.invalidEmailOrPassword'))
       setLoading(false)
       return
     }
@@ -65,7 +67,7 @@ function LoginForm() {
         </AnimatePresence>
 
         <div>
-          <label className="auth-label">Email</label>
+          <label className="auth-label">{t('auth.email')}</label>
           <div className="relative group">
             <Mail className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 auth-icon-muted group-focus-within:text-emerald-400 transition-colors" />
             <input
@@ -81,7 +83,7 @@ function LoginForm() {
         </div>
 
         <div>
-          <label className="auth-label">Password</label>
+          <label className="auth-label">{t('auth.password')}</label>
           <div className="relative group">
             <Lock className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 auth-icon-muted group-focus-within:text-emerald-400 transition-colors" />
             <input
@@ -111,10 +113,10 @@ function LoginForm() {
               onChange={(e) => setRemember(e.target.checked)}
               className="w-4 h-4 rounded border-white/20 bg-white/5 text-emerald-500 focus:ring-emerald-500/30"
             />
-            <span className="auth-text-muted text-xs">Remember me</span>
+            <span className="auth-text-muted text-xs">{t('auth.rememberMe')}</span>
           </label>
           <button type="button" className="text-xs text-emerald-400/70 hover:text-emerald-400 transition-colors">
-            Forgot password?
+            {t('auth.forgotPassword')}
           </button>
         </div>
 
@@ -125,11 +127,11 @@ function LoginForm() {
         >
           {loading ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" /> Signing in...
+              <Loader2 className="w-4 h-4 animate-spin" /> {t('auth.signingIn')}
             </>
           ) : (
             <>
-              <Sparkles className="w-4 h-4" /> Sign in
+              <Sparkles className="w-4 h-4" /> {t('auth.signIn')}
             </>
           )}
         </button>
@@ -140,7 +142,7 @@ function LoginForm() {
           <div className="w-full border-t border-white/10" />
         </div>
         <div className="relative flex justify-center text-xs">
-          <span className="px-3 auth-divider-bg auth-text-muted">Or continue with</span>
+          <span className="px-3 auth-divider-bg auth-text-muted">{t('auth.orContinueWith')}</span>
         </div>
       </div>
 
@@ -167,7 +169,7 @@ function LoginForm() {
               d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
             />
           </svg>
-          Google
+          {t('auth.google')}
         </button>
         <button
           type="button"
@@ -179,7 +181,7 @@ function LoginForm() {
               d="M11.4 24H2.3c-.3 0-.5-.2-.5-.5V.5c0-.3.2-.5.5-.5h5.4c.3 0 .5.2.5.5v8.4c0 .3.2.5.5.5h2.7c.3 0 .5.2.5.5v2.7c0 .3-.2.5-.5.5H8.7c-.3 0-.5.2-.5.5v2.7c0 .3.2.5.5.5h2.7c.3 0 .5.2.5.5v2.7c0 .3-.2.5-.5.5z"
             />
           </svg>
-          Microsoft
+          {t('auth.microsoft')}
         </button>
       </div>
 
@@ -191,7 +193,7 @@ function LoginForm() {
           <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
           <path d="M7 11V7a5 5 0 0110 0v4" />
         </svg>
-        Enterprise SSO
+        {t('auth.enterpriseSSO')}
       </button>
     </>
   )

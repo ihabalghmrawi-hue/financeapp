@@ -8,18 +8,41 @@ import { Eye, EyeOff, Loader2, Mail, Lock, Building2, User, Sparkles, ArrowLeft,
 import { cn, generateSlug } from '@/lib/utils'
 import { BUSINESS_TYPE_COOKIE } from '@/lib/features'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useT } from '@/lib/i18n/language-provider'
 
-const BUSINESS_TYPE_OPTIONS = [
-  { value: 'retail', label: 'بقالة / سوبرماركت', icon: '🛒', description: 'مبيعات بالتجزئة وإدارة المخزون' },
-  { value: 'wholesale', label: 'تجارة الجملة', icon: '📦', description: 'بيع بالجملة وأسعار كميات' },
-  { value: 'pharmacy', label: 'صيدلية', icon: '💊', description: 'إدارة الأدوية وتواريخ الانتهاء' },
-  { value: 'clothing', label: 'ملابس وأزياء', icon: '👗', description: 'ملابس مع متغيرات المقاسات والألوان' },
-  { value: 'dress_rental', label: 'تأجير الفساتين', icon: '👘', description: 'إدارة الحجوزات والتأجير' },
-  { value: 'stationery', label: 'قرطاسية ومكتبة', icon: '📚', description: 'مواد مكتبية وتعليمية' },
-  { value: 'tools', label: 'أدوات وعدد', icon: '🔧', description: 'معدات وأدوات صناعية' },
-  { value: 'construction', label: 'بناء وتشطيبات', icon: '🏗️', description: 'مشاريع البناء، العمال، المصروفات' },
-  { value: 'other', label: 'أخرى', icon: '🏪', description: 'نشاط تجاري عام' },
-]
+function getBusinessTypeOptions(t: ReturnType<typeof useT>['t']) {
+  return [
+    { value: 'retail', label: t('businessTypes.retail'), icon: '🛒', description: t('businessTypes.retailDesc') },
+    {
+      value: 'wholesale',
+      label: t('businessTypes.wholesale'),
+      icon: '📦',
+      description: t('businessTypes.wholesaleDesc'),
+    },
+    { value: 'pharmacy', label: t('businessTypes.pharmacy'), icon: '💊', description: t('businessTypes.pharmacyDesc') },
+    { value: 'clothing', label: t('businessTypes.clothing'), icon: '👗', description: t('businessTypes.clothingDesc') },
+    {
+      value: 'dress_rental',
+      label: t('businessTypes.dressRental'),
+      icon: '👘',
+      description: t('businessTypes.dressRentalDesc'),
+    },
+    {
+      value: 'stationery',
+      label: t('businessTypes.stationery'),
+      icon: '📚',
+      description: t('businessTypes.stationeryDesc'),
+    },
+    { value: 'tools', label: t('businessTypes.tools'), icon: '🔧', description: t('businessTypes.toolsDesc') },
+    {
+      value: 'construction',
+      label: t('businessTypes.construction'),
+      icon: '🏗️',
+      description: t('businessTypes.constructionDesc'),
+    },
+    { value: 'other', label: t('businessTypes.other'), icon: '🏪', description: t('businessTypes.otherDesc') },
+  ]
+}
 
 const stepVariants = {
   enter: { opacity: 0, x: 20 },
@@ -29,6 +52,8 @@ const stepVariants = {
 
 export default function SignupPage() {
   const router = useRouter()
+  const { t, lang } = useT()
+  const BUSINESS_TYPE_OPTIONS = getBusinessTypeOptions(t)
 
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -49,15 +74,15 @@ export default function SignupPage() {
 
   const handleNext = () => {
     if (!formData.fullName || !formData.email || !formData.password) {
-      setError('الرجاء ملء جميع الحقول المطلوبة')
+      setError(t('auth.fillRequiredFields'))
       return
     }
     if (formData.password !== formData.confirmPassword) {
-      setError('كلمتا المرور غير متطابقتين')
+      setError(t('auth.passwordsDoNotMatch'))
       return
     }
     if (formData.password.length < 6) {
-      setError('كلمة المرور يجب أن تكون 6 أحرف على الأقل')
+      setError(t('auth.passwordMinLength'))
       return
     }
     setError('')
@@ -66,7 +91,7 @@ export default function SignupPage() {
 
   const handleNextStep2 = () => {
     if (!formData.companyName) {
-      setError('الرجاء إدخال اسم الشركة')
+      setError(t('auth.fillRequiredFields'))
       return
     }
     setError('')
@@ -75,7 +100,7 @@ export default function SignupPage() {
 
   const handleSignup = async () => {
     if (!formData.businessType) {
-      setError('الرجاء اختيار نوع النشاط التجاري')
+      setError(t('auth.selectBusinessType'))
       return
     }
 
@@ -93,7 +118,7 @@ export default function SignupPage() {
     })
 
     if (authError || !authData.user) {
-      setError(authError?.message || 'حدث خطأ أثناء إنشاء الحساب')
+      setError(authError?.message || t('errors.somethingWentWrong'))
       setLoading(false)
       return
     }
@@ -111,7 +136,7 @@ export default function SignupPage() {
       .single()
 
     if (companyError || !company) {
-      setError('حدث خطأ أثناء إنشاء الشركة')
+      setError(t('errors.somethingWentWrong'))
       setLoading(false)
       return
     }
@@ -187,21 +212,21 @@ export default function SignupPage() {
           {step === 1 ? (
             <div className="space-y-4">
               <div>
-                <label className="auth-label">الاسم الكامل</label>
+                <label className="auth-label">{t('auth.fullName')}</label>
                 <div className="relative group">
                   <User className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 auth-icon-muted group-focus-within:text-emerald-400 transition-colors" />
                   <input
                     type="text"
                     value={formData.fullName}
                     onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                    placeholder="محمد أحمد"
+                    placeholder={lang === 'en' ? 'Ahmed Mohamed' : 'محمد أحمد'}
                     className="auth-input pr-11"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="auth-label">البريد الإلكتروني</label>
+                <label className="auth-label">{t('auth.email')}</label>
                 <div className="relative group">
                   <Mail className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 auth-icon-muted group-focus-within:text-emerald-400 transition-colors" />
                   <input
@@ -216,7 +241,7 @@ export default function SignupPage() {
               </div>
 
               <div>
-                <label className="auth-label">كلمة المرور</label>
+                <label className="auth-label">{t('auth.password')}</label>
                 <div className="relative group">
                   <Lock className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 auth-icon-muted group-focus-within:text-emerald-400 transition-colors" />
                   <input
@@ -238,7 +263,7 @@ export default function SignupPage() {
               </div>
 
               <div>
-                <label className="auth-label">تأكيد كلمة المرور</label>
+                <label className="auth-label">{t('auth.confirmPassword')}</label>
                 <div className="relative group">
                   <Lock className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 auth-icon-muted group-focus-within:text-emerald-400 transition-colors" />
                   <input
@@ -257,63 +282,63 @@ export default function SignupPage() {
                 onClick={handleNext}
                 className="auth-gradient-btn w-full text-white font-semibold rounded-xl py-3.5 text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-200"
               >
-                التالي <ArrowLeft className="w-4 h-4" />
+                {t('auth.next')} <ArrowLeft className="w-4 h-4" />
               </button>
             </div>
           ) : step === 2 ? (
             <div className="space-y-4">
               <div>
-                <label className="auth-label">اسم الشركة أو المتجر</label>
+                <label className="auth-label">{t('auth.companyName')}</label>
                 <div className="relative group">
                   <Building2 className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 auth-icon-muted group-focus-within:text-emerald-400 transition-colors" />
                   <input
                     type="text"
                     value={formData.companyName}
                     onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                    placeholder="متجري / شركتي"
+                    placeholder={lang === 'en' ? 'My Store' : 'متجري / شركتي'}
                     className="auth-input pr-11"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="auth-label">العملة الافتراضية</label>
+                <label className="auth-label">{t('auth.defaultCurrency')}</label>
                 <select
                   value={formData.currency}
                   onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
                   className="auth-input appearance-none"
                 >
                   <option value="USD" className="bg-[#0d1117]">
-                    دولار أمريكي (USD)
+                    {lang === 'en' ? 'US Dollar' : 'دولار أمريكي'} (USD)
                   </option>
                   <option value="SAR" className="bg-[#0d1117]">
-                    ريال سعودي (SAR)
+                    {lang === 'en' ? 'Saudi Riyal' : 'ريال سعودي'} (SAR)
                   </option>
                   <option value="AED" className="bg-[#0d1117]">
-                    درهم إماراتي (AED)
+                    {lang === 'en' ? 'UAE Dirham' : 'درهم إماراتي'} (AED)
                   </option>
                   <option value="EGP" className="bg-[#0d1117]">
-                    جنيه مصري (EGP)
+                    {lang === 'en' ? 'Egyptian Pound' : 'جنيه مصري'} (EGP)
                   </option>
                   <option value="KWD" className="bg-[#0d1117]">
-                    دينار كويتي (KWD)
+                    {lang === 'en' ? 'Kuwaiti Dinar' : 'دينار كويتي'} (KWD)
                   </option>
                   <option value="EUR" className="bg-[#0d1117]">
-                    يورو (EUR)
+                    {lang === 'en' ? 'Euro' : 'يورو'} (EUR)
                   </option>
                 </select>
               </div>
 
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setStep(1)} className="flex-1 auth-btn-secondary">
-                  رجوع
+                  {t('common.back')}
                 </button>
                 <button
                   type="button"
                   onClick={handleNextStep2}
                   className="auth-gradient-btn flex-1 text-white font-semibold rounded-xl py-3.5 text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-200"
                 >
-                  التالي <ArrowLeft className="w-4 h-4" />
+                  {t('auth.next')} <ArrowLeft className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -353,7 +378,7 @@ export default function SignupPage() {
 
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setStep(2)} className="auth-btn-secondary">
-                  رجوع
+                  {t('common.back')}
                 </button>
                 <button
                   type="button"
@@ -363,11 +388,11 @@ export default function SignupPage() {
                 >
                   {loading ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" /> جاري الإنشاء...
+                      <Loader2 className="w-4 h-4 animate-spin" /> {t('auth.creatingAccount')}
                     </>
                   ) : (
                     <>
-                      <Sparkles className="w-4 h-4" /> إنشاء الحساب
+                      <Sparkles className="w-4 h-4" /> {t('auth.createAccount')}
                     </>
                   )}
                 </button>
@@ -378,9 +403,9 @@ export default function SignupPage() {
       </AnimatePresence>
 
       <p className="mt-6 text-center auth-text-muted text-xs">
-        لديك حساب بالفعل؟{' '}
+        {t('auth.alreadyHaveAccount')}{' '}
         <Link href="/auth/login" className="text-emerald-400 font-medium hover:text-emerald-300 transition-colors">
-          تسجيل الدخول
+          {t('auth.signIn')}
         </Link>
       </p>
     </>

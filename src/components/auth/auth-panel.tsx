@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { BrandLogo } from '@/components/ui/brand-logo'
 import { SceneBackground } from '@/components/auth/scene-background'
 import { Moon, Sun, Globe, PanelRightClose, PanelRightOpen } from 'lucide-react'
+import { useT } from '@/lib/i18n/language-provider'
 
 interface AuthPanelProps {
   children: React.ReactNode
@@ -19,17 +20,17 @@ const variantMap: Record<string, Record<string, 'dark-en' | 'dark-ar' | 'dark-al
 }
 
 export function AuthPanel({ children, title, subtitle }: AuthPanelProps) {
+  const { lang, setLang } = useT()
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
-  const [language, setLanguage] = useState<'ar' | 'en'>('ar')
   const [collapsed, setCollapsed] = useState(false)
 
   const isDark = theme === 'dark'
-  const variant = variantMap[language]?.[theme] || 'dark-en'
+  const variant = variantMap[lang]?.[theme] || 'dark-en'
 
   return (
     <div
       className={cn('relative min-h-screen overflow-hidden', !isDark && 'light')}
-      dir={language === 'ar' ? 'rtl' : 'ltr'}
+      dir={lang === 'ar' ? 'rtl' : 'ltr'}
     >
       <SceneBackground variant={variant} />
 
@@ -44,11 +45,11 @@ export function AuthPanel({ children, title, subtitle }: AuthPanelProps) {
             {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
           <button
-            onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
+            onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all duration-300 bg-black/20 backdrop-blur-sm text-white/70 hover:text-white hover:bg-black/30"
           >
             <Globe className="w-3.5 h-3.5" />
-            {language === 'ar' ? 'EN' : 'AR'}
+            {lang === 'ar' ? 'EN' : 'AR'}
           </button>
         </div>
 
@@ -70,7 +71,7 @@ export function AuthPanel({ children, title, subtitle }: AuthPanelProps) {
           </button>
 
           <motion.div
-            animate={{ x: collapsed ? (language === 'ar' ? -120 : 120) : 0, opacity: collapsed ? 0 : 1 }}
+            animate={{ x: collapsed ? (lang === 'ar' ? -120 : 120) : 0, opacity: collapsed ? 0 : 1 }}
             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
             className="w-full max-w-md"
             style={{ pointerEvents: collapsed ? 'none' : 'auto' }}

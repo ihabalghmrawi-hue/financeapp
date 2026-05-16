@@ -41,6 +41,7 @@ import type { Features } from '@/lib/features'
 import type { Branding } from '@/lib/branding'
 import type { Company } from '@/types/database'
 import { motion } from 'framer-motion'
+import { useT } from '@/lib/i18n/language-provider'
 
 interface StaffInfo {
   name: string
@@ -72,6 +73,7 @@ function can(staff: StaffInfo | undefined, perm: string): boolean {
 export function Sidebar({ company, user, staff, features, branding }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
+  const { t } = useT()
 
   const isActive = (href: string) => {
     if (href === '/dashboard') {
@@ -87,38 +89,38 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
 
   const navGroups = [
     {
-      label: 'الرئيسية',
-      items: [{ label: 'لوحة التحكم', href: '/dashboard', icon: LayoutDashboard, show: true }],
+      label: t('nav.main'),
+      items: [{ label: t('nav.dashboard'), href: '/dashboard', icon: LayoutDashboard, show: true }],
     },
     {
-      label: 'المبيعات',
+      label: t('nav.salesSection'),
       items: [
         {
-          label: 'نقطة البيع',
+          label: t('nav.pos'),
           href: '/dashboard/pos',
           icon: ShoppingCart,
           show: features.showPOS && can(staff, 'pos.access'),
         },
         {
-          label: 'فواتير المبيعات',
+          label: t('nav.sales'),
           href: '/dashboard/sales',
           icon: Receipt,
           show: features.showPOS && can(staff, 'returns.view'),
         },
         {
-          label: 'المرتجعات',
+          label: t('nav.returns'),
           href: '/dashboard/returns',
           icon: RotateCcw,
           show: features.showReturns && can(staff, 'returns.view'),
         },
         {
-          label: 'العملاء',
+          label: t('nav.customers'),
           href: '/dashboard/customers',
           icon: Users,
           show: features.showPOS && can(staff, 'customers.view'),
         },
         {
-          label: 'الورديات',
+          label: t('nav.shifts'),
           href: '/dashboard/shifts',
           icon: Clock,
           show: features.showShifts && can(staff, 'shifts.manage'),
@@ -126,16 +128,16 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
       ],
     },
     {
-      label: 'المشتريات',
+      label: t('nav.purchasesSection'),
       items: [
         {
-          label: 'فواتير الشراء',
+          label: t('nav.purchases'),
           href: '/dashboard/purchases',
           icon: ShoppingBag,
           show: features.showPurchases && can(staff, 'purchases.view'),
         },
         {
-          label: 'الموردون',
+          label: t('nav.suppliers'),
           href: '/dashboard/suppliers',
           icon: Truck,
           show: features.showPurchases && can(staff, 'purchases.view'),
@@ -143,22 +145,22 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
       ],
     },
     {
-      label: 'المستودع',
+      label: t('nav.warehouseSection'),
       items: [
         {
-          label: 'المنتجات',
+          label: t('nav.inventory'),
           href: '/dashboard/inventory',
           icon: Package,
           show: features.showInventory && can(staff, 'inventory.view'),
         },
         {
-          label: 'المخازن',
+          label: t('nav.warehouses'),
           href: '/dashboard/warehouses',
           icon: Building2,
           show: features.showInventory && can(staff, 'inventory.view'),
         },
         {
-          label: 'حركة المخزون',
+          label: t('nav.inventoryMovements'),
           href: '/dashboard/inventory/movements',
           icon: Warehouse,
           show: features.showInventory && can(staff, 'inventory.view'),
@@ -166,18 +168,18 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
       ],
     },
     {
-      label: 'المالية',
+      label: t('nav.financialSection'),
       items: [
-        { label: 'المصروفات', href: '/dashboard/expenses', icon: DollarSign, show: can(staff, 'expenses.view') },
-        { label: 'الصندوق', href: '/dashboard/wallet', icon: Wallet, show: can(staff, 'reports.view') },
+        { label: t('nav.expenses'), href: '/dashboard/expenses', icon: DollarSign, show: can(staff, 'expenses.view') },
+        { label: t('nav.wallet'), href: '/dashboard/wallet', icon: Wallet, show: can(staff, 'reports.view') },
       ],
     },
     {
-      label: 'التقارير',
+      label: t('nav.reportsSection'),
       items: [
-        { label: 'التقارير', href: '/dashboard/reports', icon: BarChart3, show: can(staff, 'reports.view') },
+        { label: t('nav.reports'), href: '/dashboard/reports', icon: BarChart3, show: can(staff, 'reports.view') },
         {
-          label: 'الأرباح والخسائر',
+          label: t('nav.profitLoss'),
           href: '/dashboard/reports/profit-loss',
           icon: TrendingUp,
           show: can(staff, 'reports.view'),
@@ -185,37 +187,52 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
       ],
     },
     {
-      label: 'البناء والتشطيبات',
+      label: t('nav.constructionSection'),
       items: [
-        { label: 'لوحة البناء', href: '/dashboard/construction', icon: HardHat, show: features.hasConstruction },
         {
-          label: 'المشاريع',
+          label: t('nav.construction'),
+          href: '/dashboard/construction',
+          icon: HardHat,
+          show: features.hasConstruction,
+        },
+        {
+          label: t('nav.constructionProjects'),
           href: '/dashboard/construction/projects',
           icon: Building2,
           show: features.hasConstruction,
         },
-        { label: 'العمال', href: '/dashboard/construction/workers', icon: Users, show: features.hasConstruction },
-        { label: 'المهام', href: '/dashboard/construction/tasks', icon: CheckSquare, show: features.hasConstruction },
         {
-          label: 'المصروفات',
+          label: t('nav.constructionWorkers'),
+          href: '/dashboard/construction/workers',
+          icon: Users,
+          show: features.hasConstruction,
+        },
+        {
+          label: t('nav.constructionTasks'),
+          href: '/dashboard/construction/tasks',
+          icon: CheckSquare,
+          show: features.hasConstruction,
+        },
+        {
+          label: t('nav.constructionExpenses'),
           href: '/dashboard/construction/expenses',
           icon: DollarSign,
           show: features.hasConstruction,
         },
         {
-          label: 'المواد',
+          label: t('nav.constructionMaterials'),
           href: '/dashboard/construction/materials',
           icon: PackageOpen,
           show: features.hasConstruction,
         },
         {
-          label: 'المدفوعات',
+          label: t('nav.constructionPayments'),
           href: '/dashboard/construction/payments',
           icon: CreditCard,
           show: features.hasConstruction,
         },
         {
-          label: 'تقارير البناء',
+          label: t('nav.constructionReports'),
           href: '/dashboard/construction/reports',
           icon: BarChart3,
           show: features.hasConstruction,
@@ -223,44 +240,59 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
       ],
     },
     {
-      label: 'التأجير',
+      label: t('nav.rentalSection'),
       items: [
-        { label: 'لوحة التأجير', href: '/dashboard/rentals', icon: LayoutDashboard, show: features.hasRental },
-        { label: 'الفساتين', href: '/dashboard/rentals/dresses', icon: Shirt, show: features.hasRental },
-        { label: 'حجز سريع', href: '/dashboard/rentals/bookings/new', icon: Calendar, show: features.hasRental },
-        { label: 'الحجوزات', href: '/dashboard/rentals/bookings', icon: CalendarDays, show: features.hasRental },
-        { label: 'تقويم التأجير', href: '/dashboard/rentals/calendar', icon: CalendarDays, show: features.hasRental },
-        { label: 'الإرجاعات', href: '/dashboard/rentals/returns', icon: RotateCcw, show: features.hasRental },
-        { label: 'قواعد التسعير', href: '/dashboard/rentals/pricing', icon: Tag, show: features.hasRental },
+        { label: t('nav.rentals'), href: '/dashboard/rentals', icon: LayoutDashboard, show: features.hasRental },
+        { label: t('nav.dresses'), href: '/dashboard/rentals/dresses', icon: Shirt, show: features.hasRental },
+        {
+          label: t('nav.quickBooking'),
+          href: '/dashboard/rentals/bookings/new',
+          icon: Calendar,
+          show: features.hasRental,
+        },
+        { label: t('nav.bookings'), href: '/dashboard/rentals/bookings', icon: CalendarDays, show: features.hasRental },
+        {
+          label: t('nav.rentalCalendar'),
+          href: '/dashboard/rentals/calendar',
+          icon: CalendarDays,
+          show: features.hasRental,
+        },
+        {
+          label: t('nav.rentalReturns'),
+          href: '/dashboard/rentals/returns',
+          icon: RotateCcw,
+          show: features.hasRental,
+        },
+        { label: t('nav.pricingRules'), href: '/dashboard/rentals/pricing', icon: Tag, show: features.hasRental },
       ],
     },
     {
-      label: 'الإدارة',
+      label: t('nav.managementSection'),
       items: [
-        { label: 'الموظفون', href: '/dashboard/admin/staff', icon: UserCog, show: can(staff, 'admin.staff') },
-        { label: 'سجل الأحداث', href: '/dashboard/admin/audit', icon: Shield, show: can(staff, 'admin.audit') },
+        { label: t('nav.staff'), href: '/dashboard/admin/staff', icon: UserCog, show: can(staff, 'admin.staff') },
+        { label: t('nav.auditLog'), href: '/dashboard/admin/audit', icon: Shield, show: can(staff, 'admin.audit') },
         {
-          label: 'سلامة البيانات',
+          label: t('nav.dataIntegrity'),
           href: '/dashboard/admin/integrity',
           icon: ShieldCheck,
           show: can(staff, 'admin.audit'),
         },
-        { label: 'الفئات', href: '/dashboard/categories', icon: Tag, show: can(staff, 'admin.settings') },
-        { label: 'الإعدادات', href: '/dashboard/settings', icon: Settings, show: can(staff, 'admin.settings') },
+        { label: t('nav.categories'), href: '/dashboard/categories', icon: Tag, show: can(staff, 'admin.settings') },
+        { label: t('nav.settings'), href: '/dashboard/settings', icon: Settings, show: can(staff, 'admin.settings') },
         {
-          label: 'النسخ الاحتياطية',
+          label: t('nav.backup'),
           href: '/dashboard/settings/backup',
           icon: Shield,
           show: can(staff, 'admin.settings'),
         },
         {
-          label: 'سلة المحذوفات',
+          label: t('nav.trash'),
           href: '/dashboard/settings/trash',
           icon: Trash2Icon,
           show: can(staff, 'admin.settings'),
         },
         {
-          label: 'منطقة الخطر',
+          label: t('nav.dangerZone'),
           href: '/dashboard/settings/danger',
           icon: AlertOctagon,
           show: can(staff, 'admin.settings'),
@@ -270,9 +302,9 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
   ]
 
   const ROLE_LABELS: Record<string, string> = {
-    admin: 'مدير النظام',
-    manager: 'مدير',
-    cashier: 'كاشير',
+    admin: t('roles.admin'),
+    manager: t('roles.manager'),
+    cashier: t('roles.cashier'),
   }
 
   return (
@@ -354,7 +386,7 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
           </div>
           <button
             onClick={handleLogout}
-            title="تسجيل خروج"
+            title={t('common.logout')}
             className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
           >
             <LogOut className="w-3.5 h-3.5" />

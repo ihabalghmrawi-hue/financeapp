@@ -24,6 +24,7 @@ import { BUSINESS_TYPES, getFeatures, type BusinessType } from '@/lib/features'
 import { BrandingSettings } from '@/components/branding-settings'
 import { NotificationPreferences } from '@/components/push/NotificationPreferences'
 import type { Company } from '@/types/database'
+import { useT } from '@/lib/i18n/language-provider'
 
 interface SettingsClientProps {
   company: Company
@@ -36,6 +37,7 @@ interface SettingsClientProps {
 export function SettingsClient({ company, user, role, currentBusinessType, branding }: SettingsClientProps) {
   const router = useRouter()
   const { theme, setTheme } = useTheme()
+  const { setLang } = useT()
   const [activeSection, setActiveSection] = useState('general')
   const [selectedBizType, setSelectedBizType] = useState<BusinessType>(
     (currentBusinessType as BusinessType) || 'retail',
@@ -85,6 +87,7 @@ export function SettingsClient({ company, user, role, currentBusinessType, brand
       return
     }
     setSaved(true)
+    setLang(form.language as 'ar' | 'en')
     setTimeout(() => setSaved(false), 3000)
     router.refresh()
   }

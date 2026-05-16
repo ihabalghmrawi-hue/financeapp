@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Cairo } from 'next/font/google'
+import { cookies } from 'next/headers'
 import './globals.css'
 import { ThemeProvider } from '@/components/layout/theme-provider'
 import { Toaster } from '@/components/ui/toaster'
@@ -7,6 +8,7 @@ import { NetworkStatus } from '@/components/ui/network-status'
 import { AppProviders } from '@/lib/mobile'
 import { PerformanceProvider } from '@/hooks/usePerformanceMode'
 import { getBranding, buildThemeCss } from '@/lib/branding'
+import type { Lang } from '@/lib/i18n'
 
 const cairo = Cairo({
   subsets: ['arabic', 'latin'],
@@ -41,9 +43,12 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const branding = await getBranding()
   const themeCss = buildThemeCss(branding)
+  const cookieStore = await cookies()
+  const lang = (cookieStore.get('lang')?.value as Lang) || 'ar'
+  const dir = lang === 'ar' ? 'rtl' : 'ltr'
 
   return (
-    <html lang="ar" dir="rtl" suppressHydrationWarning>
+    <html lang={lang} dir={dir} suppressHydrationWarning>
       <head>
         <style dangerouslySetInnerHTML={{ __html: themeCss }} />
         {branding.logo_url && <link rel="icon" href={branding.logo_url} />}
@@ -54,7 +59,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className={`${cairo.variable} font-sans antialiased mobile-text-fix`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <PerformanceProvider>
-            <AppProviders>{children}</AppProviders>
+            <AppProviders initialLang={lang}>{children}</AppProviders>
             <Toaster />
             <NetworkStatus />
             <div id="sr-announcer" role="status" aria-live="polite" aria-atomic="true" className="sr-only" />

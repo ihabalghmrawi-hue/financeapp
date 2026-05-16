@@ -1,4 +1,5 @@
 import { headers } from 'next/headers'
+import { cookies } from 'next/headers'
 import { getFeatures } from '@/lib/features'
 import { getBranding } from '@/lib/branding'
 import { createClient } from '@/lib/supabase/server'
@@ -8,9 +9,11 @@ import { QuickActionBar } from '@/components/layout/quick-action-bar'
 import { DashboardMobileLayout } from '@/components/layout/dashboard-mobile-layout'
 import { PageTransitionWrapper } from '@/components/layout/page-transition-wrapper'
 import { CommandBar } from '@/components/command-center'
+import type { Lang } from '@/lib/i18n'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const h = await headers()
+  const cookieStore = await cookies()
 
   const dec = (v: string | null, fallback = '') => {
     try {
@@ -37,7 +40,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   try {
     const supabase = createClient()
-    const { data } = await supabase.from('companies').select('id, name, currency').eq('id', tenantId).maybeSingle()
+    const { data } = await supabase
+      .from('companies')
+      .select('id, name, currency, language')
+      .eq('id', tenantId)
+      .maybeSingle()
     companyRow = data
   } catch {
     /* fallback */
@@ -49,13 +56,20 @@ export default async function DashboardLayout({ children }: { children: React.Re
     /* fallback */
   }
 
+  const companyLang = (companyRow?.language as Lang) || 'ar'
+  let lang = companyLang
+  const cookieLang = cookieStore.get('lang')?.value as Lang | undefined
+  if (cookieLang && (cookieLang === 'ar' || cookieLang === 'en')) {
+    lang = cookieLang
+  }
+
   const company = {
     id: companyRow?.id || tenantId,
     name: companyRow?.name || companyNameHdr || process.env.NEXT_PUBLIC_COMPANY_NAME || 'شركتي',
     name_ar: companyRow?.name || companyNameHdr || process.env.NEXT_PUBLIC_COMPANY_NAME || 'شركتي',
     slug: 'default',
     currency: companyRow?.currency || companyCurrHdr || process.env.NEXT_PUBLIC_CURRENCY || 'SAR',
-    language: 'ar',
+    language: lang,
     timezone: 'Asia/Riyadh',
     fiscal_year_start: 1,
     is_active: true,
