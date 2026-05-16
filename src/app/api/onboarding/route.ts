@@ -1,10 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { BUSINESS_TYPE_COOKIE, BusinessType, BUSINESS_TYPES } from '@/lib/features'
+import type { BusinessType } from '@/lib/features'
+import { BUSINESS_TYPE_COOKIE, BUSINESS_TYPES } from '@/lib/features'
 
 async function getAuthCompanyId(supabase: ReturnType<typeof createClient>): Promise<string | null> {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return null
+  }
   const { data: membership } = await supabase
     .from('memberships')
     .select('company_id')
@@ -17,7 +23,9 @@ async function getAuthCompanyId(supabase: ReturnType<typeof createClient>): Prom
 export async function GET() {
   const supabase = createClient()
   const companyId = await getAuthCompanyId(supabase)
-  if (!companyId) return NextResponse.json({ business_type: null })
+  if (!companyId) {
+    return NextResponse.json({ business_type: null })
+  }
 
   const { data } = await supabase
     .from('company_settings')
@@ -30,19 +38,19 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const { business_type } = await req.json()
   if (!BUSINESS_TYPES.includes(business_type as BusinessType)) {
-    return NextResponse.json({ error: 'نوع غير صالح' }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid type' }, { status: 400 })
   }
 
-  const supabase  = createClient()
+  const supabase = createClient()
   const companyId = await getAuthCompanyId(supabase)
   if (!companyId) {
-    return NextResponse.json({ error: 'غير مصرح به' }, { status: 401 })
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const { error } = await supabase.from('company_settings').upsert({
-    company_id:  companyId,
+    company_id: companyId,
     business_type,
-    updated_at:  new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   })
 
   if (error) {
@@ -52,8 +60,8 @@ export async function POST(req: NextRequest) {
   const res = NextResponse.json({ success: true })
   res.cookies.set(BUSINESS_TYPE_COOKIE, business_type, {
     httpOnly: false,
-    path:     '/',
-    maxAge:   60 * 60 * 24 * 365,
+    path: '/',
+    maxAge: 60 * 60 * 24 * 365,
     sameSite: 'lax',
   })
   return res

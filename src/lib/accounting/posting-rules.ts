@@ -24,12 +24,14 @@ export class PostingRulesEngine {
     const lines: JournalLine[] = []
 
     if (event.lines && event.lines.length > 0) {
-      return { lines: event.lines.map(l => ({
-        account_code: l.accountCode,
-        debit: l.debit,
-        credit: l.credit,
-        description: l.description,
-      }))}
+      return {
+        lines: event.lines.map((l) => ({
+          account_code: l.accountCode,
+          debit: l.debit,
+          credit: l.credit,
+          description: l.description,
+        })),
+      }
     }
 
     const rule = await this.findMatchingRule(event.type)
@@ -42,7 +44,7 @@ export class PostingRulesEngine {
       return this.applyMapping(mapping, event)
     }
 
-    throw new Error(`لا توجد قاعدة ترحيل للنوع: ${event.type}`)
+    throw new Error(`No posting rule found for type: ${event.type}`)
   }
 
   private async findMatchingRule(eventType: string) {
@@ -76,11 +78,11 @@ export class PostingRulesEngine {
     const ruleLines = rule.posting_rule_lines || []
 
     for (const rl of ruleLines.sort((a: any, b: any) => a.sequence - b.sequence)) {
-      const amount = rl.amount_fixed > 0
-        ? rl.amount_fixed
-        : event.amount * (rl.amount_percent / 100)
+      const amount = rl.amount_fixed > 0 ? rl.amount_fixed : event.amount * (rl.amount_percent / 100)
 
-      if (amount <= 0) continue
+      if (amount <= 0) {
+        continue
+      }
 
       if (rl.debit_account_id) {
         const { data: acct } = await this.supabase
@@ -166,7 +168,7 @@ export class PostingRulesEngine {
           account_code: taxAcct.code,
           debit: taxAmount,
           credit: 0,
-          description: `ضريبة ${mapping.tax_rate}%`,
+          description: `Tax ${mapping.tax_rate}%`,
         }
       }
     }
@@ -188,12 +190,12 @@ export async function allocateToCostCenters(
     .eq('company_id', companyId)
     .eq('is_active', true)
 
-  if (!rules || rules.length === 0) return
+  if (!rules || rules.length === 0) {
+    return
+  }
 
   for (const line of lines) {
-    const matchingRules = rules.filter(
-      (r: any) => !r.account_id || r.account_id === line.account_id
-    )
+    const matchingRules = rules.filter((r: any) => !r.account_id || r.account_id === line.account_id)
     for (const rule of matchingRules) {
       let allocAmount = 0
       if (rule.allocation_type === 'percentage') {
@@ -209,7 +211,7 @@ export async function allocateToCostCenters(
           debit: allocAmount,
           credit: 0,
           cost_center_id: rule.cost_center_id,
-          description: `توزيع: ${rule.cost_centers?.name_ar || rule.cost_center_id}`,
+          description: `Allocation: ${rule.cost_centers?.name_ar || rule.cost_center_id}`,
         })
       }
     }
@@ -223,7 +225,9 @@ export async function allocateToBranches(
   journalEntryId: string,
   sourceBranchId?: string,
 ): Promise<void> {
-  if (!sourceBranchId) return
+  if (!sourceBranchId) {
+    return
+  }
 
   const { data: branches } = await supabase
     .from('branches')
@@ -231,21 +235,27 @@ export async function allocateToBranches(
     .eq('company_id', companyId)
     .eq('is_active', true)
 
-  if (!branches || branches.length <= 1) return
+  if (!branches || branches.length <= 1) {
+    return
+  }
 
   const { data: lines } = await supabase
     .from('journal_entry_lines')
     .select('id, account_id, debit, credit')
     .eq('journal_entry_id', journalEntryId)
 
-  if (!lines) return
+  if (!lines) {
+    return
+  }
 
   const otherBranches = branches.filter((b: any) => b.id !== sourceBranchId)
   const sharePerBranch = 1 / (otherBranches.length + 1)
 
   for (const line of lines) {
     const amount = (line.debit + line.credit) * sharePerBranch
-    if (amount <= 0) continue
+    if (amount <= 0) {
+      continue
+    }
 
     for (const branch of otherBranches) {
       await supabase.from('journal_entry_lines').insert({
@@ -254,7 +264,7 @@ export async function allocateToBranches(
         debit: amount,
         credit: 0,
         branch_id: branch.id,
-        description: `توزيع فرع: ${branch.name_ar}`,
+        description: `Branch Allocation: ${branch.name_ar}`,
       })
     }
   }

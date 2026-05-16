@@ -3,6 +3,7 @@
 import { forwardRef, useMemo, useState, useCallback, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { useIsMobile, useIsTablet } from '@/hooks'
+import { useT } from '@/lib/i18n/language-provider'
 import { ChevronLeft, ChevronRight, ArrowUpDown, Search, Filter } from 'lucide-react'
 import type { Column, DataGridProps, DataGridHandlers, FilterConfig } from '@/lib/datagrid/types'
 import { formatCellValue, getRowValue, filterData, sortData, paginateData } from '@/lib/datagrid/types'
@@ -39,6 +40,7 @@ function MobileDataGridInner<T extends Record<string, any>>(
     compact = false,
   } = props
 
+  const { t } = useT()
   const isMobile = useIsMobile()
   const isTablet = useIsTablet()
   const cardView = forceCardView ?? (isMobile || (isTablet && propColumns.length > 4))
@@ -99,7 +101,7 @@ function MobileDataGridInner<T extends Record<string, any>>(
         <div className="w-12 h-12 rounded-2xl bg-destructive/10 flex items-center justify-center mb-3">
           <span className="text-destructive text-xl font-bold">!</span>
         </div>
-        <p className="font-semibold text-destructive">حدث خطأ في تحميل البيانات</p>
+        <p className="font-semibold text-destructive">{t('mobileDataGrid.loadError')}</p>
         <p className="text-sm text-muted-foreground/70 mt-1">{error}</p>
       </div>
     )
@@ -130,8 +132,8 @@ function MobileDataGridInner<T extends Record<string, any>>(
         <div className="w-14 h-14 rounded-2xl bg-primary/5 flex items-center justify-center mb-3">
           <span className="text-primary/40 text-2xl">~</span>
         </div>
-        <p className="font-semibold text-foreground/60">لا توجد بيانات</p>
-        {emptyState || <p className="text-sm text-muted-foreground/60 mt-0.5">لم يتم العثور على سجلات</p>}
+        <p className="font-semibold text-foreground/60">{t('common.noData')}</p>
+        {emptyState || <p className="text-sm text-muted-foreground/60 mt-0.5">{t('mobileDataGrid.noRecords')}</p>}
       </div>
     )
   }
@@ -151,7 +153,7 @@ function MobileDataGridInner<T extends Record<string, any>>(
               .map((col) => (
                 <input
                   key={col.id}
-                  placeholder={`بحث ${col.title}`}
+                  placeholder={`${t('common.search')} ${col.title}`}
                   value={filters?.find((f) => f.id === col.id)?.value ?? ''}
                   onChange={(e) => setFilter(col.id, e.target.value)}
                   className="w-full h-9 px-3 text-sm bg-background border border-border/50 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
@@ -252,7 +254,7 @@ function MobileDataGridInner<T extends Record<string, any>>(
               className="flex items-center gap-1 px-3 py-1.5 text-sm hover:bg-secondary rounded-xl disabled:opacity-30 transition-colors"
             >
               <ChevronRight className="h-4 w-4" />
-              السابق
+              {t('common.back')}
             </button>
             <span className="text-muted-foreground/60 text-xs font-medium tabular-nums">
               {pagination.page} / {totalPages}
@@ -262,7 +264,7 @@ function MobileDataGridInner<T extends Record<string, any>>(
               onClick={() => setPagination({ ...pagination, page: pagination.page + 1 })}
               className="flex items-center gap-1 px-3 py-1.5 text-sm hover:bg-secondary rounded-xl disabled:opacity-30 transition-colors"
             >
-              التالي
+              {t('common.next')}
               <ChevronLeft className="h-4 w-4" />
             </button>
           </div>
@@ -282,7 +284,7 @@ function MobileDataGridInner<T extends Record<string, any>>(
             .map((col) => (
               <input
                 key={col.id}
-                placeholder={`بحث ${col.title}`}
+                placeholder={`${t('common.search')} ${col.title}`}
                 value={filters?.find((f) => f.id === col.id)?.value ?? ''}
                 onChange={(e) => setFilter(col.id, e.target.value)}
                 className="h-9 px-3 text-xs bg-background border border-border/50 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all min-w-[130px]"
@@ -352,7 +354,7 @@ function MobileDataGridInner<T extends Record<string, any>>(
         <span className="text-muted-foreground/60 text-xs font-medium">
           {totalFiltered > 0
             ? `${(pagination.page - 1) * pagination.pageSize + 1}-${Math.min(pagination.page * pagination.pageSize, totalFiltered)} من ${totalFiltered}`
-            : 'لا توجد نتائج'}
+            : t('common.noResults')}
         </span>
         <div className="flex items-center gap-1">
           <button

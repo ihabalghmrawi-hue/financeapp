@@ -1,25 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient }      from '@/lib/supabase/server'
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { getCompanyId }      from '@/lib/tenant'
-import {
-  ensureFiscalYear,
-  closePeriod,
-  generatePeriods,
-} from '@/lib/accounting/index'
+import { getCompanyId } from '@/lib/tenant'
+import { ensureFiscalYear, closePeriod, generatePeriods } from '@/lib/accounting/index'
 
 // ── GET: list fiscal years and periods ────────────────────────
 export async function GET(req: NextRequest) {
-  const supabase   = createClient()
-  const company_id = req.headers.get('x-tenant-id') || await getCompanyId()
+  const supabase = createClient()
+  const company_id = req.headers.get('x-tenant-id') || (await getCompanyId())
 
   try {
     const [fyResult, periodsResult] = await Promise.all([
-      supabase
-        .from('fiscal_years')
-        .select('*')
-        .eq('company_id', company_id)
-        .order('start_date', { ascending: false }),
+      supabase.from('fiscal_years').select('*').eq('company_id', company_id).order('start_date', { ascending: false }),
       supabase
         .from('accounting_periods')
         .select('*')
@@ -28,8 +21,8 @@ export async function GET(req: NextRequest) {
     ])
 
     return NextResponse.json({
-      fiscal_years: fyResult.data  || [],
-      periods:      periodsResult.data || [],
+      fiscal_years: fyResult.data || [],
+      periods: periodsResult.data || [],
     })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
@@ -38,11 +31,11 @@ export async function GET(req: NextRequest) {
 
 // ── POST: create fiscal year OR close period ──────────────────
 export async function POST(req: NextRequest) {
-  const supabase   = createAdminClient()
-  const company_id = req.headers.get('x-tenant-id') || await getCompanyId()
+  const supabase = createAdminClient()
+  const company_id = req.headers.get('x-tenant-id') || (await getCompanyId())
 
   try {
-    const body   = await req.json()
+    const body = await req.json()
     const action = body.action
 
     if (action === 'ensure_fiscal_year' || !action) {
@@ -53,10 +46,12 @@ export async function POST(req: NextRequest) {
     if (action === 'close_period') {
       const { period_id } = body
       if (!period_id) {
-        return NextResponse.json({ error: 'معرف الفترة مطلوب' }, { status: 400 })
+        return NextResponse.json({ error: 'Period ID is required' }, { status: 400 })
       }
       const result = await closePeriod(supabase, company_id, period_id)
-      if (!result.ok) return NextResponse.json({ error: result.error }, { status: 422 })
+      if (!result.ok) {
+        return NextResponse.json({ error: result.error }, { status: 422 })
+      }
       return NextResponse.json(result)
     }
 
@@ -64,10 +59,7 @@ export async function POST(req: NextRequest) {
       const { name, start_date, end_date } = body
 
       if (!start_date || !end_date) {
-        return NextResponse.json(
-          { error: 'تاريخ البداية والنهاية مطلوبان' },
-          { status: 400 },
-        )
+        return NextResponse.json({ error: 'Start date and end date are required' }, { status: 400 })
       }
 
       // Mark existing current year as not current
@@ -81,10 +73,10 @@ export async function POST(req: NextRequest) {
         .from('fiscal_years')
         .insert({
           company_id,
-          name:       name || `السنة المالية ${start_date.slice(0, 4)}`,
+          name: name || `Fiscal Year ${start_date.slice(0, 4)}`,
           start_date,
           end_date,
-          status:     'active',
+          status: 'active',
           is_current: true,
         })
         .select('*')
@@ -103,13 +95,13 @@ export async function POST(req: NextRequest) {
     if (action === 'generate_periods') {
       const { fiscal_year_id } = body
       if (!fiscal_year_id) {
-        return NextResponse.json({ error: 'معرف السنة المالية مطلوب' }, { status: 400 })
+        return NextResponse.json({ error: 'Fiscal year ID is required' }, { status: 400 })
       }
       await generatePeriods(supabase, company_id, fiscal_year_id)
       return NextResponse.json({ ok: true })
     }
 
-    return NextResponse.json({ error: 'إجراء غير معروف' }, { status: 400 })
+    return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
@@ -118,19 +110,21 @@ export async function POST(req: NextRequest) {
 // ── PATCH: Period lock/unlock ─────────────────────────────────
 export async function PATCH(req: NextRequest) {
   const supabase = createAdminClient()
-  const company_id = req.headers.get('x-tenant-id') || await getCompanyId()
+  const company_id = req.headers.get('x-tenant-id') || (await getCompanyId())
 
   try {
     const body = await req.json()
     const { period_id, action } = body
 
     if (!period_id || !action) {
-      return NextResponse.json({ error: 'معرف الفترة والإجراء مطلوبان' }, { status: 400 })
+      return NextResponse.json({ error: 'Period ID and action are required' }, { status: 400 })
     }
 
     if (action === 'lock') {
       const result = await closePeriod(supabase, company_id, period_id)
-      if (!result.ok) return NextResponse.json({ error: result.error }, { status: 422 })
+      if (!result.ok) {
+        return NextResponse.json({ error: result.error }, { status: 422 })
+      }
       return NextResponse.json(result)
     }
 
@@ -140,11 +134,13 @@ export async function PATCH(req: NextRequest) {
         .update({ status: 'open' })
         .eq('id', period_id)
         .eq('company_id', company_id)
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 })
+      }
       return NextResponse.json({ ok: true })
     }
 
-    return NextResponse.json({ error: 'إجراء غير معروف' }, { status: 400 })
+    return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
   }

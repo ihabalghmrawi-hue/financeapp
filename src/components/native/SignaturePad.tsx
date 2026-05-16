@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react'
 import { cn } from '@/lib/utils'
 import { signatureCaptureWorkflow } from '@/lib/native/workflow/signature-capture'
+import { useT } from '@/lib/i18n/language-provider'
 import { Pen, Trash2, Check, X } from 'lucide-react'
 
 interface SignaturePadProps {
@@ -14,6 +15,7 @@ interface SignaturePadProps {
 }
 
 export function SignaturePad({ open, onConfirm, onCancel, title, className }: SignaturePadProps) {
+  const { t } = useT()
   const [canvasEl, setCanvasEl] = useState<HTMLCanvasElement | null>(null)
   const [drawing, setDrawing] = useState(false)
   const [hasContent, setHasContent] = useState(false)
@@ -125,7 +127,7 @@ export function SignaturePad({ open, onConfirm, onCancel, title, className }: Si
         <div className="flex items-center justify-between px-4 py-3 border-b">
           <div className="flex items-center gap-2">
             <Pen className="h-4 w-4 text-muted-foreground" />
-            <h3 className="text-sm font-semibold">{title ?? 'التوقيع'}</h3>
+            <h3 className="text-sm font-semibold">{title ?? t('signature.title')}</h3>
           </div>
           <button
             onClick={onCancel}
@@ -169,7 +171,7 @@ export function SignaturePad({ open, onConfirm, onCancel, title, className }: Si
             }}
             onTouchEnd={endDraw}
           />
-          <p className="text-[10px] text-muted-foreground mt-1 text-center">وقع أعلاه</p>
+          <p className="text-[10px] text-muted-foreground mt-1 text-center">{t('signature.signAbove')}</p>
         </div>
 
         <div className="flex items-center gap-2 px-4 py-3 border-t bg-muted/30">
@@ -183,7 +185,7 @@ export function SignaturePad({ open, onConfirm, onCancel, title, className }: Si
             )}
           >
             <Trash2 className="h-3.5 w-3.5" />
-            مسح
+            {t('signature.clear')}
           </button>
 
           <div className="flex-1" />
@@ -198,7 +200,7 @@ export function SignaturePad({ open, onConfirm, onCancel, title, className }: Si
             )}
           >
             <Check className="h-3.5 w-3.5" />
-            {capturing ? 'جاري...' : 'تأكيد'}
+            {capturing ? t('common.saving') : t('common.confirm')}
           </button>
         </div>
       </div>

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/language-provider'
 
 interface StaffMember {
   id: string
@@ -97,6 +98,7 @@ const ROLE_TEMPLATES = [
 // ── All permissions grouped ────────────────────────────────────────────────────
 const PERMISSION_GROUPS = [
   {
+    key: 'pos',
     label: 'نقطة البيع',
     perms: [
       { code: 'pos.access', label: 'الوصول لنقطة البيع' },
@@ -105,6 +107,7 @@ const PERMISSION_GROUPS = [
     ],
   },
   {
+    key: 'returns',
     label: 'المرتجعات',
     perms: [
       { code: 'returns.view', label: 'عرض المرتجعات' },
@@ -112,6 +115,7 @@ const PERMISSION_GROUPS = [
     ],
   },
   {
+    key: 'customers',
     label: 'العملاء',
     perms: [
       { code: 'customers.view', label: 'عرض العملاء' },
@@ -120,6 +124,7 @@ const PERMISSION_GROUPS = [
     ],
   },
   {
+    key: 'inventory',
     label: 'المخزون',
     perms: [
       { code: 'inventory.view', label: 'عرض المخزون' },
@@ -127,6 +132,7 @@ const PERMISSION_GROUPS = [
     ],
   },
   {
+    key: 'purchases',
     label: 'المشتريات',
     perms: [
       { code: 'purchases.view', label: 'عرض المشتريات' },
@@ -134,6 +140,7 @@ const PERMISSION_GROUPS = [
     ],
   },
   {
+    key: 'finance',
     label: 'المالية والتقارير',
     perms: [
       { code: 'expenses.view', label: 'عرض المصروفات' },
@@ -142,6 +149,7 @@ const PERMISSION_GROUPS = [
     ],
   },
   {
+    key: 'management',
     label: 'الإدارة',
     perms: [
       { code: 'shifts.manage', label: 'إدارة الورديات' },
@@ -184,6 +192,7 @@ const emptyForm = {
 }
 
 export function StaffManagementClient({ staff: initialStaff, companyId }: Props) {
+  const { t, formatDate } = useT()
   const [staff, setStaff] = useState(initialStaff)
   const [showForm, setShowForm] = useState(false)
   const [editTarget, setEditTarget] = useState<StaffMember | null>(null)
@@ -192,7 +201,7 @@ export function StaffManagementClient({ staff: initialStaff, companyId }: Props)
   const [error, setError] = useState('')
 
   const selectTemplate = (tpl: (typeof ROLE_TEMPLATES)[number]) => {
-    setForm((f) => ({ ...f, roleKey: tpl.key, roleNameAr: tpl.name_ar, permissions: [...tpl.defaultPerms] }))
+    setForm((f) => ({ ...f, roleKey: tpl.key, roleNameAr: t(`staff.${tpl.key}`), permissions: [...tpl.defaultPerms] }))
   }
 
   const togglePerm = (code: string) => {
@@ -203,7 +212,7 @@ export function StaffManagementClient({ staff: initialStaff, companyId }: Props)
   }
 
   const openNew = () => {
-    setForm(emptyForm)
+    setForm({ ...emptyForm, roleNameAr: t(`staff.${emptyForm.roleKey}`) })
     setEditTarget(null)
     setShowForm(true)
     setError('')
@@ -229,16 +238,16 @@ export function StaffManagementClient({ staff: initialStaff, companyId }: Props)
 
   const handleSubmit = async () => {
     if (!form.name.trim()) {
-      setError('اسم الموظف مطلوب')
+      setError(t('staff.nameRequired'))
       return
     }
     if (!editTarget) {
       if (!form.email.trim()) {
-        setError('البريد الإلكتروني مطلوب')
+        setError(t('staff.emailRequired'))
         return
       }
       if (!form.password || form.password.length < 6) {
-        setError('كلمة المرور يجب أن تكون 6 أحرف على الأقل')
+        setError(t('staff.passwordTooShort'))
         return
       }
     }
@@ -291,7 +300,7 @@ export function StaffManagementClient({ staff: initialStaff, companyId }: Props)
   }
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`هل تريد إلغاء تفعيل ${name}؟`)) {
+    if (!confirm(t('staff.confirmDeactivate', { name }))) {
       return
     }
     const res = await fetch('/api/admin/staff', {
@@ -310,16 +319,16 @@ export function StaffManagementClient({ staff: initialStaff, companyId }: Props)
         <div>
           <h1 className="text-xl font-bold flex items-center gap-2">
             <Shield className="w-5 h-5 text-primary" />
-            إدارة الموظفين
+            {t('staff.title')}
           </h1>
-          <p className="text-sm text-muted-foreground">{staff.length} موظف نشط</p>
+          <p className="text-sm text-muted-foreground">{t('staff.activeStaff', { count: staff.length })}</p>
         </div>
         <button
           onClick={openNew}
           className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl text-sm font-medium hover:bg-primary/90"
         >
           <Plus className="w-4 h-4" />
-          موظف جديد
+          {t('staff.newStaff')}
         </button>
       </div>
 
@@ -329,7 +338,7 @@ export function StaffManagementClient({ staff: initialStaff, companyId }: Props)
           const count = staff.filter((s) => s.staff_roles?.name?.startsWith(tpl.key)).length
           return (
             <div key={tpl.key} className={cn('rounded-xl p-3 border text-center', tpl.color)}>
-              <p className="text-xs font-semibold">{tpl.name_ar}</p>
+              <p className="text-xs font-semibold">{t(`staff.${tpl.key}`)}</p>
               <p className="text-lg font-bold mt-0.5">{count}</p>
             </div>
           )
@@ -341,17 +350,17 @@ export function StaffManagementClient({ staff: initialStaff, companyId }: Props)
         {staff.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             <User className="w-10 h-10 mx-auto mb-2 opacity-20" />
-            <p className="text-sm">لا يوجد موظفون — أضف موظفاً للبدء</p>
+            <p className="text-sm">{t('staff.noStaff')}</p>
           </div>
         ) : (
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>
-                <th className="text-right px-4 py-3 font-medium text-muted-foreground">الاسم</th>
-                <th className="text-right px-4 py-3 font-medium text-muted-foreground">البريد الإلكتروني</th>
-                <th className="text-right px-4 py-3 font-medium text-muted-foreground">الدور</th>
-                <th className="text-right px-4 py-3 font-medium text-muted-foreground">الصلاحيات</th>
-                <th className="text-right px-4 py-3 font-medium text-muted-foreground">آخر دخول</th>
+                <th className="text-right px-4 py-3 font-medium text-muted-foreground">{t('staff.name')}</th>
+                <th className="text-right px-4 py-3 font-medium text-muted-foreground">{t('staff.email')}</th>
+                <th className="text-right px-4 py-3 font-medium text-muted-foreground">{t('staff.role')}</th>
+                <th className="text-right px-4 py-3 font-medium text-muted-foreground">{t('staff.permissions')}</th>
+                <th className="text-right px-4 py-3 font-medium text-muted-foreground">{t('staff.lastLogin')}</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -390,7 +399,7 @@ export function StaffManagementClient({ staff: initialStaff, companyId }: Props)
                       </div>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground text-xs">
-                      {s.last_login ? formatDate(s.last_login) : 'لم يدخل بعد'}
+                      {s.last_login ? formatDate(s.last_login) : t('staff.noLogin')}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
@@ -421,7 +430,7 @@ export function StaffManagementClient({ staff: initialStaff, companyId }: Props)
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-card rounded-2xl shadow-2xl w-full max-w-lg my-4 overflow-hidden">
             <div className="flex items-center justify-between p-5 border-b">
-              <h3 className="font-bold text-lg">{editTarget ? 'تعديل موظف' : 'إضافة موظف جديد'}</h3>
+              <h3 className="font-bold text-lg">{editTarget ? t('staff.editStaff') : t('staff.addStaff')}</h3>
               <button
                 onClick={() => {
                   setShowForm(false)
@@ -435,12 +444,12 @@ export function StaffManagementClient({ staff: initialStaff, companyId }: Props)
             <div className="p-5 space-y-5">
               {/* Name */}
               <div>
-                <label className="text-sm font-medium mb-1 block">الاسم *</label>
+                <label className="text-sm font-medium mb-1 block">{t('staff.staffName')} *</label>
                 <input
                   type="text"
                   value={form.name}
                   onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                  placeholder="اسم الموظف"
+                  placeholder={t('staff.staffNamePlaceholder')}
                   autoFocus
                   className="w-full border border-input rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 bg-background"
                 />
@@ -450,7 +459,7 @@ export function StaffManagementClient({ staff: initialStaff, companyId }: Props)
               <div>
                 <label className="text-sm font-medium mb-1 flex items-center gap-1">
                   <Mail className="w-3.5 h-3.5" />
-                  البريد الإلكتروني {editTarget ? '' : '*'}
+                  {t('staff.email')} {editTarget ? '' : '*'}
                 </label>
                 <input
                   type="email"
@@ -466,7 +475,7 @@ export function StaffManagementClient({ staff: initialStaff, companyId }: Props)
               <div>
                 <label className="text-sm font-medium mb-1 flex items-center gap-1">
                   <Lock className="w-3.5 h-3.5" />
-                  كلمة المرور {editTarget ? '(اتركه فارغاً للإبقاء على الحالي)' : '*'} (6 أحرف على الأقل)
+                  {t('staff.password')} {editTarget ? t('staff.passwordHint') : '*'} {t('staff.passwordMin')}
                 </label>
                 <input
                   type="password"
@@ -480,7 +489,7 @@ export function StaffManagementClient({ staff: initialStaff, companyId }: Props)
 
               {/* Role Templates */}
               <div>
-                <label className="text-sm font-medium mb-2 block">الدور الوظيفي *</label>
+                <label className="text-sm font-medium mb-2 block">{t('staff.roleRequired')}</label>
                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                   {ROLE_TEMPLATES.map((tpl) => (
                     <button
@@ -492,7 +501,7 @@ export function StaffManagementClient({ staff: initialStaff, companyId }: Props)
                         form.roleKey === tpl.key ? tpl.selected : tpl.color,
                       )}
                     >
-                      {tpl.name_ar}
+                      {t(`staff.${tpl.key}`)}
                     </button>
                   ))}
                 </div>
@@ -506,26 +515,31 @@ export function StaffManagementClient({ staff: initialStaff, companyId }: Props)
                   className="flex items-center gap-2 text-sm font-medium text-primary hover:underline mb-2"
                 >
                   {form.showPerms ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                  تخصيص الصلاحيات ({form.permissions.length} صلاحية مفعّلة)
+                  {t('staff.customizePerms', { count: form.permissions.length })}
                 </button>
 
                 {form.showPerms && (
                   <div className="border border-input rounded-xl p-4 space-y-4 bg-muted/20">
                     {PERMISSION_GROUPS.map((group) => (
-                      <div key={group.label}>
-                        <p className="text-xs font-semibold text-muted-foreground mb-2">{group.label}</p>
+                      <div key={group.key}>
+                        <p className="text-xs font-semibold text-muted-foreground mb-2">
+                          {t(`staff.permGroups.${group.key}`)}
+                        </p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                          {group.perms.map((perm) => (
-                            <label key={perm.code} className="flex items-center gap-2 cursor-pointer select-none">
-                              <input
-                                type="checkbox"
-                                checked={form.permissions.includes(perm.code)}
-                                onChange={() => togglePerm(perm.code)}
-                                className="w-3.5 h-3.5 accent-primary rounded"
-                              />
-                              <span className="text-xs">{perm.label}</span>
-                            </label>
-                          ))}
+                          {group.perms.map((perm) => {
+                            const permKey = `staff.permLabels.${perm.code.replace(/\./g, '')}`
+                            return (
+                              <label key={perm.code} className="flex items-center gap-2 cursor-pointer select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={form.permissions.includes(perm.code)}
+                                  onChange={() => togglePerm(perm.code)}
+                                  className="w-3.5 h-3.5 accent-primary rounded"
+                                />
+                                <span className="text-xs">{t(permKey)}</span>
+                              </label>
+                            )
+                          })}
                         </div>
                       </div>
                     ))}
@@ -547,7 +561,7 @@ export function StaffManagementClient({ staff: initialStaff, companyId }: Props)
                   className="flex-1 bg-primary text-white py-2.5 rounded-xl font-medium text-sm hover:bg-primary/90 flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                  {editTarget ? 'حفظ التغييرات' : 'إضافة الموظف'}
+                  {editTarget ? t('staff.save') : t('staff.add')}
                 </button>
                 <button
                   onClick={() => {
@@ -556,7 +570,7 @@ export function StaffManagementClient({ staff: initialStaff, companyId }: Props)
                   }}
                   className="px-4 py-2.5 border border-input rounded-xl text-sm hover:bg-accent"
                 >
-                  إلغاء
+                  {t('staff.cancel')}
                 </button>
               </div>
             </div>

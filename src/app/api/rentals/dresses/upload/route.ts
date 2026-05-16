@@ -11,15 +11,15 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData()
     const file = formData.get('image') as File
     if (!file) {
-      return NextResponse.json({ error: 'لا يوجد ملف' }, { status: 400 })
+      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
     const ext = file.name.split('.').pop()?.toLowerCase()
     if (!['png', 'jpg', 'jpeg', 'webp'].includes(ext || '')) {
-      return NextResponse.json({ error: 'نوع الملف غير مدعوم. الأنواع المسموحة: PNG, JPG, WEBP' }, { status: 400 })
+      return NextResponse.json({ error: 'File type not supported. Allowed types: PNG, JPG, WEBP' }, { status: 400 })
     }
     if (file.size > 5 * 1024 * 1024) {
-      return NextResponse.json({ error: 'الحجم الأقصى 5MB' }, { status: 400 })
+      return NextResponse.json({ error: 'Maximum size is 5MB' }, { status: 400 })
     }
 
     const admin = createAdminClient()
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     if (!bucketExists) {
       const { error: bucketErr } = await admin.storage.createBucket(BUCKET, { public: true })
       if (bucketErr) {
-        throw new Error(`فشل إنشاء مخزن الملفات: ${bucketErr.message}`)
+        throw new Error(`Failed to create storage bucket: ${bucketErr.message}`)
       }
     }
 

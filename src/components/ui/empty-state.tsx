@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/language-provider'
 import { Button } from './button'
 import { Inbox, Search, FilePlus, Package, Users, Wallet, ShoppingCart } from 'lucide-react'
 
@@ -159,39 +160,60 @@ export function EmptyState({
 }
 
 export function SmartEmptyState({ module, onAction }: { module: string; onAction?: (action: string) => void }) {
+  const { t } = useT()
   const configs: Record<string, { icon: React.ReactNode; title: string; description: string; suggestions: string[] }> =
     {
       sales: {
         icon: <ShoppingCart className="w-full h-full" />,
-        title: 'ابدأ بتسجيل أول فاتورة',
-        description: 'لم يتم تسجيل أي مبيعات بعد. قم بإنشاء فاتورة جديدة لبدء تتبع إيراداتك.',
-        suggestions: ['إنشاء فاتورة جديدة', 'إضافة عميل', 'عرض تقارير المبيعات'],
+        title: t('ui.emptyState.sales.title'),
+        description: t('ui.emptyState.sales.description'),
+        suggestions: [
+          t('ui.emptyState.sales.suggestion1'),
+          t('ui.emptyState.sales.suggestion2'),
+          t('ui.emptyState.sales.suggestion3'),
+        ],
       },
       inventory: {
         icon: <Package className="w-full h-full" />,
-        title: 'المخزون فارغ',
-        description: 'أضف منتجاتك الأولى للمخزون لبدء إدارة المخزون بشكل احترافي.',
-        suggestions: ['إضافة منتج جديد', 'استيراد منتجات', 'إعداد تصنيفات'],
+        title: t('ui.emptyState.inventory.title'),
+        description: t('ui.emptyState.inventory.description'),
+        suggestions: [
+          t('ui.emptyState.inventory.suggestion1'),
+          t('ui.emptyState.inventory.suggestion2'),
+          t('ui.emptyState.inventory.suggestion3'),
+        ],
       },
       customers: {
         icon: <Users className="w-full h-full" />,
-        title: 'قاعدة العملاء فارغة',
-        description: 'أضف عملاءك لبدء بناء علاقات تجارية وتتبع المبيعات.',
-        suggestions: ['إضافة عميل جديد', 'استيراد عملاء', 'إنشاء قائمة أسعار'],
+        title: t('ui.emptyState.customers.title'),
+        description: t('ui.emptyState.customers.description'),
+        suggestions: [
+          t('ui.emptyState.customers.suggestion1'),
+          t('ui.emptyState.customers.suggestion2'),
+          t('ui.emptyState.customers.suggestion3'),
+        ],
       },
       expenses: {
         icon: <Wallet className="w-full h-full" />,
-        title: 'لا توجد مصروفات',
-        description: 'سجل مصروفاتك الأولى لبدء تتبع التدفقات المالية وتحليل التكاليف.',
-        suggestions: ['تسجيل مصروف', 'إضافة تصنيف مصروفات', 'عرض التقارير'],
+        title: t('ui.emptyState.expenses.title'),
+        description: t('ui.emptyState.expenses.description'),
+        suggestions: [
+          t('ui.emptyState.expenses.suggestion1'),
+          t('ui.emptyState.expenses.suggestion2'),
+          t('ui.emptyState.expenses.suggestion3'),
+        ],
       },
     }
 
   const config = configs[module] || {
     icon: <Inbox className="w-full h-full" />,
-    title: 'لا توجد بيانات',
-    description: 'هذه الوحدة فارغة حالياً. ابدأ بإضافة بيانات جديدة.',
-    suggestions: ['إضافة جديد', 'استيراد بيانات', 'عرض المساعدة'],
+    title: t('common.noData'),
+    description: t('ui.emptyState.default.description'),
+    suggestions: [
+      t('ui.emptyState.default.suggestion1'),
+      t('ui.emptyState.default.suggestion2'),
+      t('ui.emptyState.default.suggestion3'),
+    ],
   }
 
   return (
@@ -204,7 +226,7 @@ export function SmartEmptyState({ module, onAction }: { module: string; onAction
         onClick: () => onAction?.(config.suggestions[0]),
       }}
       secondaryAction={{
-        label: 'معرفة المزيد',
+        label: t('ui.emptyState.learnMore'),
         onClick: () => onAction?.('help'),
       }}
       variant="premium"

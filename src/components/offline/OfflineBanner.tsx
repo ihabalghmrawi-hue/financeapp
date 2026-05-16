@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { useNetworkStatus } from '@/lib/offline/react/use-network-status'
+import { useT } from '@/lib/i18n/language-provider'
 import { Wifi, WifiOff, RefreshCw, X } from 'lucide-react'
 
 export function OfflineBanner() {
+  const { t } = useT()
   const { isOnline, status, wasOffline } = useNetworkStatus()
   const [dismissed, setDismissed] = useState(false)
   const [recovering, setRecovering] = useState(false)
@@ -52,17 +54,21 @@ export function OfflineBanner() {
         {!isOnline ? (
           <>
             <WifiOff className="h-4 w-4 shrink-0" />
-            <span>لا يوجد اتصال بالإنترنت. تعمل في وضع عدم الاتصال</span>
+            <span>{t('offline.banner.offline')}</span>
             <RefreshCw className="h-3.5 w-3.5 animate-spin ml-2" />
           </>
         ) : recovering ? (
           <>
             <Wifi className="h-4 w-4 shrink-0" />
-            <span>تم استعادة الاتصال. جاري المزامنة...</span>
+            <span>{t('offline.banner.recovered')}</span>
             <RefreshCw className="h-3.5 w-3.5 animate-spin ml-2" />
           </>
         ) : null}
-        <button onClick={() => setDismissed(true)} className="mr-auto p-1 hover:opacity-80 rounded" aria-label="إغلاق">
+        <button
+          onClick={() => setDismissed(true)}
+          className="mr-auto p-1 hover:opacity-80 rounded"
+          aria-label={t('common.close')}
+        >
           <X className="h-3.5 w-3.5" />
         </button>
       </div>

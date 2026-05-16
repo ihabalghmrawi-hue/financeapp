@@ -3,11 +3,33 @@
 import { useState, useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import {
-  Wallet, FileText, CheckCircle2, AlertTriangle,
-  Clock, User, Search, ArrowUpDown, Filter, TrendingUp, TrendingDown,
-  Building2, Sparkles, Eye, Calendar, BarChart3, BookOpen,
-  Circle, Loader2, XCircle, SkipForward, ChevronLeft,
-  ExternalLink, Lightbulb, RefreshCw, Hash, Users,
+  Wallet,
+  FileText,
+  CheckCircle2,
+  AlertTriangle,
+  Clock,
+  User,
+  Search,
+  ArrowUpDown,
+  Filter,
+  TrendingUp,
+  TrendingDown,
+  Building2,
+  Sparkles,
+  Eye,
+  Calendar,
+  BarChart3,
+  BookOpen,
+  Circle,
+  Loader2,
+  XCircle,
+  SkipForward,
+  ChevronLeft,
+  ExternalLink,
+  Lightbulb,
+  RefreshCw,
+  Hash,
+  Users,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EnterpriseBreadcrumbs } from '@/components/enterprise/Navigation/Breadcrumbs'
@@ -15,7 +37,15 @@ import { ProcessPipeline } from './ProcessPipeline'
 import { ProcessTimeline } from './ProcessTimeline'
 import { ProcessApprovalCard } from './ProcessApprovalCard'
 import { calculateSLADisplay } from '@/lib/workflow/engine'
-import type { ProcessItem, ProcessStage, ProcessApproval, ProcessActivity, ProcessFlowMetrics, ProcessStageTemplate } from '@/lib/process/types'
+import { useT } from '@/lib/i18n/language-provider'
+import type {
+  ProcessItem,
+  ProcessStage,
+  ProcessApproval,
+  ProcessActivity,
+  ProcessFlowMetrics,
+  ProcessStageTemplate,
+} from '@/lib/process/types'
 
 const STAGE_TEMPLATES: ProcessStageTemplate[] = [
   { id: 'prepare', name: 'تحضير الإقفال', order: 0, slaMinutes: 480, assigneeRole: 'محاسب' },
@@ -77,7 +107,7 @@ const STATUS_STYLES: Record<string, { label: string; className: string; icon: ty
 }
 
 const ASSIGNEES: Record<string, { id: string; name: string }> = {
-  'محاسب': { id: 'acc-1', name: 'أحمد السيد' },
+  محاسب: { id: 'acc-1', name: 'أحمد السيد' },
   'محاسب أول': { id: 'acc-senior-1', name: 'محمد علي' },
   'مدير مالي': { id: 'fm-1', name: 'خالد العبدالله' },
   'مراجع داخلي': { id: 'auditor-1', name: 'سامر الحسن' },
@@ -100,14 +130,17 @@ const CROSS_LINKS = [
 ]
 
 const MODULE_ICON_MAP: Record<string, typeof FileText> = {
-  BookOpen, FileText, BarChart3, Building2, Wallet, Users, Eye, Calendar,
+  BookOpen,
+  FileText,
+  BarChart3,
+  Building2,
+  Wallet,
+  Users,
+  Eye,
+  Calendar,
 }
 
-function buildStages(
-  completedUpTo: number,
-  activeStageId: string | null,
-  baseTime: number,
-): ProcessStage[] {
+function buildStages(completedUpTo: number, activeStageId: string | null, baseTime: number): ProcessStage[] {
   return STAGE_TEMPLATES.map((t, idx) => {
     if (idx < completedUpTo) {
       const stageStart = baseTime - (completedUpTo - idx) * 7200000
@@ -145,11 +178,7 @@ function buildStages(
   })
 }
 
-function buildActivities(
-  completedUpTo: number,
-  activeStageId: string | null,
-  baseTime: number,
-): ProcessActivity[] {
+function buildActivities(completedUpTo: number, activeStageId: string | null, baseTime: number): ProcessActivity[] {
   const activities: ProcessActivity[] = []
   for (let i = 0; i < completedUpTo; i++) {
     const stage = STAGE_TEMPLATES[i]
@@ -200,10 +229,7 @@ function buildActivities(
   return activities
 }
 
-function buildApprovals(
-  completedUpTo: number,
-  activeStageId: string | null,
-): ProcessApproval[] {
+function buildApprovals(completedUpTo: number, activeStageId: string | null): ProcessApproval[] {
   const approvals: ProcessApproval[] = []
   if (completedUpTo >= 5) {
     approvals.push({
@@ -302,8 +328,16 @@ function createMockItem(
 
 const MOCK_ITEMS: ProcessItem[] = [
   createMockItem(
-    'item-1', 'إقفال شهري', 'إقفال شهر يناير 2024', 'CLS-2024-01',
-    'low', 'completed', 7, null, 0, 1440,
+    'item-1',
+    'إقفال شهري',
+    'إقفال شهر يناير 2024',
+    'CLS-2024-01',
+    'low',
+    'completed',
+    7,
+    null,
+    0,
+    1440,
     ['شهري', 'تدقيق'],
     [
       { label: 'دفتر الأستاذ', href: '/ledger/jan-2024', icon: 'BookOpen' },
@@ -311,8 +345,16 @@ const MOCK_ITEMS: ProcessItem[] = [
     ],
   ),
   createMockItem(
-    'item-2', 'إقفال شهري', 'إقفال شهر فبراير 2024', 'CLS-2024-02',
-    'low', 'completed', 7, null, 1, 1440,
+    'item-2',
+    'إقفال شهري',
+    'إقفال شهر فبراير 2024',
+    'CLS-2024-02',
+    'low',
+    'completed',
+    7,
+    null,
+    1,
+    1440,
     ['شهري'],
     [
       { label: 'دفتر الأستاذ', href: '/ledger/feb-2024', icon: 'BookOpen' },
@@ -320,8 +362,16 @@ const MOCK_ITEMS: ProcessItem[] = [
     ],
   ),
   createMockItem(
-    'item-3', 'إقفال ربعي', 'إقفال الربع الأول 2024', 'QCLS-2024-Q1',
-    'high', 'completed', 7, null, 2, 2880,
+    'item-3',
+    'إقفال ربعي',
+    'إقفال الربع الأول 2024',
+    'QCLS-2024-Q1',
+    'high',
+    'completed',
+    7,
+    null,
+    2,
+    2880,
     ['ربعي', 'تدقيق', 'نهائي'],
     [
       { label: 'دفتر الأستاذ', href: '/ledger/q1-2024', icon: 'BookOpen' },
@@ -331,8 +381,16 @@ const MOCK_ITEMS: ProcessItem[] = [
     'تم إقفال الربع الأول بنجاح. يوصى بمراجعة حسابات العملاء المدينة.',
   ),
   createMockItem(
-    'item-4', 'إقفال شهري', 'إقفال شهر مارس 2024', 'CLS-2024-03',
-    'low', 'completed', 7, null, 3, 1440,
+    'item-4',
+    'إقفال شهري',
+    'إقفال شهر مارس 2024',
+    'CLS-2024-03',
+    'low',
+    'completed',
+    7,
+    null,
+    3,
+    1440,
     ['شهري'],
     [
       { label: 'ميزان المراجعة', href: '/trial-balance/mar-2024', icon: 'BarChart3' },
@@ -340,8 +398,16 @@ const MOCK_ITEMS: ProcessItem[] = [
     ],
   ),
   createMockItem(
-    'item-5', 'إقفال شهري', 'إقفال شهر أبريل 2024', 'CLS-2024-04',
-    'medium', 'active', 1, 'reconcile', 4, 1440,
+    'item-5',
+    'إقفال شهري',
+    'إقفال شهر أبريل 2024',
+    'CLS-2024-04',
+    'medium',
+    'active',
+    1,
+    'reconcile',
+    4,
+    1440,
     ['شهري', 'تدقيق'],
     [
       { label: 'دفتر الأستاذ', href: '/ledger/apr-2024', icon: 'BookOpen' },
@@ -350,68 +416,142 @@ const MOCK_ITEMS: ProcessItem[] = [
     'حسابات العملاء بحاجة للتسوية. يرجى مراجعة الفروق في حساب 1210.',
   ),
   createMockItem(
-    'item-6', 'إقفال شهري', 'إقفال شهر مايو 2024', 'CLS-2024-05',
-    'medium', 'active', 0, 'prepare', 5, 1440,
+    'item-6',
+    'إقفال شهري',
+    'إقفال شهر مايو 2024',
+    'CLS-2024-05',
+    'medium',
+    'active',
+    0,
+    'prepare',
+    5,
+    1440,
     ['شهري'],
-    [
-      { label: 'الحسابات', href: '/accounts/may-2024', icon: 'BookOpen' },
-    ],
+    [{ label: 'الحسابات', href: '/accounts/may-2024', icon: 'BookOpen' }],
   ),
   createMockItem(
-    'item-7', 'إقفال ربعي', 'إقفال الربع الثاني 2024', 'QCLS-2024-Q2',
-    'high', 'pending', 0, null, 0, 2880,
+    'item-7',
+    'إقفال ربعي',
+    'إقفال الربع الثاني 2024',
+    'QCLS-2024-Q2',
+    'high',
+    'pending',
+    0,
+    null,
+    0,
+    2880,
     ['ربعي', 'نهائي'],
-    [
-      { label: 'القوائم المالية', href: '/financial-statements/q2-2024', icon: 'FileText' },
-    ],
+    [{ label: 'القوائم المالية', href: '/financial-statements/q2-2024', icon: 'FileText' }],
   ),
   createMockItem(
-    'item-8', 'إقفال شهري', 'إقفال شهر يونيو 2024', 'CLS-2024-06',
-    'low', 'pending', 0, null, 1, 1440,
+    'item-8',
+    'إقفال شهري',
+    'إقفال شهر يونيو 2024',
+    'CLS-2024-06',
+    'low',
+    'pending',
+    0,
+    null,
+    1,
+    1440,
     ['شهري'],
-    [
-      { label: 'ميزان المراجعة', href: '/trial-balance/jun-2024', icon: 'BarChart3' },
-    ],
+    [{ label: 'ميزان المراجعة', href: '/trial-balance/jun-2024', icon: 'BarChart3' }],
   ),
   createMockItem(
-    'item-9', 'إقفال شهري', 'إقفال شهر يوليو 2024', 'CLS-2024-07',
-    'low', 'pending', 0, null, 2, 1440,
+    'item-9',
+    'إقفال شهري',
+    'إقفال شهر يوليو 2024',
+    'CLS-2024-07',
+    'low',
+    'pending',
+    0,
+    null,
+    2,
+    1440,
     ['شهري'],
     [],
   ),
   createMockItem(
-    'item-10', 'إقفال شهري', 'إقفال شهر أغسطس 2024', 'CLS-2024-08',
-    'low', 'pending', 0, null, 3, 1440,
+    'item-10',
+    'إقفال شهري',
+    'إقفال شهر أغسطس 2024',
+    'CLS-2024-08',
+    'low',
+    'pending',
+    0,
+    null,
+    3,
+    1440,
     ['شهري'],
     [],
   ),
   createMockItem(
-    'item-11', 'إقفال شهري', 'إقفال شهر سبتمبر 2024', 'CLS-2024-09',
-    'low', 'pending', 0, null, 4, 1440,
+    'item-11',
+    'إقفال شهري',
+    'إقفال شهر سبتمبر 2024',
+    'CLS-2024-09',
+    'low',
+    'pending',
+    0,
+    null,
+    4,
+    1440,
     ['شهري', 'تدقيق'],
     [],
   ),
   createMockItem(
-    'item-12', 'إقفال ربعي', 'إقفال الربع الثالث 2024', 'QCLS-2024-Q3',
-    'high', 'pending', 0, null, 5, 2880,
+    'item-12',
+    'إقفال ربعي',
+    'إقفال الربع الثالث 2024',
+    'QCLS-2024-Q3',
+    'high',
+    'pending',
+    0,
+    null,
+    5,
+    2880,
     ['ربعي', 'نهائي'],
     [],
   ),
   createMockItem(
-    'item-13', 'إقفال شهري', 'إقفال شهر أكتوبر 2024', 'CLS-2024-10',
-    'medium', 'pending', 0, null, 0, 1440,
+    'item-13',
+    'إقفال شهري',
+    'إقفال شهر أكتوبر 2024',
+    'CLS-2024-10',
+    'medium',
+    'pending',
+    0,
+    null,
+    0,
+    1440,
     ['شهري'],
     [],
   ),
   createMockItem(
-    'item-14', 'إقفال شهري', 'إقفال شهر نوفمبر 2024', 'CLS-2024-11',
-    'medium', 'pending', 0, null, 1, 1440,
+    'item-14',
+    'إقفال شهري',
+    'إقفال شهر نوفمبر 2024',
+    'CLS-2024-11',
+    'medium',
+    'pending',
+    0,
+    null,
+    1,
+    1440,
     ['شهري', 'نهائي'],
     [],
   ),
   createMockItem(
-    'item-15', 'إقفال سنوي', 'إقفال العام 2024', 'YCLS-2024',
-    'critical', 'active', 4, 'review', 2, 4320,
+    'item-15',
+    'إقفال سنوي',
+    'إقفال العام 2024',
+    'YCLS-2024',
+    'critical',
+    'active',
+    4,
+    'review',
+    2,
+    4320,
     ['سنوي', 'تدقيق', 'نهائي'],
     [
       { label: 'دفتر الأستاذ', href: '/ledger/2024', icon: 'BookOpen' },
@@ -426,7 +566,12 @@ const MOCK_ITEMS: ProcessItem[] = [
 function PriorityBadge({ priority }: { priority: 'critical' | 'high' | 'medium' | 'low' }) {
   const config = PRIORITY_CONFIG[priority]
   return (
-    <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full border', config.className)}>
+    <span
+      className={cn(
+        'inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full border',
+        config.className,
+      )}
+    >
       {priority === 'critical' || priority === 'high' ? (
         <AlertTriangle className="h-2.5 w-2.5" />
       ) : (
@@ -439,16 +584,25 @@ function PriorityBadge({ priority }: { priority: 'critical' | 'high' | 'medium' 
 
 function StageBadge({ stageId }: { stageId: string }) {
   const config = STAGE_BADGE_CONFIG[stageId]
-  if (!config) return null
+  if (!config) {
+    return null
+  }
   return (
-    <span className={cn('inline-flex items-center px-2 py-0.5 text-[10px] font-medium rounded-full border', config.className)}>
+    <span
+      className={cn(
+        'inline-flex items-center px-2 py-0.5 text-[10px] font-medium rounded-full border',
+        config.className,
+      )}
+    >
       {config.label}
     </span>
   )
 }
 
 function SLABadge({ slaMinutes, startedAt }: { slaMinutes: number; startedAt?: number }) {
-  if (!startedAt) return null
+  if (!startedAt) {
+    return null
+  }
   const sla = calculateSLADisplay(slaMinutes, startedAt)
   const colorMap = {
     ok: 'text-success bg-success/10 border-success/20',
@@ -457,7 +611,12 @@ function SLABadge({ slaMinutes, startedAt }: { slaMinutes: number; startedAt?: n
     breached: 'text-destructive bg-destructive/10 border-destructive/20',
   }
   return (
-    <span className={cn('inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded-full border', colorMap[sla.status])}>
+    <span
+      className={cn(
+        'inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded-full border',
+        colorMap[sla.status],
+      )}
+    >
       <Clock className="h-2.5 w-2.5" />
       {sla.remainingDisplay}
     </span>
@@ -468,7 +627,12 @@ function StatusBadge({ status }: { status: ProcessStage['status'] }) {
   const config = STATUS_STYLES[status]
   const Icon = config.icon
   return (
-    <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full border', config.className)}>
+    <span
+      className={cn(
+        'inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full border',
+        config.className,
+      )}
+    >
       <Icon className={cn('h-2.5 w-2.5', status === 'active' && 'animate-spin')} />
       {config.label}
     </span>
@@ -480,11 +644,15 @@ function calcMetrics(items: ProcessItem[]): ProcessFlowMetrics {
     totalItems: items.length,
     activeItems: items.filter((i) => i.status === 'active').length,
     completedItems: items.filter((i) => i.status === 'completed').length,
-    overdueItems: items.filter((i) => i.stages.some((s) => {
-      if (s.status !== 'active' || !s.startedAt || !s.slaMinutes) return false
-      const elapsed = Date.now() - s.startedAt
-      return elapsed > s.slaMinutes * 60000
-    })).length,
+    overdueItems: items.filter((i) =>
+      i.stages.some((s) => {
+        if (s.status !== 'active' || !s.startedAt || !s.slaMinutes) {
+          return false
+        }
+        const elapsed = Date.now() - s.startedAt
+        return elapsed > s.slaMinutes * 60000
+      }),
+    ).length,
     avgCompletionTime: 0,
     totalAmount: items.reduce((sum, i) => sum + (i.amount ?? 0), 0),
     pendingApprovals: items.reduce((sum, i) => sum + i.approvals.filter((a) => a.decision === 'pending').length, 0),
@@ -492,6 +660,7 @@ function calcMetrics(items: ProcessItem[]): ProcessFlowMetrics {
 }
 
 export function FinancialCloseFlow() {
+  const { t } = useT()
   const [items, setItems] = useState<ProcessItem[]>(MOCK_ITEMS)
   const [selectedId, setSelectedId] = useState<string>(MOCK_ITEMS[0]?.id ?? '')
   const [filterTab, setFilterTab] = useState('all')
@@ -544,17 +713,18 @@ export function FinancialCloseFlow() {
     return result
   }, [items, filterTab, searchQuery, sortBy, sortAsc])
 
-  const selectedItem = useMemo(
-    () => items.find((i) => i.id === selectedId) ?? null,
-    [items, selectedId],
-  )
+  const selectedItem = useMemo(() => items.find((i) => i.id === selectedId) ?? null, [items, selectedId])
 
   function handleStageTransition(stageId: string, newStatus: 'completed' | 'failed') {
     setItems((prev) =>
       prev.map((item) => {
-        if (item.id !== selectedId) return item
+        if (item.id !== selectedId) {
+          return item
+        }
         const stages = item.stages.map((s) => {
-          if (s.id !== stageId) return s
+          if (s.id !== stageId) {
+            return s
+          }
           return {
             ...s,
             status: newStatus,
@@ -580,7 +750,10 @@ export function FinancialCloseFlow() {
         const activity: ProcessActivity = {
           id: `act-manual-${Date.now().toString(36)}`,
           type: 'stage_change',
-          action: newStatus === 'completed' ? `إكمال مرحلة ${stages.find((s) => s.id === stageId)?.name}` : `فشل في مرحلة ${stages.find((s) => s.id === stageId)?.name}`,
+          action:
+            newStatus === 'completed'
+              ? `إكمال مرحلة ${stages.find((s) => s.id === stageId)?.name}`
+              : `فشل في مرحلة ${stages.find((s) => s.id === stageId)?.name}`,
           actor: { id: 'user-current', name: 'المستخدم الحالي' },
           timestamp: now,
           details: newStatus === 'completed' ? 'تم إكمال المرحلة يدوياً' : 'تم تعليم المرحلة كفشل',
@@ -601,7 +774,9 @@ export function FinancialCloseFlow() {
   function handleApprove(approvalId: string) {
     setItems((prev) =>
       prev.map((item) => {
-        if (item.id !== selectedId) return item
+        if (item.id !== selectedId) {
+          return item
+        }
         return {
           ...item,
           approvals: item.approvals.map((a) =>
@@ -627,7 +802,9 @@ export function FinancialCloseFlow() {
   function handleReject(approvalId: string) {
     setItems((prev) =>
       prev.map((item) => {
-        if (item.id !== selectedId) return item
+        if (item.id !== selectedId) {
+          return item
+        }
         return {
           ...item,
           approvals: item.approvals.map((a) =>
@@ -653,7 +830,9 @@ export function FinancialCloseFlow() {
   const activeCounts = useMemo(() => {
     const counts: Record<string, number> = { all: items.length }
     for (const tab of FILTER_TABS) {
-      if (tab.id === 'all') continue
+      if (tab.id === 'all') {
+        continue
+      }
       counts[tab.id] = items.filter((item) => {
         const active = item.stages.find((s) => s.status === 'active')
         return active?.id === tab.id
@@ -668,10 +847,14 @@ export function FinancialCloseFlow() {
     if (activeItems.length > 2) {
       recs.push(`يوجد ${activeItems.length} عمليات إقفال نشطة. يوصى بتسريع الإجراءات لتجنب التأخير.`)
     }
-    const overdue = items.filter((i) => i.stages.some((s) => {
-      if (s.status !== 'active' || !s.startedAt || !s.slaMinutes) return false
-      return (Date.now() - s.startedAt) > s.slaMinutes * 60000 * 0.85
-    }))
+    const overdue = items.filter((i) =>
+      i.stages.some((s) => {
+        if (s.status !== 'active' || !s.startedAt || !s.slaMinutes) {
+          return false
+        }
+        return Date.now() - s.startedAt > s.slaMinutes * 60000 * 0.85
+      }),
+    )
     if (overdue.length > 0) {
       const names = overdue.map((i) => i.title).join('، ')
       recs.push(`عملية الإقفال في "${names}" تقترب من تجاوز SLA. يوصى بالتدخل الفوري.`)
@@ -695,23 +878,23 @@ export function FinancialCloseFlow() {
     <div className="flex flex-col gap-6 p-6" dir="rtl">
       <EnterpriseBreadcrumbs
         items={[
-          { label: 'المالية', href: '/finance' },
-          { label: 'الإغلاق المالي' },
+          { label: t('financialWorkbench.close.breadcrumbFinance'), href: '/finance' },
+          { label: t('financialWorkbench.close.breadcrumbClose') },
         ]}
       />
 
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight">دورة الإغلاق المالي</h1>
-        <p className="text-sm text-muted-foreground">
-          إدارة ومتابعة عمليات الإقفال المالي الشهري والربعي والسنوي
-        </p>
+        <h1 className="text-2xl font-bold tracking-tight">{t('financialWorkbench.close.title')}</h1>
+        <p className="text-sm text-muted-foreground">{t('financialWorkbench.close.description')}</p>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="rounded-xl border bg-card p-5">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-muted-foreground">الفترة الحالية</span>
+            <span className="text-xs font-medium text-muted-foreground">
+              {t('financialWorkbench.close.currentPeriod')}
+            </span>
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <Calendar className="h-4 w-4 text-primary" />
             </div>
@@ -719,13 +902,15 @@ export function FinancialCloseFlow() {
           <div className="text-2xl font-bold tabular-nums">مايو 2024</div>
           <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
             <Clock className="h-3 w-3" />
-            <span>متبقي {18} يوم للإقفال</span>
+            <span>{t('financialWorkbench.close.daysRemainingValue', { days: 18 })}</span>
           </div>
         </div>
 
         <div className="rounded-xl border bg-card p-5">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-muted-foreground">حسابات تمت تسويتها</span>
+            <span className="text-xs font-medium text-muted-foreground">
+              {t('financialWorkbench.close.settledAccounts')}
+            </span>
             <div className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center">
               <CheckCircle2 className="h-4 w-4 text-success" />
             </div>
@@ -733,13 +918,15 @@ export function FinancialCloseFlow() {
           <div className="text-2xl font-bold tabular-nums">١٢٤</div>
           <div className="flex items-center gap-1 mt-1 text-xs text-success">
             <TrendingUp className="h-3 w-3" />
-            <span>+٨ عن الشهر الماضي</span>
+            <span>{t('financialWorkbench.close.fromPreviousPeriod', { count: 8 })}</span>
           </div>
         </div>
 
         <div className="rounded-xl border bg-card p-5">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-muted-foreground">قيود التسوية</span>
+            <span className="text-xs font-medium text-muted-foreground">
+              {t('financialWorkbench.close.adjustmentEntries')}
+            </span>
             <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
               <FileText className="h-4 w-4 text-amber-600" />
             </div>
@@ -747,13 +934,15 @@ export function FinancialCloseFlow() {
           <div className="text-2xl font-bold tabular-nums">٣٧</div>
           <div className="flex items-center gap-1 mt-1 text-xs text-amber-600">
             <AlertTriangle className="h-3 w-3" />
-            <span>٥ قيود بحاجة للمراجعة</span>
+            <span>{t('financialWorkbench.close.entriesNeedingReview', { count: 5 })}</span>
           </div>
         </div>
 
         <div className="rounded-xl border bg-card p-5">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-muted-foreground">أيام متبقية للإقفال</span>
+            <span className="text-xs font-medium text-muted-foreground">
+              {t('financialWorkbench.close.daysRemaining')}
+            </span>
             <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center">
               <Clock className="h-4 w-4 text-destructive" />
             </div>
@@ -761,7 +950,7 @@ export function FinancialCloseFlow() {
           <div className="text-2xl font-bold tabular-nums text-destructive">١٢</div>
           <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
             <TrendingDown className="h-3 w-3" />
-            <span>الموعد النهائي: ٣١ مايو ٢٠٢٤</span>
+            <span>{t('financialWorkbench.close.deadlineLabel', { date: '٣١ مايو ٢٠٢٤' })}</span>
           </div>
         </div>
       </div>
@@ -775,7 +964,10 @@ export function FinancialCloseFlow() {
             {FILTER_TABS.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => { setFilterTab(tab.id); setSelectedId('') }}
+                onClick={() => {
+                  setFilterTab(tab.id)
+                  setSelectedId('')
+                }}
                 className={cn(
                   'relative flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all',
                   filterTab === tab.id
@@ -784,12 +976,14 @@ export function FinancialCloseFlow() {
                 )}
               >
                 {tab.label}
-                <span className={cn(
-                  'inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] rounded-full',
-                  filterTab === tab.id
-                    ? 'bg-primary-foreground/20 text-primary-foreground'
-                    : 'bg-muted text-muted-foreground',
-                )}>
+                <span
+                  className={cn(
+                    'inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] rounded-full',
+                    filterTab === tab.id
+                      ? 'bg-primary-foreground/20 text-primary-foreground'
+                      : 'bg-muted text-muted-foreground',
+                  )}
+                >
                   {activeCounts[tab.id] ?? 0}
                 </span>
               </button>
@@ -804,7 +998,7 @@ export function FinancialCloseFlow() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="بحث عن دورة إقفال..."
+                placeholder={t('financialWorkbench.close.searchCloseCycles')}
                 className="w-full h-9 pr-9 pl-3 text-xs rounded-lg border border-input bg-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               />
             </div>
@@ -815,7 +1009,9 @@ export function FinancialCloseFlow() {
                 className="h-9 px-3 text-xs rounded-lg border border-input bg-background appearance-none cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               >
                 {SORT_OPTIONS.map((opt) => (
-                  <option key={opt.id} value={opt.id}>{opt.label}</option>
+                  <option key={opt.id} value={opt.id}>
+                    {opt.label}
+                  </option>
                 ))}
               </select>
               <ArrowUpDown className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
@@ -825,7 +1021,9 @@ export function FinancialCloseFlow() {
               size="icon"
               className="h-9 w-9 shrink-0"
               onClick={() => setSortAsc(!sortAsc)}
-              title={sortAsc ? 'ترتيب تصاعدي' : 'ترتيب تنازلي'}
+              title={
+                sortAsc ? t('financialWorkbench.close.sortAscending') : t('financialWorkbench.close.sortDescending')
+              }
             >
               <ArrowUpDown className={cn('h-4 w-4 transition-transform', sortAsc && 'rotate-180')} />
             </Button>
@@ -838,31 +1036,35 @@ export function FinancialCloseFlow() {
                 <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-3">
                   <Filter className="h-6 w-6 text-muted-foreground" />
                 </div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">لا توجد نتائج</p>
-                <p className="text-xs text-muted-foreground/70">
-                  لم يتم العثور على دورات إقفال تطابق معايير البحث
+                <p className="text-sm font-medium text-muted-foreground mb-1">
+                  {t('financialWorkbench.close.noResults')}
                 </p>
+                <p className="text-xs text-muted-foreground/70">{t('financialWorkbench.close.noResultsHint')}</p>
                 <Button
                   variant="outline"
                   size="sm"
                   className="mt-4"
-                  onClick={() => { setFilterTab('all'); setSearchQuery('') }}
+                  onClick={() => {
+                    setFilterTab('all')
+                    setSearchQuery('')
+                  }}
                 >
                   <RefreshCw className="h-3.5 w-3.5 ml-1.5" />
-                  إعادة تعيين
+                  {t('financialWorkbench.close.reset')}
                 </Button>
               </div>
             ) : (
               filteredItems.map((item) => {
                 const activeStage = item.stages.find((s) => s.status === 'active')
-                const activeStageName = activeStage
-                  ? STAGE_TEMPLATES.find((t) => t.id === activeStage.id)?.name
-                  : null
+                const activeStageName = activeStage ? STAGE_TEMPLATES.find((t) => t.id === activeStage.id)?.name : null
                 const hasPendingApprovals = item.approvals.some((a) => a.decision === 'pending')
                 return (
                   <button
                     key={item.id}
-                    onClick={() => { setSelectedId(item.id); setDetailTab('pipeline') }}
+                    onClick={() => {
+                      setSelectedId(item.id)
+                      setDetailTab('pipeline')
+                    }}
                     className={cn(
                       'w-full text-right rounded-xl border p-4 transition-all hover:shadow-sm',
                       selectedId === item.id
@@ -872,13 +1074,11 @@ export function FinancialCloseFlow() {
                   >
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-xs text-muted-foreground font-mono shrink-0">
-                          {item.refNumber}
-                        </span>
+                        <span className="text-xs text-muted-foreground font-mono shrink-0">{item.refNumber}</span>
                         {hasPendingApprovals && (
                           <span className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-medium rounded-full bg-warning/10 text-warning border border-warning/20">
                             <Clock className="h-2 w-2" />
-                            موافقة
+                            {t('financialWorkbench.close.approval')}
                           </span>
                         )}
                       </div>
@@ -897,7 +1097,7 @@ export function FinancialCloseFlow() {
                     {activeStageName && (
                       <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                         <Loader2 className="h-3 w-3 animate-spin text-primary" />
-                        <span>المرحلة الحالية: </span>
+                        <span>{t('financialWorkbench.close.currentStage')} </span>
                         <span className="font-medium text-foreground">{activeStageName}</span>
                       </div>
                     )}
@@ -994,11 +1194,12 @@ export function FinancialCloseFlow() {
                     >
                       <Icon className="h-3.5 w-3.5" />
                       {tab.label}
-                      {tab.id === 'approvals' && selectedItem.approvals.filter((a) => a.decision === 'pending').length > 0 && (
-                        <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] rounded-full bg-warning/20 text-warning">
-                          {selectedItem.approvals.filter((a) => a.decision === 'pending').length}
-                        </span>
-                      )}
+                      {tab.id === 'approvals' &&
+                        selectedItem.approvals.filter((a) => a.decision === 'pending').length > 0 && (
+                          <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] rounded-full bg-warning/20 text-warning">
+                            {selectedItem.approvals.filter((a) => a.decision === 'pending').length}
+                          </span>
+                        )}
                     </button>
                   )
                 })}
@@ -1007,22 +1208,19 @@ export function FinancialCloseFlow() {
               {/* Tab Content */}
               <div className="min-h-[400px]">
                 {detailTab === 'pipeline' && (
-                  <ProcessPipeline
-                    item={selectedItem}
-                    onStageTransition={handleStageTransition}
-                  />
+                  <ProcessPipeline item={selectedItem} onStageTransition={handleStageTransition} />
                 )}
 
-                {detailTab === 'timeline' && (
-                  <ProcessTimeline activities={selectedItem.activities} />
-                )}
+                {detailTab === 'timeline' && <ProcessTimeline activities={selectedItem.activities} />}
 
                 {detailTab === 'approvals' && (
                   <div className="rounded-xl border bg-card p-6">
-                    <h3 className="text-sm font-medium text-muted-foreground mb-4">الموافقات</h3>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-4">
+                      {t('financialWorkbench.close.approvals')}
+                    </h3>
                     {selectedItem.approvals.length === 0 ? (
                       <p className="text-sm text-muted-foreground text-center py-8">
-                        لا توجد موافقات مطلوبة
+                        {t('financialWorkbench.close.noApprovalsRequired')}
                       </p>
                     ) : (
                       <div className="space-y-3">
@@ -1041,45 +1239,73 @@ export function FinancialCloseFlow() {
 
                 {detailTab === 'info' && (
                   <div className="rounded-xl border bg-card p-6">
-                    <h3 className="text-sm font-medium text-muted-foreground mb-4">معلومات الإقفال</h3>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-4">
+                      {t('financialWorkbench.close.closeInfo')}
+                    </h3>
                     <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-4">
                         <div>
-                          <span className="text-[11px] text-muted-foreground">رقم المرجع</span>
+                          <span className="text-[11px] text-muted-foreground">
+                            {t('financialWorkbench.close.referenceNumber')}
+                          </span>
                           <p className="text-sm font-medium font-mono">{selectedItem.refNumber}</p>
                         </div>
                         <div>
-                          <span className="text-[11px] text-muted-foreground">النوع</span>
+                          <span className="text-[11px] text-muted-foreground">
+                            {t('financialWorkbench.close.cycleType')}
+                          </span>
                           <p className="text-sm font-medium">{selectedItem.type}</p>
                         </div>
                         <div>
-                          <span className="text-[11px] text-muted-foreground">المالك</span>
+                          <span className="text-[11px] text-muted-foreground">
+                            {t('financialWorkbench.close.owner')}
+                          </span>
                           <p className="text-sm font-medium">{selectedItem.owner.name}</p>
                         </div>
                         <div>
-                          <span className="text-[11px] text-muted-foreground">تاريخ الإنشاء</span>
-                          <p className="text-sm font-medium">{new Date(selectedItem.createdAt).toLocaleString('ar-SA')}</p>
+                          <span className="text-[11px] text-muted-foreground">
+                            {t('financialWorkbench.close.createdDate')}
+                          </span>
+                          <p className="text-sm font-medium">
+                            {new Date(selectedItem.createdAt).toLocaleString('ar-SA')}
+                          </p>
                         </div>
                       </div>
                       <div className="space-y-4">
                         <div>
-                          <span className="text-[11px] text-muted-foreground">SLA الإجمالي</span>
-                          <p className="text-sm font-medium">{selectedItem.slaMinutes} دقيقة</p>
-                        </div>
-                        <div>
-                          <span className="text-[11px] text-muted-foreground">إجمالي المراحل</span>
-                          <p className="text-sm font-medium">{selectedItem.stages.length} مراحل</p>
-                        </div>
-                        <div>
-                          <span className="text-[11px] text-muted-foreground">النشاطات</span>
-                          <p className="text-sm font-medium">{selectedItem.activities.length} نشاط</p>
-                        </div>
-                        <div>
-                          <span className="text-[11px] text-muted-foreground">الموافقات</span>
+                          <span className="text-[11px] text-muted-foreground">
+                            {t('financialWorkbench.close.totalSLA')}
+                          </span>
                           <p className="text-sm font-medium">
-                            {selectedItem.approvals.filter((a) => a.decision === 'approved').length} معتمدة
+                            {selectedItem.slaMinutes} {t('financialWorkbench.close.minutes')}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-[11px] text-muted-foreground">
+                            {t('financialWorkbench.close.totalStages')}
+                          </span>
+                          <p className="text-sm font-medium">
+                            {selectedItem.stages.length} {t('financialWorkbench.close.stages')}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-[11px] text-muted-foreground">
+                            {t('financialWorkbench.close.activities')}
+                          </span>
+                          <p className="text-sm font-medium">
+                            {selectedItem.activities.length} {t('financialWorkbench.close.activity')}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-[11px] text-muted-foreground">
+                            {t('financialWorkbench.close.approvals')}
+                          </span>
+                          <p className="text-sm font-medium">
+                            {selectedItem.approvals.filter((a) => a.decision === 'approved').length}{' '}
+                            {t('financialWorkbench.close.approved_')}
                             {' / '}
-                            {selectedItem.approvals.filter((a) => a.decision === 'pending').length} معلقة
+                            {selectedItem.approvals.filter((a) => a.decision === 'pending').length}{' '}
+                            {t('financialWorkbench.close.pending_')}
                           </p>
                         </div>
                       </div>
@@ -1087,7 +1313,9 @@ export function FinancialCloseFlow() {
 
                     {selectedItem.tags.length > 0 && (
                       <div className="mt-6 pt-6 border-t">
-                        <span className="text-[11px] text-muted-foreground block mb-2">الوسوم</span>
+                        <span className="text-[11px] text-muted-foreground block mb-2">
+                          {t('financialWorkbench.close.tags')}
+                        </span>
                         <div className="flex flex-wrap gap-1.5">
                           {selectedItem.tags.map((tag) => (
                             <span
@@ -1103,7 +1331,9 @@ export function FinancialCloseFlow() {
 
                     {selectedItem.linkedModules.length > 0 && (
                       <div className="mt-6 pt-6 border-t">
-                        <span className="text-[11px] text-muted-foreground block mb-2">الوحدات المرتبطة</span>
+                        <span className="text-[11px] text-muted-foreground block mb-2">
+                          {t('financialWorkbench.close.linkedModules')}
+                        </span>
                         <div className="flex flex-wrap gap-2">
                           {selectedItem.linkedModules.map((mod) => (
                             <a
@@ -1132,8 +1362,12 @@ export function FinancialCloseFlow() {
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-medium text-primary">توصية ذكية</span>
-                        <span className="text-[10px] text-muted-foreground">AI • نظام الإقفال الذكي</span>
+                        <span className="text-xs font-medium text-primary">
+                          {t('financialWorkbench.close.smartRecommendation')}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {t('financialWorkbench.close.aiSystem')}
+                        </span>
                       </div>
                       <p className="text-sm text-muted-foreground">{selectedItem.aiRecommendation}</p>
                     </div>
@@ -1145,7 +1379,9 @@ export function FinancialCloseFlow() {
               <div className="rounded-xl border bg-card p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <Building2 className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-xs font-medium text-muted-foreground">الوحدات ذات الصلة</span>
+                  <span className="text-xs font-medium text-muted-foreground">
+                    {t('financialWorkbench.close.relatedModules')}
+                  </span>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {CROSS_LINKS.map((link) => {
@@ -1169,7 +1405,9 @@ export function FinancialCloseFlow() {
               <div className="rounded-xl border bg-card p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <Lightbulb className="h-4 w-4 text-amber-500" />
-                  <span className="text-xs font-medium text-muted-foreground">توصيات النظام</span>
+                  <span className="text-xs font-medium text-muted-foreground">
+                    {t('financialWorkbench.close.systemRecommendations')}
+                  </span>
                 </div>
                 <div className="space-y-2">
                   {aiRecommendations.map((rec, idx) => (
@@ -1186,9 +1424,11 @@ export function FinancialCloseFlow() {
               <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
                 <Building2 className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h3 className="text-base font-medium text-muted-foreground mb-1">اختر دورة إقفال</h3>
+              <h3 className="text-base font-medium text-muted-foreground mb-1">
+                {t('financialWorkbench.close.selectCloseCycle')}
+              </h3>
               <p className="text-sm text-muted-foreground/70 max-w-sm">
-                يرجى اختيار إحدى دورات الإقفال من القائمة الجانبية لعرض التفاصيل
+                {t('financialWorkbench.close.selectCloseCycleHint')}
               </p>
             </div>
           )}

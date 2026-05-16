@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { useOffline } from '@/lib/offline/react/offline-provider'
+import { useT } from '@/lib/i18n/language-provider'
 import { X, RefreshCw, AlertTriangle, CheckCircle2 } from 'lucide-react'
 
 export function RetryNotification() {
+  const { t } = useT()
   const { failedCount, retryFailed, isOnline } = useOffline()
   const [dismissed, setDismissed] = useState<Record<string, boolean>>({})
   const [retrying, setRetrying] = useState(false)
@@ -43,13 +45,17 @@ export function RetryNotification() {
         </div>
 
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium">{retrying ? 'جاري إعادة المحاولة...' : `فشل ${failedCount} عملية`}</p>
+          <p className="text-sm font-medium">
+            {retrying
+              ? t('offline.retry.retrying')
+              : `${t('offline.retry.failed')} ${failedCount} ${t('offline.retry.operations')}`}
+          </p>
           <p className="text-xs text-muted-foreground mt-0.5">
             {retrying
-              ? 'محاولة مزامنة العمليات الفاشلة'
+              ? t('offline.retry.syncingFailed')
               : isOnline
-                ? 'اضغط لإعادة محاولة المزامنة'
-                : 'يرجى الاتصال بالإنترنت للمزامنة'}
+                ? t('offline.retry.clickToRetry')
+                : t('offline.retry.connectToSync')}
           </p>
         </div>
 
@@ -58,7 +64,7 @@ export function RetryNotification() {
             <button
               onClick={handleRetry}
               className="p-2 hover:bg-accent rounded-lg text-primary transition-colors"
-              title="إعادة المحاولة"
+              title={t('offline.retry.retry')}
             >
               <RefreshCw className="h-4 w-4" />
             </button>
@@ -66,7 +72,7 @@ export function RetryNotification() {
           <button
             onClick={() => setDismissed({ all: true })}
             className="p-2 hover:bg-accent rounded-lg text-muted-foreground transition-colors"
-            title="إغلاق"
+            title={t('common.close')}
           >
             <X className="h-4 w-4" />
           </button>
@@ -77,6 +83,7 @@ export function RetryNotification() {
 }
 
 export function SyncCompleteToast({ show, onDismiss }: { show: boolean; onDismiss: () => void }) {
+  const { t } = useT()
   useEffect(() => {
     if (show) {
       const timer = setTimeout(onDismiss, 4000)
@@ -95,8 +102,8 @@ export function SyncCompleteToast({ show, onDismiss }: { show: boolean; onDismis
           <CheckCircle2 className="h-4 w-4 text-success" />
         </div>
         <div className="flex-1">
-          <p className="text-sm font-medium">تمت المزامنة بنجاح</p>
-          <p className="text-xs text-muted-foreground">جميع العمليات محدثة</p>
+          <p className="text-sm font-medium">{t('offline.syncComplete.title')}</p>
+          <p className="text-xs text-muted-foreground">{t('offline.syncComplete.description')}</p>
         </div>
         <button onClick={onDismiss} className="p-1 hover:bg-accent rounded-lg">
           <X className="h-4 w-4 text-muted-foreground" />

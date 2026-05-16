@@ -20,6 +20,7 @@ import {
 import { cn } from '@/lib/utils'
 import { useSafeArea, useIsCapacitor } from '@/hooks'
 import { useMobileLayout } from './MobileLayoutProvider'
+import { useT } from '@/lib/i18n/language-provider'
 import { useNetworkStatus } from '@/lib/offline/react/use-network-status'
 import { useSyncStatus } from '@/lib/offline/react/use-sync-status'
 
@@ -29,12 +30,12 @@ interface NavItem {
   icon: LucideIcon
 }
 
-const DEFAULT_ITEMS: NavItem[] = [
-  { label: 'الرئيسية', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'المبيعات', href: '/dashboard/sales', icon: Receipt },
-  { label: 'المخزون', href: '/dashboard/inventory', icon: Package },
-  { label: 'المالية', href: '/dashboard/expenses', icon: Wallet },
-  { label: 'المزيد', href: '#', icon: MoreHorizontal },
+const getDefaultItems = (t: (key: string) => string): NavItem[] => [
+  { label: t('nav.dashboard'), href: '/dashboard', icon: LayoutDashboard },
+  { label: t('nav.sales'), href: '/dashboard/sales', icon: Receipt },
+  { label: t('nav.inventory'), href: '/dashboard/inventory', icon: Package },
+  { label: t('nav.expenses'), href: '/dashboard/expenses', icon: Wallet },
+  { label: t('mobile.more'), href: '#', icon: MoreHorizontal },
 ]
 
 interface BottomNavigationProps {
@@ -42,7 +43,9 @@ interface BottomNavigationProps {
   className?: string
 }
 
-export function BottomNavigation({ items = DEFAULT_ITEMS, className }: BottomNavigationProps) {
+export function BottomNavigation({ items, className }: BottomNavigationProps) {
+  const { t } = useT()
+  const resolvedItems = items ?? getDefaultItems(t)
   const pathname = usePathname()
   const safeArea = useSafeArea()
   const isCapacitor = useIsCapacitor()
@@ -63,7 +66,7 @@ export function BottomNavigation({ items = DEFAULT_ITEMS, className }: BottomNav
     [pathname],
   )
 
-  const visibleItems = useMemo(() => items.slice(0, 5), [items])
+  const visibleItems = useMemo(() => resolvedItems.slice(0, 5), [resolvedItems])
 
   if (isKeyboardOpen) {
     return null
@@ -110,11 +113,13 @@ export function BottomNavigation({ items = DEFAULT_ITEMS, className }: BottomNav
 
       {/* Status indicators */}
       <div className="absolute top-1 right-1 flex gap-1">
-        {!isOnline && <div className="h-2 w-2 rounded-full bg-destructive shadow-sm" title="غير متصل" />}
+        {!isOnline && <div className="h-2 w-2 rounded-full bg-destructive shadow-sm" title={t('mobile.offline')} />}
         {isSyncing && (
-          <div className="h-2 w-2 rounded-full bg-primary animate-pulse-soft shadow-sm" title="جاري المزامنة" />
+          <div className="h-2 w-2 rounded-full bg-primary animate-pulse-soft shadow-sm" title={t('mobile.syncing')} />
         )}
-        {failedCount > 0 && <div className="h-2 w-2 rounded-full bg-warning shadow-sm" title={`${failedCount} فشل`} />}
+        {failedCount > 0 && (
+          <div className="h-2 w-2 rounded-full bg-warning shadow-sm" title={`${failedCount} ${t('mobile.failed')}`} />
+        )}
       </div>
     </nav>
   )

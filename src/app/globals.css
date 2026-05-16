@@ -669,4 +669,33 @@
   .sheet-animation {
     animation: sheet-up 0.3s ease-out;
   }
+
+  /* ── i18n / RTL utilities ──────────────────────────────────────────
+     Use logical properties (start/end) so layouts mirror automatically.
+     Prefer `ms-* / me-* / ps-* / pe-*` (Tailwind 3.3+) over `ml-/mr-/pl-/pr-`.
+  */
+  [dir='rtl'] .rtl-flip {
+    transform: scaleX(-1);
+  }
+  [dir='ltr'] .ltr-only,
+  [dir='rtl'] .rtl-only {
+    display: revert;
+  }
+  [dir='ltr'] .rtl-only,
+  [dir='rtl'] .ltr-only {
+    display: none !important;
+  }
+  /* Force a numeric/code segment to stay LTR regardless of page direction. */
+  .force-ltr {
+    direction: ltr;
+    unicode-bidi: isolate;
+  }
+  .force-rtl {
+    direction: rtl;
+    unicode-bidi: isolate;
+  }
+  /* Arabic numerals rendering helper */
+  [dir='rtl'] .tabular-nums {
+    font-feature-settings: 'tnum';
+  }
 }

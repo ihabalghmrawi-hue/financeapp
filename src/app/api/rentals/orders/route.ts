@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     p_end: body.end_date,
   })
   if (!available) {
-    return NextResponse.json({ error: 'الفستان محجوز في هذه الفترة، اختر تاريخاً آخر' }, { status: 409 })
+    return NextResponse.json({ error: 'Dress is booked for this period, choose another date' }, { status: 409 })
   }
 
   // 2. Generate order number
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
       supabase,
       COMPANY_ID,
       depositPaid,
-      `تأمين حجز ${data.order_number} - ${customerName}`,
+      `Booking deposit ${data.order_number} - ${customerName}`,
       data.id,
       'rental_order',
     ).catch(() => {})
@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
       supabase,
       COMPANY_ID,
       amountPaid,
-      `دفعة حجز ${data.order_number} - ${customerName}`,
+      `Booking payment ${data.order_number} - ${customerName}`,
       data.id,
       'rental_order',
     ).catch(() => {})

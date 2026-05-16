@@ -8,12 +8,13 @@ import type { PushNotificationCategory, PushNotificationPriority } from '@/lib/p
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useT } from '@/lib/i18n/language-provider'
 
-const PRIORITY_OPTIONS: { value: PushNotificationPriority; label: string }[] = [
-  { value: 'low', label: 'منخفضة' },
-  { value: 'normal', label: 'متوسطة' },
-  { value: 'high', label: 'عالية' },
-  { value: 'critical', label: 'حرجة' },
+const PRIORITY_OPTIONS: { value: PushNotificationPriority; labelKey: string }[] = [
+  { value: 'low', labelKey: 'notification.priority.low' },
+  { value: 'normal', labelKey: 'notification.priority.normal' },
+  { value: 'high', labelKey: 'notification.priority.high' },
+  { value: 'critical', labelKey: 'notification.priority.critical' },
 ]
 
 const CATEGORY_ICONS: Record<PushNotificationCategory, React.ReactNode> = {
@@ -98,6 +99,7 @@ function TimeInput({ label, value, onChange }: TimeInputProps) {
 }
 
 export function NotificationPreferences() {
+  const { t } = useT()
   const { preferences, initialized, updatePreferences, updateCategoryPreference } = usePush()
 
   const handleMasterToggle = useCallback(
@@ -192,14 +194,18 @@ export function NotificationPreferences() {
             ) : (
               <BellOff className="h-5 w-5 text-muted-foreground" />
             )}
-            الإشعارات
+            {t('notification.push.preferences.title')}
           </CardTitle>
-          <CardDescription>إدارة تفضيلات الإشعارات وتحديد أولوياتها</CardDescription>
+          <CardDescription>{t('notification.push.preferences.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <ToggleRow
-            label={preferences.enabled ? 'الإشعارات مفعلة' : 'الإشعارات متوقفة'}
-            description="تشغيل أو إيقاف جميع الإشعارات"
+            label={
+              preferences.enabled
+                ? t('notification.push.preferences.enabled')
+                : t('notification.push.preferences.disabled')
+            }
+            description={t('notification.push.preferences.masterToggleDesc')}
             checked={preferences.enabled}
             onChange={handleMasterToggle}
             icon={preferences.enabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
@@ -208,7 +214,9 @@ export function NotificationPreferences() {
           {preferences.enabled && (
             <>
               <div className="border-t pt-4 space-y-4">
-                <h4 className="text-sm font-semibold text-foreground px-1">الإعدادات العامة</h4>
+                <h4 className="text-sm font-semibold text-foreground px-1">
+                  {t('notification.push.preferences.generalSettings')}
+                </h4>
 
                 <div className="flex items-center justify-between py-3 px-4 rounded-lg hover:bg-muted/50 transition-colors">
                   <div className="flex items-center gap-3">
@@ -216,9 +224,11 @@ export function NotificationPreferences() {
                       <AlertTriangle className="h-4 w-4" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-foreground">الحد الأدنى للأولوية</p>
+                      <p className="text-sm font-medium text-foreground">
+                        {t('notification.push.preferences.minPriority')}
+                      </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        عرض الإشعارات التي تساوي أو تزيد عن هذه الأولوية
+                        {t('notification.push.preferences.minPriorityDesc')}
                       </p>
                     </div>
                   </div>
@@ -229,31 +239,31 @@ export function NotificationPreferences() {
                   >
                     {PRIORITY_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>
-                        {opt.label}
+                        {t(opt.labelKey)}
                       </option>
                     ))}
                   </select>
                 </div>
 
                 <ToggleRow
-                  label="الصوت"
-                  description="تشغيل الصوت عند وصول الإشعار"
+                  label={t('notification.push.preferences.sound')}
+                  description={t('notification.push.preferences.soundDesc')}
                   checked={preferences.soundEnabled}
                   onChange={handleSoundToggle}
                   icon={<Volume2 className="h-4 w-4" />}
                 />
 
                 <ToggleRow
-                  label="الاهتزاز"
-                  description="تشغيل الاهتزاز عند وصول الإشعار"
+                  label={t('notification.push.preferences.vibration')}
+                  description={t('notification.push.preferences.vibrationDesc')}
                   checked={preferences.vibrationEnabled}
                   onChange={handleVibrationToggle}
                   icon={<Vibrate className="h-4 w-4" />}
                 />
 
                 <ToggleRow
-                  label="الشارة (Badge)"
-                  description="عرض عدد الإشعارات غير المقروءة على أيقونة التطبيق"
+                  label={t('notification.push.preferences.badge')}
+                  description={t('notification.push.preferences.badgeDesc')}
                   checked={preferences.badgeEnabled}
                   onChange={handleBadgeToggle}
                   icon={<BadgeCheck className="h-4 w-4" />}
@@ -261,8 +271,8 @@ export function NotificationPreferences() {
 
                 <div className="border-t pt-4">
                   <ToggleRow
-                    label="ساعات الهدوء"
-                    description="إيقاف الإشعارات مؤقتاً خلال ساعات محددة"
+                    label={t('notification.push.preferences.quietHours')}
+                    description={t('notification.push.preferences.quietHoursDesc')}
                     checked={preferences.quietHoursEnabled}
                     onChange={handleQuietHoursToggle}
                     icon={<Moon className="h-4 w-4" />}
@@ -271,12 +281,12 @@ export function NotificationPreferences() {
                   {preferences.quietHoursEnabled && (
                     <div className="flex items-center gap-4 pr-16 pb-3 pt-1">
                       <TimeInput
-                        label="من"
+                        label={t('notification.push.preferences.from')}
                         value={preferences.quietHoursStart || '22:00'}
                         onChange={handleQuietHoursStart}
                       />
                       <TimeInput
-                        label="إلى"
+                        label={t('notification.push.preferences.to')}
                         value={preferences.quietHoursEnd || '07:00'}
                         onChange={handleQuietHoursEnd}
                       />
@@ -287,9 +297,15 @@ export function NotificationPreferences() {
 
               <div className="border-t pt-4 space-y-1">
                 <div className="flex items-center justify-between px-1 mb-2">
-                  <h4 className="text-sm font-semibold text-foreground">تصنيفات الإشعارات</h4>
+                  <h4 className="text-sm font-semibold text-foreground">
+                    {t('notification.push.preferences.categories')}
+                  </h4>
                   <span className="text-xs text-muted-foreground">
-                    {allEnabled ? 'الكل مفعل' : someEnabled ? 'بعضها مفعل' : 'الكل متوقف'}
+                    {allEnabled
+                      ? t('notification.push.preferences.allEnabled')
+                      : someEnabled
+                        ? t('notification.push.preferences.someEnabled')
+                        : t('notification.push.preferences.allDisabled')}
                   </span>
                 </div>
 

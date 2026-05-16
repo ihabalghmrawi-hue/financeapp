@@ -9,6 +9,7 @@ import { UnreadBadge } from './UnreadBadge'
 import type { PushNotificationCategory } from '@/lib/push/types'
 import { CATEGORY_LABELS } from '@/lib/push/types'
 import { Bell, BellOff, Inbox, Settings, X, CheckCheck, RefreshCw, Filter } from 'lucide-react'
+import { useT } from '@/lib/i18n/language-provider'
 
 interface PushNotificationCenterProps {
   open: boolean
@@ -19,6 +20,7 @@ interface PushNotificationCenterProps {
 const CATEGORIES = Object.keys(CATEGORY_LABELS) as PushNotificationCategory[]
 
 export function PushNotificationCenter({ open, onClose, className }: PushNotificationCenterProps) {
+  const { t } = useT()
   const {
     notifications,
     groups,
@@ -59,26 +61,26 @@ export function PushNotificationCenter({ open, onClose, className }: PushNotific
       <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
         <div className="flex items-center gap-2">
           <Bell className="h-5 w-5 text-primary" />
-          <h2 className="text-base font-semibold">الإشعارات</h2>
+          <h2 className="text-base font-semibold">{t('notification.push.title')}</h2>
           <UnreadBadge count={unreadCount} size="md" />
         </div>
         <div className="flex items-center gap-1">
           {!registered && !hasPermission && (
             <span className="text-[10px] text-muted-foreground flex items-center gap-1 ml-2">
-              <BellOff className="h-3 w-3" /> غير مفعلة
+              <BellOff className="h-3 w-3" /> {t('notification.push.disabled')}
             </span>
           )}
           <button
             onClick={() => setShowFilters(!showFilters)}
             className="p-2 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="تصفية"
+            aria-label={t('notification.push.ariaFilter')}
           >
             <Filter className="h-4 w-4" />
           </button>
           <button
             onClick={() => refreshNotifications()}
             className="p-2 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="تحديث"
+            aria-label={t('notification.push.ariaRefresh')}
           >
             <RefreshCw className="h-4 w-4" />
           </button>
@@ -86,7 +88,7 @@ export function PushNotificationCenter({ open, onClose, className }: PushNotific
             <button
               onClick={markAllAsRead}
               className="p-2 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="تحديد الكل كمقروء"
+              aria-label={t('notification.push.ariaMarkAllRead')}
             >
               <CheckCheck className="h-4 w-4" />
             </button>
@@ -94,7 +96,7 @@ export function PushNotificationCenter({ open, onClose, className }: PushNotific
           <button
             onClick={onClose}
             className="p-2 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="إغلاق"
+            aria-label={t('notification.push.ariaClose')}
           >
             <X className="h-4 w-4" />
           </button>
@@ -112,7 +114,7 @@ export function PushNotificationCenter({ open, onClose, className }: PushNotific
               )}
             >
               <Inbox className="h-3 w-3 inline ml-1" />
-              مجمعة
+              {t('notification.push.groupView')}
             </button>
             <button
               onClick={() => setViewMode((v) => (v === 'list' ? 'groups' : 'list'))}
@@ -122,7 +124,7 @@ export function PushNotificationCenter({ open, onClose, className }: PushNotific
               )}
             >
               <Bell className="h-3 w-3 inline ml-1" />
-              قائمة
+              {t('notification.push.listView')}
             </button>
           </div>
           <div className="flex flex-wrap gap-1.5">
@@ -135,7 +137,7 @@ export function PushNotificationCenter({ open, onClose, className }: PushNotific
                   : 'bg-muted text-muted-foreground hover:bg-accent',
               )}
             >
-              الكل
+              {t('notification.push.all')}
             </button>
             {CATEGORIES.map((cat) => (
               <button
@@ -159,13 +161,13 @@ export function PushNotificationCenter({ open, onClose, className }: PushNotific
         {!initialized ? (
           <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
             <RefreshCw className="h-8 w-8 animate-spin mb-2" />
-            <p className="text-sm">جاري التحميل...</p>
+            <p className="text-sm">{t('notification.push.loading')}</p>
           </div>
         ) : notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
             <BellOff className="h-10 w-10 mb-3 opacity-50" />
-            <p className="text-sm font-medium">لا توجد إشعارات</p>
-            <p className="text-xs mt-1">ستظهر الإشعارات هنا عند ورودها</p>
+            <p className="text-sm font-medium">{t('notification.push.noNotifications')}</p>
+            <p className="text-xs mt-1">{t('notification.push.emptyHint')}</p>
           </div>
         ) : viewMode === 'groups' ? (
           groups.map((group) => (

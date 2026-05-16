@@ -40,34 +40,39 @@ export class ReconciliationEngine {
       .select('id')
       .single()
 
-    if (error) return { ok: false, error: error.message }
+    if (error) {
+      return { ok: false, error: error.message }
+    }
     return { ok: true, id: data.id }
   }
 
-  async matchLines(reconciliationId: string, lines: Array<{
-    journal_entry_id?: string
-    invoice_id?: string
-    payment_id?: string
-    amount: number
-    matched_amount: number
-    notes?: string
-  }>): Promise<{ ok: boolean; error?: string }> {
-    const { error } = await this.supabase
-      .from('reconciliation_lines')
-      .insert(
-        lines.map(l => ({
-          reconciliation_id: reconciliationId,
-          journal_entry_id: l.journal_entry_id,
-          invoice_id: l.invoice_id,
-          payment_id: l.payment_id,
-          amount: l.amount,
-          matched_amount: l.matched_amount,
-          status: Math.abs(l.amount - l.matched_amount) < 0.01 ? 'matched' : 'partial',
-          notes: l.notes,
-        }))
-      )
+  async matchLines(
+    reconciliationId: string,
+    lines: Array<{
+      journal_entry_id?: string
+      invoice_id?: string
+      payment_id?: string
+      amount: number
+      matched_amount: number
+      notes?: string
+    }>,
+  ): Promise<{ ok: boolean; error?: string }> {
+    const { error } = await this.supabase.from('reconciliation_lines').insert(
+      lines.map((l) => ({
+        reconciliation_id: reconciliationId,
+        journal_entry_id: l.journal_entry_id,
+        invoice_id: l.invoice_id,
+        payment_id: l.payment_id,
+        amount: l.amount,
+        matched_amount: l.matched_amount,
+        status: Math.abs(l.amount - l.matched_amount) < 0.01 ? 'matched' : 'partial',
+        notes: l.notes,
+      })),
+    )
 
-    if (error) return { ok: false, error: error.message }
+    if (error) {
+      return { ok: false, error: error.message }
+    }
     await this.updateReconciliationStatus(reconciliationId)
     return { ok: true }
   }
@@ -79,7 +84,9 @@ export class ReconciliationEngine {
       .eq('id', reconciliationId)
       .single()
 
-    if (!rec) return
+    if (!rec) {
+      return
+    }
 
     const { data: lines } = await this.supabase
       .from('reconciliation_lines')
@@ -120,7 +127,7 @@ export class ReconciliationEngine {
       .single()
 
     if (!invoice) {
-      return { ok: false, error: 'الفاتورة غير موجودة' }
+      return { ok: false, error: 'Invoice not found' }
     }
 
     const invoiceAmount = Number(invoice.total_debit)
@@ -134,7 +141,9 @@ export class ReconciliationEngine {
         .eq('company_id', this.companyId)
         .maybeSingle()
 
-      if (payment) totalPaid += Number(payment.total_credit)
+      if (payment) {
+        totalPaid += Number(payment.total_credit)
+      }
     }
 
     const matched = Math.min(invoiceAmount, totalPaid)
@@ -157,14 +166,14 @@ export class ReconciliationEngine {
       .single()
 
     if (rec) {
-      const lines = paymentIds.map(pid => ({
+      const lines = paymentIds.map((pid) => ({
         reconciliation_id: rec.id,
         journal_entry_id: pid,
         invoice_id: invoiceId,
         payment_id: pid,
         amount: invoiceAmount,
         matched_amount: matched,
-        status: status === 'matched' ? 'matched' as const : 'partial' as const,
+        status: status === 'matched' ? ('matched' as const) : ('partial' as const),
       }))
       await this.supabase.from('reconciliation_lines').insert(lines as any)
     }
@@ -172,20 +181,28 @@ export class ReconciliationEngine {
     return { ok: true, totalMatched: matched }
   }
 
-  async getPendingReconciliations(params: {
-    account_id?: string
-    status?: string
-    limit?: number
-  } = {}): Promise<Reconciliation[]> {
+  async getPendingReconciliations(
+    params: {
+      account_id?: string
+      status?: string
+      limit?: number
+    } = {},
+  ): Promise<Reconciliation[]> {
     let query = this.supabase
       .from('reconciliations')
       .select('*, reconciliation_lines(*)')
       .eq('company_id', this.companyId)
       .order('created_at', { ascending: false })
 
-    if (params.account_id) query = query.eq('account_id', params.account_id)
-    if (params.status) query = query.eq('status', params.status)
-    if (params.limit) query = query.limit(params.limit)
+    if (params.account_id) {
+      query = query.eq('account_id', params.account_id)
+    }
+    if (params.status) {
+      query = query.eq('status', params.status)
+    }
+    if (params.limit) {
+      query = query.limit(params.limit)
+    }
 
     const { data } = await query
     return (data || []) as Reconciliation[]
@@ -204,11 +221,13 @@ async function fetchAgedData(
 
   const { data: lines } = await supabase
     .from('journal_entry_lines')
-    .select(`
+    .select(
+      `
       ${field},
       journal_entries!inner(id, entry_number, date, reference, status, company_id),
       accounts!inner(id, code, name_ar, company_id)
-    `)
+    `,
+    )
     .eq('journal_entries.company_id', companyId)
     .eq('journal_entries.status', 'posted')
     .eq(`accounts.${balanceField}`, true)
@@ -216,9 +235,15 @@ async function fetchAgedData(
     .lte('journal_entries.date', asOfDate || new Date().toISOString().slice(0, 10))
 
   const buckets: AgedReport['buckets'] = {
-    '0-30': [], '31-60': [], '61-90': [], '90+': [],
+    '0-30': [],
+    '31-60': [],
+    '61-90': [],
+    '90+': [],
   }
-  let total_0_30 = 0, total_31_60 = 0, total_61_90 = 0, total_90_plus = 0
+  let total_0_30 = 0,
+    total_31_60 = 0,
+    total_61_90 = 0,
+    total_90_plus = 0
 
   const today = new Date(asOfDate || new Date().toISOString().slice(0, 10))
 
@@ -245,13 +270,17 @@ async function fetchAgedData(
 
     let bucket: keyof AgedReport['buckets']
     if (daysOverdue <= 30) {
-      bucket = '0-30'; total_0_30 += amt
+      bucket = '0-30'
+      total_0_30 += amt
     } else if (daysOverdue <= 60) {
-      bucket = '31-60'; total_31_60 += amt
+      bucket = '31-60'
+      total_31_60 += amt
     } else if (daysOverdue <= 90) {
-      bucket = '61-90'; total_61_90 += amt
+      bucket = '61-90'
+      total_61_90 += amt
     } else {
-      bucket = '90+'; total_90_plus += amt
+      bucket = '90+'
+      total_90_plus += amt
     }
     item.aging_bucket = bucket
     buckets[bucket].push(item)
@@ -291,20 +320,24 @@ export async function getCustomerBalances(
 ): Promise<Array<{ party_id: string; name: string; total: number; paid: number; due: number }>> {
   const { data: sales } = await supabase
     .from('journal_entry_lines')
-    .select(`
+    .select(
+      `
       debit, journal_entries!inner(id, reference, date, status, company_id),
       accounts!inner(code, is_receivable)
-    `)
+    `,
+    )
     .eq('journal_entries.company_id', companyId)
     .eq('journal_entries.status', 'posted')
     .eq('accounts.code', '1110')
 
   const { data: payments } = await supabase
     .from('journal_entry_lines')
-    .select(`
+    .select(
+      `
       credit, journal_entries!inner(id, reference, date, status, company_id),
       accounts!inner(code)
-    `)
+    `,
+    )
     .eq('journal_entries.company_id', companyId)
     .eq('journal_entries.status', 'posted')
     .eq('accounts.code', '1110')
@@ -312,13 +345,15 @@ export async function getCustomerBalances(
   const totalInvoiced = (sales || []).reduce((s, r: any) => s + Number(r.debit || 0), 0)
   const totalPaid = (payments || []).reduce((s, r: any) => s + Number(r.credit || 0), 0)
 
-  return [{
-    party_id: 'all',
-    name: 'إجمالي العملاء',
-    total: totalInvoiced,
-    paid: totalPaid,
-    due: totalInvoiced - totalPaid,
-  }]
+  return [
+    {
+      party_id: 'all',
+      name: 'إجمالي العملاء',
+      total: totalInvoiced,
+      paid: totalPaid,
+      due: totalInvoiced - totalPaid,
+    },
+  ]
 }
 
 export async function getSupplierBalances(
@@ -327,20 +362,24 @@ export async function getSupplierBalances(
 ): Promise<Array<{ party_id: string; name: string; total: number; paid: number; due: number }>> {
   const { data: purchases } = await supabase
     .from('journal_entry_lines')
-    .select(`
+    .select(
+      `
       credit, journal_entries!inner(id, reference, date, status, company_id),
       accounts!inner(code, is_payable)
-    `)
+    `,
+    )
     .eq('journal_entries.company_id', companyId)
     .eq('journal_entries.status', 'posted')
     .eq('accounts.code', '2101')
 
   const { data: payments } = await supabase
     .from('journal_entry_lines')
-    .select(`
+    .select(
+      `
       debit, journal_entries!inner(id, reference, date, status, company_id),
       accounts!inner(code)
-    `)
+    `,
+    )
     .eq('journal_entries.company_id', companyId)
     .eq('journal_entries.status', 'posted')
     .eq('accounts.code', '2101')
@@ -348,11 +387,13 @@ export async function getSupplierBalances(
   const totalInvoiced = (purchases || []).reduce((s, r: any) => s + Number(r.credit || 0), 0)
   const totalPaid = (payments || []).reduce((s, r: any) => s + Number(r.debit || 0), 0)
 
-  return [{
-    party_id: 'all',
-    name: 'إجمالي الموردين',
-    total: totalInvoiced,
-    paid: totalPaid,
-    due: totalInvoiced - totalPaid,
-  }]
+  return [
+    {
+      party_id: 'all',
+      name: 'إجمالي الموردين',
+      total: totalInvoiced,
+      paid: totalPaid,
+      due: totalInvoiced - totalPaid,
+    },
+  ]
 }

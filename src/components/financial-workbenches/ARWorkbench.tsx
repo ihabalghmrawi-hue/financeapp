@@ -1,13 +1,37 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useT } from '@/lib/i18n/language-provider'
 import { cn } from '@/lib/utils'
 import {
-  Wallet, Search, Filter, ArrowUpDown, Plus, Download,
-  CheckCircle2, XCircle, AlertTriangle, Eye, Clock, User,
-  FileText, DollarSign, Building2, Landmark, ArrowLeftRight,
-  Receipt, Sparkles, Shield, Activity, TrendingUp, TrendingDown,
-  CreditCard, Calendar, Mail, Phone, Percent,
+  Wallet,
+  Search,
+  Filter,
+  ArrowUpDown,
+  Plus,
+  Download,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  Eye,
+  Clock,
+  User,
+  FileText,
+  DollarSign,
+  Building2,
+  Landmark,
+  ArrowLeftRight,
+  Receipt,
+  Sparkles,
+  Shield,
+  Activity,
+  TrendingUp,
+  TrendingDown,
+  CreditCard,
+  Calendar,
+  Mail,
+  Phone,
+  Percent,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -25,27 +49,48 @@ import { AuditOverlay } from '@/components/workbench/AuditOverlay'
 import { OperationalCommenting } from '@/components/workbench/OperationalCommenting'
 import { CrossEntityInspector } from '@/components/workbench/CrossEntityInspector'
 import { DocumentViewer } from '@/components/workbench/DocumentViewer'
-import { generateMockInvoices, generateMockAccounts, generateMockAIInsights, generateMockAuditTrail, generateMockDocuments, generateMockOperationalComments, generateMockCustomers } from '@/lib/workbench/mock-data'
-import type { Invoice, AccountSummary, ValidationMessage, AIInsight, WorkbenchMetric, InspectorTab, DocumentAttachment, AuditTrailEntry } from '@/lib/workbench/types'
-
-const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning'; icon: any }> = {
-  pending: { label: 'معلقة', variant: 'warning', icon: Clock },
-  approved: { label: 'معتمدة', variant: 'success', icon: CheckCircle2 },
-  paid: { label: 'مدفوعة', variant: 'default', icon: DollarSign },
-  overdue: { label: 'متأخرة', variant: 'destructive', icon: AlertTriangle },
-  draft: { label: 'مسودة', variant: 'secondary', icon: FileText },
-  cancelled: { label: 'ملغية', variant: 'outline', icon: XCircle },
-}
-
-const filterTabs = [
-  { id: 'all', label: 'الكل' },
-  { id: 'pending', label: 'معلقة' },
-  { id: 'approved', label: 'معتمدة' },
-  { id: 'overdue', label: 'متأخرة' },
-  { id: 'paid', label: 'مدفوعة' },
-]
+import {
+  generateMockInvoices,
+  generateMockAccounts,
+  generateMockAIInsights,
+  generateMockAuditTrail,
+  generateMockDocuments,
+  generateMockOperationalComments,
+  generateMockCustomers,
+} from '@/lib/workbench/mock-data'
+import type {
+  Invoice,
+  AccountSummary,
+  ValidationMessage,
+  AIInsight,
+  WorkbenchMetric,
+  InspectorTab,
+  DocumentAttachment,
+  AuditTrailEntry,
+} from '@/lib/workbench/types'
 
 export function ARWorkbench() {
+  const { t } = useT()
+
+  const statusConfig: Record<
+    string,
+    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning'; icon: any }
+  > = {
+    pending: { label: t('financialWorkbench.ar.statusPending'), variant: 'warning', icon: Clock },
+    approved: { label: t('financialWorkbench.ar.statusApproved'), variant: 'success', icon: CheckCircle2 },
+    paid: { label: t('financialWorkbench.ar.statusPaid'), variant: 'default', icon: DollarSign },
+    overdue: { label: t('financialWorkbench.ar.statusOverdue'), variant: 'destructive', icon: AlertTriangle },
+    draft: { label: t('financialWorkbench.ar.statusDraft'), variant: 'secondary', icon: FileText },
+    cancelled: { label: t('financialWorkbench.ar.statusCancelled'), variant: 'outline', icon: XCircle },
+  }
+
+  const filterTabs = [
+    { id: 'all', label: t('financialWorkbench.ar.filterAll') },
+    { id: 'pending', label: t('financialWorkbench.ar.filterPending') },
+    { id: 'approved', label: t('financialWorkbench.ar.filterApproved') },
+    { id: 'overdue', label: t('financialWorkbench.ar.filterOverdue') },
+    { id: 'paid', label: t('financialWorkbench.ar.filterPaid') },
+  ]
   const [invoices] = useState(() => generateMockInvoices(20, 'receivable'))
   const [customers] = useState(() => generateMockCustomers())
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -64,10 +109,7 @@ export function ARWorkbench() {
   const aiInsights = useMemo(() => generateMockAIInsights('ar'), [])
   const auditTrail = useMemo(() => generateMockAuditTrail(), [])
 
-  const selected = useMemo(
-    () => invoices.find((i) => i.id === selectedId) ?? null,
-    [invoices, selectedId],
-  )
+  const selected = useMemo(() => invoices.find((i) => i.id === selectedId) ?? null, [invoices, selectedId])
 
   const selectedCustomer = useMemo(
     () => customers.find((c) => selected && c.name === selected.vendorOrCustomer) ?? null,
@@ -85,70 +127,109 @@ export function ARWorkbench() {
     }
     if (searchQuery) {
       const q = searchQuery.toLowerCase()
-      list = list.filter(
-        (i) =>
-          i.number.toLowerCase().includes(q) ||
-          i.vendorOrCustomer.toLowerCase().includes(q),
-      )
+      list = list.filter((i) => i.number.toLowerCase().includes(q) || i.vendorOrCustomer.toLowerCase().includes(q))
     }
     return list.sort((a, b) => a.dueDate - b.dueDate)
   }, [invoices, filterTab, searchQuery])
 
   const allValidationMessages = useMemo(() => {
-    if (!selected) return []
+    if (!selected) {
+      return []
+    }
     const msgs = [...(selected.validationMessages ?? [])]
     if (selected.balance > 0 && selected.status === 'paid') {
       msgs.push({
         id: 'balance-warn',
         type: 'warning' as const,
-        message: 'الفاتورة مدفوعة لكن يوجد رصيد متبقي',
-        field: 'الرصيد',
-        action: { label: 'مراجعة', handler: () => {} },
+        message: t('financialWorkbench.ar.balanceWarn'),
+        field: t('financialWorkbench.ar.fieldBalance'),
+        action: { label: t('financialWorkbench.ar.actionReview'), handler: () => {} },
       })
     }
     if (selected.dueDate < Date.now() && selected.status !== 'paid' && selected.status !== 'cancelled') {
       msgs.push({
         id: 'overdue-ar',
         type: 'error' as const,
-        message: 'الفاتورة متأخرة - يرجى اتخاذ إجراء تحصيل',
-        field: 'تاريخ الاستحقاق',
-        action: { label: 'إرسال إشعار', handler: () => {} },
+        message: t('financialWorkbench.ar.overdueWarn'),
+        field: t('financialWorkbench.ar.fieldDueDate'),
+        action: { label: t('financialWorkbench.ar.actionSendNotice'), handler: () => {} },
       })
     }
     if (selectedCustomer && selected.balance > (selectedCustomer as any).creditLimit * 0.8) {
       msgs.push({
         id: 'credit-warn',
         type: 'warning' as const,
-        message: 'الرصيد يقترب من حد الائتمان',
-        field: 'حد الائتمان',
-        action: { label: 'مراجعة', handler: () => {} },
+        message: t('financialWorkbench.ar.creditWarn'),
+        field: t('financialWorkbench.ar.fieldCreditLimit'),
+        action: { label: t('financialWorkbench.ar.actionReview'), handler: () => {} },
       })
     }
     return msgs.slice(0, 8)
-  }, [selected, selectedCustomer])
+  }, [selected, selectedCustomer, t])
 
   const metrics: WorkbenchMetric[] = useMemo(() => {
-    const totalDue = invoices.filter((i) => i.status !== 'paid' && i.status !== 'cancelled').reduce((s, i) => s + i.balance, 0)
+    const totalDue = invoices
+      .filter((i) => i.status !== 'paid' && i.status !== 'cancelled')
+      .reduce((s, i) => s + i.balance, 0)
     const pendingCount = invoices.filter((i) => i.status === 'pending').length
-    const overdueCount = invoices.filter((i) => i.status === 'overdue' || (i.status === 'pending' && i.dueDate < Date.now())).length
+    const overdueCount = invoices.filter(
+      (i) => i.status === 'overdue' || (i.status === 'pending' && i.dueDate < Date.now()),
+    ).length
     const totalPaid = invoices.filter((i) => i.status === 'paid').reduce((s, i) => s + i.amount, 0)
     const totalAmount = invoices.reduce((s, i) => s + i.amount, 0)
     const collectionRate = totalAmount > 0 ? Math.round((totalPaid / totalAmount) * 100) : 0
     return [
-      { id: 'total-ar', label: 'إجمالي المستحقات', value: totalDue.toLocaleString('ar-SA', { minimumFractionDigits: 2 }) + ' ريال', icon: 'DollarSign', severity: 'info' as const, change: 6.7, trend: 'up' as const },
-      { id: 'pending-ar', label: 'فواتير معلقة', value: pendingCount, icon: 'AlertTriangle', severity: 'warning' as const, change: -2.3, trend: 'down' as const },
-      { id: 'overdue-ar', label: 'متأخرة عن السداد', value: overdueCount, icon: 'AlertTriangle', severity: 'critical' as const, change: 15.1, trend: 'up' as const },
-      { id: 'collection', label: 'نسبة التحصيل', value: `${collectionRate}%`, icon: 'DollarSign', severity: collectionRate > 70 ? 'success' as const : 'warning' as const, change: 3.2, trend: 'up' as const },
+      {
+        id: 'total-ar',
+        label: t('financialWorkbench.ar.metricTotalReceivables'),
+        value: `${totalDue.toLocaleString('ar-SA', { minimumFractionDigits: 2 })} ${t('financialWorkbench.ar.sar')}`,
+        icon: 'DollarSign',
+        severity: 'info' as const,
+        change: 6.7,
+        trend: 'up' as const,
+      },
+      {
+        id: 'pending-ar',
+        label: t('financialWorkbench.ar.metricPendingInvoices'),
+        value: pendingCount,
+        icon: 'AlertTriangle',
+        severity: 'warning' as const,
+        change: -2.3,
+        trend: 'down' as const,
+      },
+      {
+        id: 'overdue-ar',
+        label: t('financialWorkbench.ar.metricOverdueInvoices'),
+        value: overdueCount,
+        icon: 'AlertTriangle',
+        severity: 'critical' as const,
+        change: 15.1,
+        trend: 'up' as const,
+      },
+      {
+        id: 'collection',
+        label: t('financialWorkbench.ar.metricCollectionRate'),
+        value: `${collectionRate}%`,
+        icon: 'DollarSign',
+        severity: collectionRate > 70 ? ('success' as const) : ('warning' as const),
+        change: 3.2,
+        trend: 'up' as const,
+      },
     ]
   }, [invoices])
 
   const inspectorTabs: InspectorTab[] = useMemo(
     () => [
-      { id: 'customer', label: 'معلومات العميل', icon: 'info' },
-      { id: 'aging', label: 'تحليل التقادم', icon: 'activity' },
-      { id: 'attachments', label: 'المرفقات', icon: 'paperclip', badge: (selected as any)?.attachments?.length ?? 0 },
+      { id: 'customer', label: t('financialWorkbench.ar.inspectorCustomer'), icon: 'info' },
+      { id: 'aging', label: t('financialWorkbench.ar.inspectorAging'), icon: 'activity' },
+      {
+        id: 'attachments',
+        label: t('financialWorkbench.ar.inspectorAttachments'),
+        icon: 'paperclip',
+        badge: (selected as any)?.attachments?.length ?? 0,
+      },
     ],
-    [selected],
+    [selected, t],
   )
 
   const handleApprove = () => {}
@@ -170,7 +251,7 @@ export function ARWorkbench() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="بحث عن فاتورة..."
+              placeholder={t('financialWorkbench.ar.searchPlaceholder')}
               className="flex h-9 w-full rounded-lg border border-input bg-background pr-10 pl-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
           </div>
@@ -204,7 +285,7 @@ export function ARWorkbench() {
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <Receipt className="h-12 w-12 text-muted-foreground/30 mb-3" />
-            <p className="text-sm text-muted-foreground">لا توجد فواتير متطابقة</p>
+            <p className="text-sm text-muted-foreground">{t('financialWorkbench.ar.noMatchingInvoices')}</p>
           </div>
         ) : (
           <div className="divide-y">
@@ -225,22 +306,29 @@ export function ARWorkbench() {
                   )}
                 >
                   <div className="flex items-start gap-3">
-                    <div className={cn(
-                      'h-9 w-9 rounded-lg flex items-center justify-center shrink-0',
-                      isOverdue ? 'bg-red-50 text-red-600' : 'bg-primary/10 text-primary',
-                    )}>
+                    <div
+                      className={cn(
+                        'h-9 w-9 rounded-lg flex items-center justify-center shrink-0',
+                        isOverdue ? 'bg-red-50 text-red-600' : 'bg-primary/10 text-primary',
+                      )}
+                    >
                       <Receipt className="h-4 w-4" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className="text-sm font-semibold truncate">{inv.number}</span>
-                        <div className={cn(
-                          'flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium',
-                          inv.status === 'overdue' ? 'bg-red-50 text-red-700' :
-                          inv.status === 'paid' ? 'bg-green-50 text-green-700' :
-                          inv.status === 'approved' ? 'bg-blue-50 text-blue-700' :
-                          'bg-amber-50 text-amber-700',
-                        )}>
+                        <div
+                          className={cn(
+                            'flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium',
+                            inv.status === 'overdue'
+                              ? 'bg-red-50 text-red-700'
+                              : inv.status === 'paid'
+                                ? 'bg-green-50 text-green-700'
+                                : inv.status === 'approved'
+                                  ? 'bg-blue-50 text-blue-700'
+                                  : 'bg-amber-50 text-amber-700',
+                          )}
+                        >
                           <StatusIcon className="h-2.5 w-2.5" />
                           <span>{config.label}</span>
                         </div>
@@ -248,18 +336,22 @@ export function ARWorkbench() {
                       <p className="text-xs text-muted-foreground truncate">{inv.vendorOrCustomer}</p>
                       <div className="flex items-center gap-3 mt-1.5 text-xs">
                         <span className="font-semibold" dir="ltr">
-                          {formatCurrency(inv.amount)} ريال
+                          {formatCurrency(inv.amount)} {t('financialWorkbench.ar.sar')}
                         </span>
                         {isOverdue && (
                           <span className="text-red-600 flex items-center gap-0.5">
                             <AlertTriangle className="h-3 w-3" />
-                            متأخرة
+                            {t('financialWorkbench.ar.overdue')}
                           </span>
                         )}
                         {cust && (
                           <span className="text-muted-foreground flex items-center gap-0.5">
                             <Percent className="h-3 w-3" />
-                            {(cust as any).creditLimit ? Math.round((inv.balance / (cust as any).creditLimit) * 100) : 0}% من الائتمان
+                            {t('financialWorkbench.ar.percentageOfCredit', {
+                              pct: (cust as any).creditLimit
+                                ? Math.round((inv.balance / (cust as any).creditLimit) * 100)
+                                : 0,
+                            })}
                           </span>
                         )}
                       </div>
@@ -274,11 +366,12 @@ export function ARWorkbench() {
 
       <div className="border-t p-3 flex items-center justify-between">
         <span className="text-xs text-muted-foreground">
-          {filtered.length} {filtered.length === 1 ? 'فاتورة' : 'فواتير'}
+          {filtered.length}{' '}
+          {filtered.length === 1 ? t('financialWorkbench.ar.itemInvoice') : t('financialWorkbench.ar.itemInvoices')}
         </span>
         <Button variant="ghost" size="sm" className="h-8 text-xs gap-1">
           <Download className="h-3.5 w-3.5" />
-          تصدير
+          {t('financialWorkbench.ar.export')}
         </Button>
       </div>
     </div>
@@ -289,10 +382,8 @@ export function ARWorkbench() {
       return (
         <div className="flex flex-col items-center justify-center h-full text-center p-12">
           <Receipt className="h-16 w-16 text-muted-foreground/20 mb-4" />
-          <h3 className="text-lg font-semibold mb-2">اختر فاتورة</h3>
-          <p className="text-sm text-muted-foreground max-w-md">
-            اختر فاتورة من القائمة لعرض تفاصيلها وإدارة عمليات التحصيل
-          </p>
+          <h3 className="text-lg font-semibold mb-2">{t('financialWorkbench.ar.selectInvoice')}</h3>
+          <p className="text-sm text-muted-foreground max-w-md">{t('financialWorkbench.ar.selectInvoiceDesc')}</p>
         </div>
       )
     }
@@ -306,10 +397,12 @@ export function ARWorkbench() {
         <div className="p-6 border-b space-y-4">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-4">
-              <div className={cn(
-                'h-14 w-14 rounded-xl flex items-center justify-center',
-                isOverdue ? 'bg-red-50' : 'bg-primary/10',
-              )}>
+              <div
+                className={cn(
+                  'h-14 w-14 rounded-xl flex items-center justify-center',
+                  isOverdue ? 'bg-red-50' : 'bg-primary/10',
+                )}
+              >
                 <Receipt className={cn('h-7 w-7', isOverdue ? 'text-red-600' : 'text-primary')} />
               </div>
               <div>
@@ -431,10 +524,18 @@ export function ARWorkbench() {
                         <TableRow key={line.id}>
                           <TableCell className="font-medium">{line.description}</TableCell>
                           <TableCell className="text-center">{line.quantity}</TableCell>
-                          <TableCell className="text-center" dir="ltr">{formatCurrency(line.unitPrice)}</TableCell>
-                          <TableCell className="text-center" dir="ltr">{formatCurrency(line.amount)}</TableCell>
-                          <TableCell className="text-center" dir="ltr">{formatCurrency(line.tax)}</TableCell>
-                          <TableCell className="text-center font-semibold" dir="ltr">{formatCurrency(line.total)}</TableCell>
+                          <TableCell className="text-center" dir="ltr">
+                            {formatCurrency(line.unitPrice)}
+                          </TableCell>
+                          <TableCell className="text-center" dir="ltr">
+                            {formatCurrency(line.amount)}
+                          </TableCell>
+                          <TableCell className="text-center" dir="ltr">
+                            {formatCurrency(line.tax)}
+                          </TableCell>
+                          <TableCell className="text-center font-semibold" dir="ltr">
+                            {formatCurrency(line.total)}
+                          </TableCell>
                           <TableCell className="text-center">
                             <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{line.accountCode}</code>
                           </TableCell>
@@ -449,19 +550,25 @@ export function ARWorkbench() {
                 <Card>
                   <CardContent className="p-4">
                     <div className="text-sm text-muted-foreground mb-1">مجموع المبلغ</div>
-                    <div className="text-lg font-bold" dir="ltr">{formatCurrency(selected.lines.reduce((s, l) => s + l.amount, 0))} ريال</div>
+                    <div className="text-lg font-bold" dir="ltr">
+                      {formatCurrency(selected.lines.reduce((s, l) => s + l.amount, 0))} ريال
+                    </div>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4">
                     <div className="text-sm text-muted-foreground mb-1">إجمالي الضريبة</div>
-                    <div className="text-lg font-bold" dir="ltr">{formatCurrency(selected.lines.reduce((s, l) => s + l.tax, 0))} ريال</div>
+                    <div className="text-lg font-bold" dir="ltr">
+                      {formatCurrency(selected.lines.reduce((s, l) => s + l.tax, 0))} ريال
+                    </div>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4">
                     <div className="text-sm text-muted-foreground mb-1">الرصيد المتبقي</div>
-                    <div className="text-lg font-bold text-primary" dir="ltr">{formatCurrency(selected.balance)} ريال</div>
+                    <div className="text-lg font-bold text-primary" dir="ltr">
+                      {formatCurrency(selected.balance)} ريال
+                    </div>
                   </CardContent>
                 </Card>
               </div>
@@ -492,15 +599,21 @@ export function ARWorkbench() {
                     </div>
                     <div className="flex justify-between py-1.5 border-b">
                       <span className="text-muted-foreground">المبلغ</span>
-                      <span className="font-medium" dir="ltr">{formatCurrency(selected.amount)}</span>
+                      <span className="font-medium" dir="ltr">
+                        {formatCurrency(selected.amount)}
+                      </span>
                     </div>
                     <div className="flex justify-between py-1.5 border-b">
                       <span className="text-muted-foreground">المدفوع</span>
-                      <span className="font-medium" dir="ltr">{formatCurrency(selected.paidAmount)}</span>
+                      <span className="font-medium" dir="ltr">
+                        {formatCurrency(selected.paidAmount)}
+                      </span>
                     </div>
                     <div className="flex justify-between py-1.5">
                       <span className="text-muted-foreground">الرصيد</span>
-                      <span className="font-medium text-primary" dir="ltr">{formatCurrency(selected.balance)}</span>
+                      <span className="font-medium text-primary" dir="ltr">
+                        {formatCurrency(selected.balance)}
+                      </span>
                     </div>
                   </div>
                 </CardContent>
@@ -534,7 +647,9 @@ export function ARWorkbench() {
                           <TableCell>PAY-{selected.number.slice(-4)}</TableCell>
                           <TableCell dir="ltr">{formatCurrency(selected.paidAmount)} ريال</TableCell>
                           <TableCell>تحويل بنكي</TableCell>
-                          <TableCell><Badge variant="success">مدفوع</Badge></TableCell>
+                          <TableCell>
+                            <Badge variant="success">مدفوع</Badge>
+                          </TableCell>
                         </TableRow>
                       ) : (
                         <TableRow>
@@ -615,7 +730,8 @@ export function ARWorkbench() {
                       </div>
                       <p className="text-xs text-muted-foreground">{entry.details}</p>
                       <span className="text-xs text-muted-foreground mt-1 block">
-                        {new Date(entry.timestamp).toLocaleDateString('ar-SA')} - {new Date(entry.timestamp).toLocaleTimeString('ar-SA')}
+                        {new Date(entry.timestamp).toLocaleDateString('ar-SA')} -{' '}
+                        {new Date(entry.timestamp).toLocaleTimeString('ar-SA')}
                       </span>
                     </div>
                   </div>
@@ -623,9 +739,7 @@ export function ARWorkbench() {
               </div>
 
               <div className="flex flex-col h-[400px] border rounded-xl">
-                <OperationalCommenting
-                  comments={(selected as any).comments ?? generateMockOperationalComments()}
-                />
+                <OperationalCommenting comments={(selected as any).comments ?? generateMockOperationalComments()} />
               </div>
             </TabsContent>
           </Tabs>
@@ -641,7 +755,9 @@ export function ARWorkbench() {
   }
 
   const renderInspectorContent = () => {
-    if (!selected) return null
+    if (!selected) {
+      return null
+    }
     switch (inspectorTab) {
       case 'customer':
         return (
@@ -664,7 +780,9 @@ export function ARWorkbench() {
                 <div key={item.label} className="flex items-center gap-3 p-2 rounded-lg">
                   <div className={cn('h-2.5 w-2.5 rounded-full', item.color)} />
                   <span className="text-sm flex-1">{item.label}</span>
-                  <span className="text-sm font-medium" dir="ltr">{formatCurrency(item.amount)} ريال</span>
+                  <span className="text-sm font-medium" dir="ltr">
+                    {formatCurrency(item.amount)} ريال
+                  </span>
                 </div>
               ))}
             </div>
@@ -699,10 +817,7 @@ export function ARWorkbench() {
     <>
       <WorkbenchShell
         title="منصة الحسابات المدينة"
-        breadcrumbs={[
-          { label: 'المالية' },
-          { label: 'إدارة الحسابات المدينة' },
-        ]}
+        breadcrumbs={[{ label: 'المالية' }, { label: 'إدارة الحسابات المدينة' }]}
         metrics={metrics}
         actions={[
           { id: 'new-invoice', label: 'فاتورة جديدة', type: 'primary', icon: 'Plus' },
@@ -717,9 +832,11 @@ export function ARWorkbench() {
         onInspectorTabChange={setInspectorTab}
         sidebar={renderInvoiceList()}
         sidebarWidth={420}
-        validationBar={allValidationMessages.length > 0 && selected ? (
-          <RealtimeValidationBar messages={allValidationMessages} />
-        ) : undefined}
+        validationBar={
+          allValidationMessages.length > 0 && selected ? (
+            <RealtimeValidationBar messages={allValidationMessages} />
+          ) : undefined
+        }
         aiPanel={
           <AIAssistancePanel
             open={aiOpen}
@@ -744,10 +861,7 @@ export function ARWorkbench() {
       {activeDoc && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="w-full max-w-3xl max-h-[90vh] bg-background rounded-2xl shadow-2xl overflow-hidden">
-            <DocumentViewer
-              document={activeDoc}
-              onClose={() => setActiveDoc(null)}
-            />
+            <DocumentViewer document={activeDoc} onClose={() => setActiveDoc(null)} />
           </div>
         </div>
       )}

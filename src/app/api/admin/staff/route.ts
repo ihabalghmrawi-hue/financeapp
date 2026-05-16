@@ -125,16 +125,16 @@ export async function POST(req: NextRequest) {
   const admin = createAdminClient()
   const companyId = await getCompanyId()
   const body = await req.json()
-  const { name, email, password, role_name = 'employee', role_name_ar = 'موظف', permissions = [] } = body
+  const { name, email, password, role_name = 'employee', role_name_ar = 'Employee', permissions = [] } = body
 
   if (!name?.trim()) {
-    return NextResponse.json({ error: 'اسم الموظف مطلوب' }, { status: 400 })
+    return NextResponse.json({ error: 'Staff name is required' }, { status: 400 })
   }
   if (!email?.trim()) {
-    return NextResponse.json({ error: 'البريد الإلكتروني مطلوب' }, { status: 400 })
+    return NextResponse.json({ error: 'Email is required' }, { status: 400 })
   }
   if (!password || password.length < 6) {
-    return NextResponse.json({ error: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' }, { status: 400 })
+    return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 })
   }
 
   // 1. Create auth user
@@ -220,7 +220,7 @@ export async function PATCH(req: NextRequest) {
   const { id, name, email, password, permissions, role_name_ar } = body
 
   if (!id) {
-    return NextResponse.json({ error: 'id مطلوب' }, { status: 400 })
+    return NextResponse.json({ error: 'ID is required' }, { status: 400 })
   }
 
   // Find membership
@@ -233,7 +233,7 @@ export async function PATCH(req: NextRequest) {
     .maybeSingle()
 
   if (!membership) {
-    return NextResponse.json({ error: 'الموظف غير موجود' }, { status: 404 })
+    return NextResponse.json({ error: 'Staff not found' }, { status: 404 })
   }
 
   // Update auth user
@@ -293,7 +293,7 @@ export async function DELETE(req: NextRequest) {
   const { id } = await req.json()
 
   if (!id) {
-    return NextResponse.json({ error: 'id مطلوب' }, { status: 400 })
+    return NextResponse.json({ error: 'ID is required' }, { status: 400 })
   }
 
   const { data: membership } = await admin
@@ -305,7 +305,7 @@ export async function DELETE(req: NextRequest) {
     .maybeSingle()
 
   if (!membership) {
-    return NextResponse.json({ error: 'الموظف غير موجود' }, { status: 404 })
+    return NextResponse.json({ error: 'Staff not found' }, { status: 404 })
   }
 
   const { error } = await admin

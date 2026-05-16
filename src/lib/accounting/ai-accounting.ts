@@ -1,13 +1,5 @@
-// ============================================================
-// AI Accounting Engine — Suggestions, Anomaly Detection, Auto-Categorization
-// ============================================================
-
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type {
-  JournalSuggestion,
-  AnomalyResult,
-  AutoCategorizationResult,
-} from './enterprise-types'
+import type { JournalSuggestion, AnomalyResult, AutoCategorizationResult } from './enterprise-types'
 
 interface AIContext {
   companyId: string
@@ -25,124 +17,113 @@ export class AIAccountingEngine {
     this.companyId = companyId
   }
 
-  // ── Journal Suggestions ──────────────────────────────────────
   async suggestJournalEntry(description: string, amount?: number): Promise<JournalSuggestion[]> {
     const suggestions: JournalSuggestion[] = []
     const lower = description.toLowerCase()
 
-    // Revenue patterns
-    if (this.matchAny(lower, ['بيع', 'مبيعات', 'فاتورة', 'sale', 'invoice', 'customer'])) {
+    if (this.matchAny(lower, ['sale', 'invoice', 'customer'])) {
       suggestions.push({
         confidence: 0.85,
-        description: `تسجيل إيراد: ${description}`,
+        description: `Revenue Entry: ${description}`,
         lines: [
-          { account_code: '1101', debit: amount || 0, credit: 0, description: 'الصندوق' },
-          { account_code: '4001', debit: 0, credit: amount || 0, description: 'إيراد المبيعات' },
+          { account_code: '1101', debit: amount || 0, credit: 0, description: 'Cash' },
+          { account_code: '4001', debit: 0, credit: amount || 0, description: 'Sales Revenue' },
         ],
-        reason: 'نمط فاتورة مبيعات',
+        reason: 'Sales invoice pattern',
       })
     }
 
-    // Expense patterns
-    if (this.matchAny(lower, ['مصروف', 'expense', 'دفع', 'payment', 'شراء', 'purchase'])) {
+    if (this.matchAny(lower, ['expense', 'payment', 'purchase'])) {
       suggestions.push({
         confidence: 0.8,
-        description: `تسجيل مصروف: ${description}`,
+        description: `Expense Entry: ${description}`,
         lines: [
           { account_code: '6501', debit: amount || 0, credit: 0, description },
-          { account_code: '1101', debit: 0, credit: amount || 0, description: 'الصندوق' },
+          { account_code: '1101', debit: 0, credit: amount || 0, description: 'Cash' },
         ],
-        reason: 'نمط مصروف عام',
+        reason: 'General expense pattern',
       })
     }
 
-    // Purchase patterns
-    if (this.matchAny(lower, ['مشتريات', 'شراء', 'purchase', 'مخزون', 'inventory'])) {
+    if (this.matchAny(lower, ['purchase', 'inventory'])) {
       suggestions.push({
         confidence: 0.85,
-        description: `تسجيل مشتريات: ${description}`,
+        description: `Purchase Entry: ${description}`,
         lines: [
-          { account_code: '1120', debit: amount || 0, credit: 0, description: 'المخزون' },
-          { account_code: '2101', debit: 0, credit: amount || 0, description: 'ذمم دائنة' },
+          { account_code: '1120', debit: amount || 0, credit: 0, description: 'Inventory' },
+          { account_code: '2101', debit: 0, credit: amount || 0, description: 'Accounts Payable' },
         ],
-        reason: 'نمط فاتورة مشتريات',
+        reason: 'Purchase invoice pattern',
       })
     }
 
-    // Payroll patterns
-    if (this.matchAny(lower, ['راتب', 'مرتب', 'salary', 'payroll', 'أجور', 'wages'])) {
+    if (this.matchAny(lower, ['salary', 'payroll', 'wages'])) {
       suggestions.push({
         confidence: 0.9,
-        description: `تسجيل رواتب: ${description}`,
+        description: `Payroll Entry: ${description}`,
         lines: [
-          { account_code: '6101', debit: amount || 0, credit: 0, description: 'الرواتب والأجور' },
-          { account_code: '2106', debit: 0, credit: amount || 0, description: 'رواتب مستحقة' },
+          { account_code: '6101', debit: amount || 0, credit: 0, description: 'Salaries and Wages' },
+          { account_code: '2106', debit: 0, credit: amount || 0, description: 'Accrued Salaries' },
         ],
-        reason: 'نمط كشف رواتب',
+        reason: 'Payroll pattern',
       })
     }
 
-    // Rent patterns
-    if (this.matchAny(lower, ['إيجار', 'rent', 'ايجار'])) {
+    if (this.matchAny(lower, ['rent'])) {
       suggestions.push({
         confidence: 0.92,
-        description: `تسجيل إيجار: ${description}`,
+        description: `Rent Entry: ${description}`,
         lines: [
-          { account_code: '6201', debit: amount || 0, credit: 0, description: 'مصروف الإيجار' },
-          { account_code: '1101', debit: 0, credit: amount || 0, description: 'الصندوق' },
+          { account_code: '6201', debit: amount || 0, credit: 0, description: 'Rent Expense' },
+          { account_code: '1101', debit: 0, credit: amount || 0, description: 'Cash' },
         ],
-        reason: 'نمط دفعة إيجار',
+        reason: 'Rent payment pattern',
       })
     }
 
-    // Customer payment patterns
-    if (this.matchAny(lower, ['تحصيل', 'collection', 'قبض', 'receipt', 'دفعة عميل'])) {
+    if (this.matchAny(lower, ['collection', 'receipt'])) {
       suggestions.push({
         confidence: 0.88,
-        description: `تسجيل تحصيل: ${description}`,
+        description: `Collection Entry: ${description}`,
         lines: [
-          { account_code: '1101', debit: amount || 0, credit: 0, description: 'الصندوق' },
-          { account_code: '1110', debit: 0, credit: amount || 0, description: 'ذمم مدينة' },
+          { account_code: '1101', debit: amount || 0, credit: 0, description: 'Cash' },
+          { account_code: '1110', debit: 0, credit: amount || 0, description: 'Accounts Receivable' },
         ],
-        reason: 'نمط تحصيل من عميل',
+        reason: 'Customer collection pattern',
       })
     }
 
-    // Supplier payment patterns
-    if (this.matchAny(lower, ['دفع', 'payment', 'سداد', 'pay', 'مورد', 'supplier'])) {
+    if (this.matchAny(lower, ['payment', 'pay', 'supplier'])) {
       suggestions.push({
         confidence: 0.88,
-        description: `تسجيل دفعة لمورد: ${description}`,
+        description: `Supplier Payment Entry: ${description}`,
         lines: [
-          { account_code: '2101', debit: amount || 0, credit: 0, description: 'ذمم دائنة' },
-          { account_code: '1101', debit: 0, credit: amount || 0, description: 'الصندوق' },
+          { account_code: '2101', debit: amount || 0, credit: 0, description: 'Accounts Payable' },
+          { account_code: '1101', debit: 0, credit: amount || 0, description: 'Cash' },
         ],
-        reason: 'نمط دفعة لمورد',
+        reason: 'Supplier payment pattern',
       })
     }
 
-    // Default suggestion
     if (suggestions.length === 0) {
       suggestions.push({
         confidence: 0.5,
-        description: `تسجيل يدوي: ${description}`,
+        description: `Manual Entry: ${description}`,
         lines: [
           { account_code: '6501', debit: amount || 0, credit: 0, description },
-          { account_code: '1101', debit: 0, credit: amount || 0, description: 'مقابل' },
+          { account_code: '1101', debit: 0, credit: amount || 0, description: 'Offset' },
         ],
-        reason: 'توصية عامة - يرجى المراجعة',
+        reason: 'General recommendation - please review',
       })
     }
 
     return suggestions
   }
 
-  // ── Anomaly Detection ────────────────────────────────────────
   async detectAnomalies(): Promise<AnomalyResult[]> {
     const anomalies: AnomalyResult[] = []
     const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10)
 
-    // 1. Unusually large journal entries
     const { data: entries } = await this.supabase
       .from('journal_entries')
       .select('id, entry_number, description, total_debit, date, company_id')
@@ -158,9 +139,7 @@ export class AIAccountingEngine {
       .gte('date', thirtyDaysAgo)
 
     const allAmounts = (avgResult.data || []).map((r: any) => Number(r.total_debit))
-    const avgAmount = allAmounts.length > 0
-      ? allAmounts.reduce((s, v) => s + v, 0) / allAmounts.length
-      : 0
+    const avgAmount = allAmounts.length > 0 ? allAmounts.reduce((s, v) => s + v, 0) / allAmounts.length : 0
     const threshold = avgAmount * 3
 
     for (const entry of (entries || []) as any[]) {
@@ -168,14 +147,13 @@ export class AIAccountingEngine {
         anomalies.push({
           type: 'unusual_amount',
           severity: 'medium',
-          message: `قيد غير معتاد: ${entry.entry_number} بقيمة ${entry.total_debit}`,
+          message: `Unusual journal entry: ${entry.entry_number} value ${entry.total_debit}`,
           details: { entry_id: entry.id, amount: entry.total_debit, avg: avgAmount },
-          suggestion: 'يرجى مراجعة هذا القيد للتأكد من صحته',
+          suggestion: 'Please review this entry to verify its accuracy',
         })
       }
     }
 
-    // 2. Unbalanced entries
     const { data: unbalanced } = await this.supabase
       .from('journal_entries')
       .select('id, entry_number, total_debit, total_credit')
@@ -188,21 +166,22 @@ export class AIAccountingEngine {
         anomalies.push({
           type: 'broken_balance',
           severity: 'high',
-          message: `قيد غير متوازن: ${entry.entry_number} (الفرق: ${diff})`,
+          message: `Unbalanced journal entry: ${entry.entry_number} (difference: ${diff})`,
           details: { entry_id: entry.id, debit: entry.total_debit, credit: entry.total_credit, diff },
-          suggestion: 'يجب تصحيح القيد فوراً لضمان Integrity البيانات',
+          suggestion: 'Must correct this entry immediately to ensure data integrity',
         })
       }
     }
 
-    // 3. Unusual account usage
     const { data: recentLines } = await this.supabase
       .from('journal_entry_lines')
-      .select(`
+      .select(
+        `
         account_id, debit, credit,
         accounts!inner(code, name_ar, type),
         journal_entries!inner(date, company_id)
-      `)
+      `,
+      )
       .eq('journal_entries.company_id', this.companyId)
       .gte('journal_entries.date', thirtyDaysAgo)
 
@@ -216,7 +195,6 @@ export class AIAccountingEngine {
     return anomalies
   }
 
-  // ── Recurring Transaction Detection ──────────────────────────
   async detectRecurringTransactions(): Promise<JournalSuggestion[]> {
     const suggestions: JournalSuggestion[] = []
     const threeMonthsAgo = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10)
@@ -228,13 +206,19 @@ export class AIAccountingEngine {
       .gte('date', threeMonthsAgo)
       .order('date', { ascending: true })
 
-    if (!entries || entries.length < 3) return suggestions
+    if (!entries || entries.length < 3) {
+      return suggestions
+    }
 
     const byDescription: Record<string, Array<{ date: string; amount: number }>> = {}
     for (const entry of entries as any[]) {
       const desc = (entry.description || '').trim()
-      if (!desc) continue
-      if (!byDescription[desc]) byDescription[desc] = []
+      if (!desc) {
+        continue
+      }
+      if (!byDescription[desc]) {
+        byDescription[desc] = []
+      }
       byDescription[desc].push({
         date: entry.date,
         amount: Number(entry.total_debit),
@@ -245,25 +229,21 @@ export class AIAccountingEngine {
       if (occurrences.length >= 3) {
         const intervals: number[] = []
         for (let i = 1; i < occurrences.length; i++) {
-          const diff = Math.abs(
-            new Date(occurrences[i].date).getTime() - new Date(occurrences[i - 1].date).getTime()
-          )
+          const diff = Math.abs(new Date(occurrences[i].date).getTime() - new Date(occurrences[i - 1].date).getTime())
           intervals.push(diff / (1000 * 60 * 60 * 24))
         }
 
-        const avgInterval = intervals.length > 0
-          ? intervals.reduce((s, v) => s + v, 0) / intervals.length
-          : 0
+        const avgInterval = intervals.length > 0 ? intervals.reduce((s, v) => s + v, 0) / intervals.length : 0
 
-        if (avgInterval > 0 && intervals.every(i => Math.abs(i - avgInterval) / avgInterval <= 0.2)) {
-          const amounts = occurrences.map(o => o.amount)
+        if (avgInterval > 0 && intervals.every((i) => Math.abs(i - avgInterval) / avgInterval <= 0.2)) {
+          const amounts = occurrences.map((o) => o.amount)
           const avgAmount = amounts.reduce((s, v) => s + v, 0) / amounts.length
 
           suggestions.push({
             confidence: 0.8,
-            description: `قيد متكرر مكتشف: ${desc}`,
+            description: `Recurring entry detected: ${desc}`,
             lines: [],
-            reason: `ظهر ${occurrences.length} مرات بمتوسط فاصل ${Math.round(avgInterval)} يوم ومتوسط قيمة ${avgAmount.toFixed(2)}`,
+            reason: `Appeared ${occurrences.length} times with avg interval ${Math.round(avgInterval)} days and avg value ${avgAmount.toFixed(2)}`,
           })
         }
       }
@@ -272,90 +252,87 @@ export class AIAccountingEngine {
     return suggestions
   }
 
-  // ── Auto-Categorization ──────────────────────────────────────
   async autoCategorize(description: string): Promise<AutoCategorizationResult> {
     const lower = description.toLowerCase()
 
-    if (this.matchAny(lower, ['رجال', 'نسائي', 'ملابس', 'فساتين', 'dress', 'clothing', 'robe'])) {
+    if (this.matchAny(lower, ['dress', 'clothing', 'robe'])) {
       return {
         confidence: 0.9,
         suggested_code: '4001',
-        suggested_name: 'إيرادات المبيعات',
-        reason: 'وصف المنتج يتوافق مع إيرادات المبيعات',
+        suggested_name: 'Sales Revenue',
+        reason: 'Product description matches sales revenue',
       }
     }
-    if (this.matchAny(lower, ['كهرباء', 'ماء', 'electricity', 'water', 'utility'])) {
+    if (this.matchAny(lower, ['electricity', 'water', 'utility'])) {
       return {
         confidence: 0.95,
         suggested_code: '6202',
-        suggested_name: 'الكهرباء والماء',
-        reason: 'مصروف خدمي',
+        suggested_name: 'Electricity and Water',
+        reason: 'Utility expense',
       }
     }
-    if (this.matchAny(lower, ['إيجار', 'rent', 'ايجار'])) {
+    if (this.matchAny(lower, ['rent'])) {
       return {
         confidence: 0.95,
         suggested_code: '6201',
-        suggested_name: 'الإيجار',
-        reason: 'مصروف إيجار',
+        suggested_name: 'Rent',
+        reason: 'Rent expense',
       }
     }
-    if (this.matchAny(lower, ['مواصلات', 'نقل', 'transport', 'fuel', 'وقود', 'بنزين'])) {
+    if (this.matchAny(lower, ['transport', 'fuel'])) {
       return {
         confidence: 0.9,
         suggested_code: '6501',
-        suggested_name: 'مصروفات نقل',
-        reason: 'مصروف مواصلات',
+        suggested_name: 'Transportation Expenses',
+        reason: 'Transport expense',
       }
     }
-    if (this.matchAny(lower, ['سفر', 'تذاكر', 'طيران', 'travel', 'flight', 'hotel', 'فندق'])) {
+    if (this.matchAny(lower, ['travel', 'flight', 'hotel'])) {
       return {
         confidence: 0.85,
         suggested_code: '6501',
-        suggested_name: 'مصروفات سفر',
-        reason: 'مصروف سفر',
+        suggested_name: 'Travel Expenses',
+        reason: 'Travel expense',
       }
     }
-    if (this.matchAny(lower, ['دعاية', 'إعلان', 'advert', 'marketing', 'تسويق', 'اعلان'])) {
+    if (this.matchAny(lower, ['advert', 'marketing'])) {
       return {
         confidence: 0.92,
         suggested_code: '6301',
-        suggested_name: 'الإعلان والتسويق',
-        reason: 'مصروف تسويق',
+        suggested_name: 'Advertising and Marketing',
+        reason: 'Marketing expense',
       }
     }
-    if (this.matchAny(lower, ['صيانة', 'maintenance', 'تصليح', 'repair'])) {
+    if (this.matchAny(lower, ['maintenance', 'repair'])) {
       return {
         confidence: 0.9,
         suggested_code: '6203',
-        suggested_name: 'الصيانة والإصلاحات',
-        reason: 'مصروف صيانة',
+        suggested_name: 'Maintenance and Repairs',
+        reason: 'Maintenance expense',
       }
     }
-    if (this.matchAny(lower, ['عمولة', 'commission', 'بنك', 'bank', 'تحويل'])) {
+    if (this.matchAny(lower, ['commission', 'bank'])) {
       return {
         confidence: 0.88,
         suggested_code: '6402',
-        suggested_name: 'عمولات بنكية',
-        reason: 'مصروف بنكي',
+        suggested_name: 'Bank Charges',
+        reason: 'Bank expense',
       }
     }
 
     return {
       confidence: 0.5,
       suggested_code: '6501',
-      suggested_name: 'مصروفات متنوعة',
-      reason: 'لم يتم التعرف على النمط — استخدام الحساب الافتراضي',
+      suggested_name: 'Miscellaneous Expenses',
+      reason: 'Pattern not recognized - using default account',
     }
   }
 
-  // ── Financial Insights ───────────────────────────────────────
   async generateInsights(): Promise<Array<{ type: string; message: string; severity: string; action_url?: string }>> {
     const insights: Array<{ type: string; message: string; severity: string; action_url?: string }> = []
     const today = new Date().toISOString().slice(0, 10)
-    const monthStart = new Date().toISOString().slice(0, 7) + '-01'
+    const monthStart = `${new Date().toISOString().slice(0, 7)}-01`
 
-    // Revenue vs Expense comparison
     const { data: revenueLines } = await this.supabase
       .from('journal_entry_lines')
       .select('credit, debit')
@@ -382,20 +359,19 @@ export class AIAccountingEngine {
       if (ratio < 1.1) {
         insights.push({
           type: 'profit_warning',
-          message: `نسبة الإيرادات إلى المصروفات هذا الشهر منخفضة (${ratio.toFixed(2)})`,
+          message: `Revenue to expense ratio this month is low (${ratio.toFixed(2)})`,
           severity: 'warning',
           action_url: '/dashboard/accounting/statements?type=income',
         })
       } else if (ratio > 3) {
         insights.push({
           type: 'high_margin',
-          message: `هامش الربح ممتاز هذا الشهر (${((1 - 1/ratio) * 100).toFixed(0)}%)`,
+          message: `Excellent profit margin this month (${((1 - 1 / ratio) * 100).toFixed(0)}%)`,
           severity: 'positive',
         })
       }
     }
 
-    // Unreconciled items
     const { count: unmatchedCount } = await this.supabase
       .from('reconciliations')
       .select('id', { count: 'exact', head: true })
@@ -405,13 +381,12 @@ export class AIAccountingEngine {
     if (unmatchedCount && unmatchedCount > 5) {
       insights.push({
         type: 'unreconciled',
-        message: `هناك ${unmatchedCount} عملية غير مطابقة تحتاج للتسوية`,
+        message: `There are ${unmatchedCount} unmatched transactions needing reconciliation`,
         severity: 'warning',
         action_url: '/dashboard/accounting/reconciliation',
       })
     }
 
-    // Draft entries
     const { count: draftCount } = await this.supabase
       .from('journal_entries')
       .select('id', { count: 'exact', head: true })
@@ -421,7 +396,7 @@ export class AIAccountingEngine {
     if (draftCount && draftCount > 0) {
       insights.push({
         type: 'draft_entries',
-        message: `هناك ${draftCount} قيود في حالة المسودة تحتاج للمراجعة`,
+        message: `There are ${draftCount} draft entries needing review`,
         severity: 'info',
         action_url: '/dashboard/accounting/journal?status=draft',
       })
@@ -430,15 +405,16 @@ export class AIAccountingEngine {
     return insights
   }
 
-  // ── Reconciliation Suggestions ────────────────────────────
-  async suggestReconciliation(): Promise<Array<{
-    invoice_id: string
-    invoice_ref: string
-    invoice_amount: number
-    payment_ids: string[]
-    total_paid: number
-    confidence: number
-  }>> {
+  async suggestReconciliation(): Promise<
+    Array<{
+      invoice_id: string
+      invoice_ref: string
+      invoice_amount: number
+      payment_ids: string[]
+      total_paid: number
+      confidence: number
+    }>
+  > {
     const suggestions: Array<{
       invoice_id: string
       invoice_ref: string
@@ -466,7 +442,9 @@ export class AIAccountingEngine {
       .order('date', { ascending: false })
       .limit(50)
 
-    if (!invoices || !payments) return suggestions
+    if (!invoices || !payments) {
+      return suggestions
+    }
 
     for (const inv of invoices as any[]) {
       const invAmount = Number(inv.total_debit)
@@ -475,12 +453,16 @@ export class AIAccountingEngine {
 
       for (const pmt of (payments || []) as any[]) {
         const pmtAmount = Number(pmt.total_credit)
-        if (matchedPayments.includes(pmt.id)) continue
+        if (matchedPayments.includes(pmt.id)) {
+          continue
+        }
 
         if (new Date(pmt.date) >= new Date(inv.date) && remaining > 0) {
           matchedPayments.push(pmt.id)
           remaining -= pmtAmount
-          if (remaining <= 0) break
+          if (remaining <= 0) {
+            break
+          }
         }
       }
 
@@ -501,6 +483,6 @@ export class AIAccountingEngine {
   }
 
   private matchAny(text: string, patterns: string[]): boolean {
-    return patterns.some(p => text.includes(p))
+    return patterns.some((p) => text.includes(p))
   }
 }

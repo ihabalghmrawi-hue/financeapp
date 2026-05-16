@@ -2,6 +2,7 @@
 
 import { cn } from '@/lib/utils'
 import { useOffline } from './OfflineProvider'
+import { useT } from '@/lib/i18n/language-provider'
 import { Clock, Database, Upload, AlertTriangle, Activity } from 'lucide-react'
 
 interface OfflineTelemetryProps {
@@ -10,6 +11,7 @@ interface OfflineTelemetryProps {
 }
 
 export function OfflineTelemetryPanel({ className, compact }: OfflineTelemetryProps) {
+  const { t } = useT()
   const { telemetry, isOnline, syncStatus, pendingCount, failedCount } = useOffline()
 
   const formatUptime = (ms: number): string => {
@@ -24,20 +26,25 @@ export function OfflineTelemetryPanel({ className, compact }: OfflineTelemetryPr
   const metrics = [
     {
       icon: Activity,
-      label: 'الحالة',
-      value: isOnline ? 'متصل' : 'غير متصل',
+      label: t('offline.telemetry.status'),
+      value: isOnline ? t('offline.telemetry.online') : t('offline.telemetry.offline'),
       color: isOnline ? 'text-success' : 'text-destructive',
     },
-    { icon: Clock, label: 'وقت التشغيل', value: formatUptime(telemetry.uptime) },
+    { icon: Clock, label: t('offline.telemetry.uptime'), value: formatUptime(telemetry.uptime) },
     {
       icon: Database,
-      label: 'المزامنة',
-      value: syncStatus === 'syncing' ? 'جاري...' : syncStatus === 'error' ? 'خطأ' : 'مستقر',
+      label: t('offline.telemetry.sync'),
+      value:
+        syncStatus === 'syncing'
+          ? t('offline.telemetry.syncing')
+          : syncStatus === 'error'
+            ? t('offline.telemetry.error')
+            : t('offline.telemetry.stable'),
     },
-    { icon: Upload, label: 'معلق', value: String(pendingCount) },
+    { icon: Upload, label: t('offline.telemetry.pending'), value: String(pendingCount) },
     {
       icon: AlertTriangle,
-      label: 'فاشل',
+      label: t('offline.telemetry.failed'),
       value: String(failedCount),
       color: failedCount > 0 ? 'text-warning' : undefined,
     },
@@ -45,7 +52,7 @@ export function OfflineTelemetryPanel({ className, compact }: OfflineTelemetryPr
 
   return (
     <div className={cn(compact ? 'space-y-1' : 'bg-card border rounded-xl p-4 space-y-3', className)}>
-      {!compact && <h3 className="text-sm font-semibold">تتبع الأداء</h3>}
+      {!compact && <h3 className="text-sm font-semibold">{t('offline.telemetry.title')}</h3>}
       <div className={cn('grid', compact ? 'grid-cols-3 gap-1' : 'gap-2')}>
         {metrics.map((m) => (
           <div key={m.label} className="flex items-center gap-2">

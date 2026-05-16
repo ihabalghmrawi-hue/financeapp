@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { AccountingDomain } from '@/domains/accounting'
 import { InventoryDomain } from '@/domains/inventory'
@@ -14,7 +15,7 @@ export async function GET(req: NextRequest) {
   const expected = `Bearer ${process.env.CRON_SECRET || 'local-dev-cron-secret'}`
 
   if (authHeader !== expected && process.env.NODE_ENV !== 'development') {
-    return NextResponse.json({ error: 'غير مصرح' }, { status: 401 })
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const supabase = createAdminClient()
@@ -99,10 +100,13 @@ export async function GET(req: NextRequest) {
       results,
     })
   } catch (err: any) {
-    return NextResponse.json({
-      ok: false,
-      error: err.message,
-      timestamp: new Date().toISOString(),
-    }, { status: 500 })
+    return NextResponse.json(
+      {
+        ok: false,
+        error: err.message,
+        timestamp: new Date().toISOString(),
+      },
+      { status: 500 },
+    )
   }
 }

@@ -22,6 +22,7 @@ import {
   ChevronRight,
   ChevronLeft,
 } from 'lucide-react'
+import { useT } from '@/lib/i18n/language-provider'
 import { Button } from './button'
 import { useIsMobile, useReducedMotion } from '@/hooks'
 
@@ -99,6 +100,7 @@ function EliteTableInner<T extends Record<string, any>>(props: EliteTableProps<T
     exportable,
   } = props
 
+  const { t } = useT()
   const isMobile = useIsMobile()
   const reducedMotion = useReducedMotion()
 
@@ -257,7 +259,7 @@ function EliteTableInner<T extends Record<string, any>>(props: EliteTableProps<T
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="بحث..."
+                placeholder={t('common.search')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full h-9 bg-muted/50 rounded-lg pl-3 pr-9 text-xs text-foreground placeholder:text-muted-foreground border border-border/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
@@ -374,7 +376,7 @@ function EliteTableInner<T extends Record<string, any>>(props: EliteTableProps<T
                     {col.filterable !== false && (
                       <input
                         type="text"
-                        placeholder={`تصفية ${col.header}...`}
+                        placeholder={`${t('ui.filter')} ${col.header}...`}
                         value={filters[col.id] || ''}
                         onChange={(e) => setFilters((prev) => ({ ...prev, [col.id]: e.target.value }))}
                         className="w-full h-7 bg-muted/50 rounded-md px-2 text-[11px] text-foreground placeholder:text-muted-foreground/50 border border-border/30 focus:outline-none"
@@ -447,7 +449,7 @@ function EliteTableInner<T extends Record<string, any>>(props: EliteTableProps<T
           <div className="py-12">
             {emptyState || (
               <div className="text-center">
-                <p className="text-sm text-muted-foreground">لا توجد بيانات</p>
+                <p className="text-sm text-muted-foreground">{t('common.noData')}</p>
               </div>
             )}
           </div>
@@ -470,7 +472,7 @@ function EliteTableInner<T extends Record<string, any>>(props: EliteTableProps<T
       {paginated && processed.length > 0 && (
         <div className="flex items-center justify-between px-4 py-3 border-t border-border/50 bg-muted/10">
           <span className="text-xs text-muted-foreground">
-            {processed.length} نتيجة · صفحة {page} من {totalPages || 1}
+            {processed.length} {t('ui.result')} · {t('ui.page')} {page} {t('ui.of')} {totalPages || 1}
           </span>
           <div className="flex items-center gap-1">
             <Button

@@ -1,5 +1,6 @@
 // POST /api/reset — factory reset (admin only, requires confirmation phrase)
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 import { factoryReset } from '@/lib/data-lifecycle'
 import { getCompanyId } from '@/lib/tenant'
@@ -9,13 +10,13 @@ const CONFIRM_PHRASE = 'DELETE MY BUSINESS DATA'
 
 export async function POST(req: NextRequest) {
   const COMPANY_ID = await getCompanyId()
-  const h         = await headers()
+  const h = await headers()
   const staffName = h.get('x-staff-name') || ''
-  const staffRole = h.get('x-staff-role')  || ''
+  const staffRole = h.get('x-staff-role') || ''
 
   // Only admins
   if (staffRole !== 'admin' && staffRole !== 'owner') {
-    return NextResponse.json({ error: 'غير مصرح — المسؤول فقط يمكنه إعادة الضبط' }, { status: 403 })
+    return NextResponse.json({ error: 'Unauthorized — only admin can reset' }, { status: 403 })
   }
 
   const body = await req.json().catch(() => ({}))
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
   // Require the exact phrase
   if (confirm_phrase !== CONFIRM_PHRASE) {
     return NextResponse.json(
-      { error: `يجب كتابة عبارة التأكيد بالضبط: "${CONFIRM_PHRASE}"` },
+      { error: `Must enter the exact confirmation phrase: "${CONFIRM_PHRASE}"` },
       { status: 422 },
     )
   }
@@ -32,7 +33,7 @@ export async function POST(req: NextRequest) {
   // Require password (client sends it; here we just check it was provided —
   // real verification happens via Supabase Auth in production)
   if (!password || password.length < 4) {
-    return NextResponse.json({ error: 'كلمة المرور مطلوبة' }, { status: 422 })
+    return NextResponse.json({ error: 'Password is required' }, { status: 422 })
   }
 
   const result = await factoryReset(COMPANY_ID, staffName || 'admin', BUSINESS_TYPE)
@@ -42,9 +43,9 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({
-    ok:       true,
-    counts:   result.counts,
+    ok: true,
+    counts: result.counts,
     backupId: result.backupId,
-    message:  'تمت إعادة ضبط بيانات الشركة بنجاح',
+    message: 'Company data has been reset successfully',
   })
 }

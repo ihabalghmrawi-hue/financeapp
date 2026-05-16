@@ -55,7 +55,9 @@ export class RecurringJournalEngine {
       .select('id')
       .single()
 
-    if (error) return { ok: false, error: error.message }
+    if (error) {
+      return { ok: false, error: error.message }
+    }
     return { ok: true, id: data.id }
   }
 
@@ -93,18 +95,18 @@ export class RecurringJournalEngine {
     const lines = (journal.template_lines || []) as RecurringJournalLine[]
 
     if (lines.length < 2) {
-      throw new Error('قالب القيد لا يحتوي على سطور كافية')
+      throw new Error('Journal template does not have enough lines')
     }
 
     const totalDebit = lines.reduce((s, l) => s + l.debit, 0)
     const totalCredit = lines.reduce((s, l) => s + l.credit, 0)
     if (Math.abs(totalDebit - totalCredit) > 0.005) {
-      throw new Error('القيد المتكرر غير متوازن')
+      throw new Error('Recurring journal entry is unbalanced')
     }
 
     const entryLines = lines
-      .filter(l => l.account_code && (l.debit > 0 || l.credit > 0))
-      .map(l => ({
+      .filter((l) => l.account_code && (l.debit > 0 || l.credit > 0))
+      .map((l) => ({
         account_code: l.account_code,
         debit: l.debit,
         credit: l.credit,
@@ -132,16 +134,10 @@ export class RecurringJournalEngine {
       status: 'success',
     })
 
-    const nextRun = this.calculateNextRun(
-      journal.frequency,
-      today,
-      journal,
-    )
+    const nextRun = this.calculateNextRun(journal.frequency, today, journal)
 
     const totalRuns = (journal.total_runs || 0) + 1
-    const newStatus = journal.max_runs && totalRuns >= journal.max_runs
-      ? 'completed'
-      : 'active'
+    const newStatus = journal.max_runs && totalRuns >= journal.max_runs ? 'completed' : 'active'
 
     await this.supabase
       .from('recurring_journals')
@@ -154,11 +150,7 @@ export class RecurringJournalEngine {
       .eq('id', journal.id)
   }
 
-  private calculateNextRun(
-    frequency: string,
-    fromDate: string,
-    params: any,
-  ): string {
+  private calculateNextRun(frequency: string, fromDate: string, params: any): string {
     const d = new Date(fromDate)
 
     switch (frequency) {

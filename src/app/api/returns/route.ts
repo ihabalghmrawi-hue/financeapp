@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { logAudit } from '@/lib/audit'
 import { getCompanyId } from '@/lib/tenant'
@@ -10,7 +11,7 @@ export async function POST(req: NextRequest) {
     const { sale_id, items, refund_method, reason, notes, warehouse_id } = body
 
     if (!sale_id || !items?.length) {
-      return NextResponse.json({ error: 'بيانات ناقصة' }, { status: 400 })
+      return NextResponse.json({ error: 'Incomplete data' }, { status: 400 })
     }
 
     const supabase = createClient()
@@ -23,7 +24,9 @@ export async function POST(req: NextRequest) {
       .eq('company_id', COMPANY_ID)
       .single()
 
-    if (saleErr || !sale) return NextResponse.json({ error: 'الفاتورة غير موجودة' }, { status: 404 })
+    if (saleErr || !sale) {
+      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
+    }
 
     const total = items.reduce((s: number, i: any) => s + i.total, 0)
     const subtotal = total
@@ -52,7 +55,9 @@ export async function POST(req: NextRequest) {
       .select()
       .single()
 
-    if (retErr) throw new Error(retErr.message)
+    if (retErr) {
+      throw new Error(retErr.message)
+    }
 
     // Create return items
     await supabase.from('return_items').insert(
@@ -64,7 +69,7 @@ export async function POST(req: NextRequest) {
         unit_price: i.unit_price,
         total: i.total,
         reason: i.reason || null,
-      }))
+      })),
     )
 
     // Return inventory
@@ -79,7 +84,8 @@ export async function POST(req: NextRequest) {
           .single()
 
         if (inv) {
-          await supabase.from('inventory')
+          await supabase
+            .from('inventory')
             .update({ quantity: inv.quantity + item.quantity, updated_at: new Date().toISOString() })
             .eq('id', inv.id)
         } else {
@@ -121,14 +127,12 @@ export async function POST(req: NextRequest) {
         sale_id,
         amount: -total,
         balance_after: newBalance,
-        notes: `مرتجع ${return_number}`,
+        notes: `Return ${return_number}`,
       })
     }
 
     // Update original sale status
-    await supabase.from('sales')
-      .update({ status: 'returned', payment_status: 'refunded' })
-      .eq('id', sale_id)
+    await supabase.from('sales').update({ status: 'returned', payment_status: 'refunded' }).eq('id', sale_id)
 
     await logAudit({
       action: 'return.created',

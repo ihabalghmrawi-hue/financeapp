@@ -11,9 +11,14 @@ export class AuditRepository {
         .insert({ ...entry, timestamp: entry.timestamp ?? Date.now() })
         .select()
         .single()
-      if (error) { console.error('Audit log error:', error); return null }
+      if (error) {
+        console.error('Audit log error:', error)
+        return null
+      }
       return data as AuditTrailEntry
-    } catch { return null }
+    } catch {
+      return null
+    }
   }
 
   async getByEntity(entityType: string, entityId: string, limit = 50): Promise<AuditTrailEntry[]> {
@@ -26,7 +31,9 @@ export class AuditRepository {
         .order('timestamp', { ascending: false })
         .limit(limit)
       return (data ?? []) as AuditTrailEntry[]
-    } catch { return [] }
+    } catch {
+      return []
+    }
   }
 
   async getByUser(userId: string, limit = 50): Promise<AuditTrailEntry[]> {
@@ -38,7 +45,9 @@ export class AuditRepository {
         .order('timestamp', { ascending: false })
         .limit(limit)
       return (data ?? []) as AuditTrailEntry[]
-    } catch { return [] }
+    } catch {
+      return []
+    }
   }
 
   async getByDateRange(start: number, end: number, limit = 100): Promise<AuditTrailEntry[]> {
@@ -51,7 +60,9 @@ export class AuditRepository {
         .order('timestamp', { ascending: false })
         .limit(limit)
       return (data ?? []) as AuditTrailEntry[]
-    } catch { return [] }
+    } catch {
+      return []
+    }
   }
 
   async getByType(type: AuditTrailEntry['type'], limit = 50): Promise<AuditTrailEntry[]> {
@@ -63,7 +74,9 @@ export class AuditRepository {
         .order('timestamp', { ascending: false })
         .limit(limit)
       return (data ?? []) as AuditTrailEntry[]
-    } catch { return [] }
+    } catch {
+      return []
+    }
   }
 
   async getRecent(limit = 20): Promise<AuditTrailEntry[]> {
@@ -74,7 +87,9 @@ export class AuditRepository {
         .order('timestamp', { ascending: false })
         .limit(limit)
       return (data ?? []) as AuditTrailEntry[]
-    } catch { return [] }
+    } catch {
+      return []
+    }
   }
 
   async search(query: string, limit = 50): Promise<AuditTrailEntry[]> {
@@ -86,18 +101,30 @@ export class AuditRepository {
         .order('timestamp', { ascending: false })
         .limit(limit)
       return (data ?? []) as AuditTrailEntry[]
-    } catch { return [] }
+    } catch {
+      return []
+    }
   }
 
   subscribe(entityType?: string, entityId?: string): { unsubscribe: () => void } {
     const channel = this.supabase
       .channel(`audit-${entityType ?? 'all'}-${entityId ?? 'all'}-${Date.now()}`)
-      .on('postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'audit_trail', ...(entityType && entityId ? { filter: `entity_type=eq.${entityType}` } : {}) },
-        () => {}
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'audit_trail',
+          ...(entityType && entityId ? { filter: `entity_type=eq.${entityType}` } : {}),
+        },
+        () => {},
       )
       .subscribe()
-    return { unsubscribe: () => { this.supabase.removeChannel(channel) } }
+    return {
+      unsubscribe: () => {
+        this.supabase.removeChannel(channel)
+      },
+    }
   }
 }
 
@@ -110,25 +137,55 @@ export async function logEntityAction(
   entityId: string,
   entityName: string,
   details: string,
-  type: AuditTrailEntry['type'] = 'update'
+  type: AuditTrailEntry['type'] = 'update',
 ): Promise<void> {
   await auditRepo.log({
-    action, actor, details, type,
+    action,
+    actor,
+    details,
+    type,
     timestamp: Date.now(),
   } as AuditTrailEntry)
 }
 
-export async function logWorkflowAction(instanceId: string, actor: string, action: string, details: string): Promise<void> {
-  await logEntityAction(action, actor, 'workflow', instanceId, `سير العمل ${instanceId}`, details, 'system')
+export async function logWorkflowAction(
+  instanceId: string,
+  actor: string,
+  action: string,
+  details: string,
+): Promise<void> {
+  await logEntityAction(action, actor, 'workflow', instanceId, `Workflow ${instanceId}`, details, 'system')
 }
 
-export async function logApprovalAction(requestId: string, actor: string, decision: string, comments?: string): Promise<void> {
+export async function logApprovalAction(
+  requestId: string,
+  actor: string,
+  decision: string,
+  comments?: string,
+): Promise<void> {
   await logEntityAction(
-    `approval_${decision}`, actor, 'approval', requestId,
-    `طلب اعتماد ${requestId}`, comments ?? `تم ${decision === 'approved' ? 'الاعتماد' : 'الرفض'}`, 'approve'
+    `approval_${decision}`,
+    actor,
+    'approval',
+    requestId,
+    `Approval Request ${requestId}`,
+    comments ?? `${decision === 'approved' ? 'Approved' : 'Rejected'}`,
+    'approve',
   )
 }
 
-export async function logPostingAction(entryId: string, actor: string, type: 'journal' | 'invoice' | 'payment'): Promise<void> {
-  await logEntityAction('posted', actor, type, entryId, `${type === 'journal' ? 'قيود اليومية' : type === 'invoice' ? 'الفاتورة' : 'الدفعة'} ${entryId}`, 'تم الترحيل', 'post')
+export async function logPostingAction(
+  entryId: string,
+  actor: string,
+  type: 'journal' | 'invoice' | 'payment',
+): Promise<void> {
+  await logEntityAction(
+    'posted',
+    actor,
+    type,
+    entryId,
+    `${type === 'journal' ? 'Journal Entry' : type === 'invoice' ? 'Invoice' : 'Payment'} ${entryId}`,
+    'Posted',
+    'post',
+  )
 }

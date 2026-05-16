@@ -2,27 +2,30 @@ import Link from 'next/link'
 import { Check, X, Zap } from 'lucide-react'
 import { PLAN_PRICING, PLAN_LIMITS, PLAN_FEATURES } from '@/lib/plans'
 import type { Plan } from '@/lib/plans'
+import { getTranslations } from '@/lib/i18n/server'
 
 const PLANS: Plan[] = ['free', 'basic', 'pro']
 
-const FEATURE_ROWS = [
-  { key: 'products', label: 'المنتجات', isLimit: true },
-  { key: 'customers', label: 'العملاء', isLimit: true },
-  { key: 'salesPerMonth', label: 'مبيعات شهرية', isLimit: true },
-  { key: 'users', label: 'المستخدمون', isLimit: true },
-  { key: 'reports', label: 'التقارير', isLimit: false },
-  { key: 'exportCSV', label: 'تصدير CSV', isLimit: false },
-  { key: 'backups', label: 'النسخ الاحتياطية', isLimit: false },
-  { key: 'aiInsights', label: 'تحليلات الذكاء الاصطناعي', isLimit: false },
-  { key: 'customBranding', label: 'هوية بصرية مخصصة', isLimit: false },
-  { key: 'prioritySupport', label: 'دعم فني أولوية', isLimit: false },
-] as const
+export default async function PricingPage() {
+  const { t } = await getTranslations('ar')
 
-function formatLimit(val: number): string {
-  return val === -1 ? 'غير محدود' : val.toLocaleString('ar')
-}
+  function formatLimit(val: number): string {
+    return val === -1 ? t('pricing.unlimited') : val.toLocaleString('ar')
+  }
 
-export default function PricingPage() {
+  const FEATURE_ROWS = [
+    { key: 'products', label: t('pricing.products'), isLimit: true },
+    { key: 'customers', label: t('pricing.customers'), isLimit: true },
+    { key: 'salesPerMonth', label: t('pricing.salesPerMonth'), isLimit: true },
+    { key: 'users', label: t('pricing.users'), isLimit: true },
+    { key: 'reports', label: t('pricing.reports'), isLimit: false },
+    { key: 'exportCSV', label: t('pricing.exportCSV'), isLimit: false },
+    { key: 'backups', label: t('pricing.backups'), isLimit: false },
+    { key: 'aiInsights', label: t('pricing.aiInsights'), isLimit: false },
+    { key: 'customBranding', label: t('pricing.customBranding'), isLimit: false },
+    { key: 'prioritySupport', label: t('pricing.prioritySupport'), isLimit: false },
+  ] as const
+
   return (
     <div className="min-h-screen bg-[#0a0a0a]" dir="rtl">
       {/* Nav */}
@@ -31,13 +34,13 @@ export default function PricingPage() {
           <span className="font-bold text-lg text-primary">Ezy ERP</span>
           <div className="flex items-center gap-3">
             <Link href="/auth/login" className="text-sm text-white/50 hover:text-white/80 transition-colors">
-              تسجيل الدخول
+              {t('pricing.login')}
             </Link>
             <Link
               href="/auth/signup"
               className="text-sm bg-primary text-primary-foreground px-4 py-1.5 rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
             >
-              ابدأ مجاناً
+              {t('pricing.startFree')}
             </Link>
           </div>
         </div>
@@ -47,12 +50,10 @@ export default function PricingPage() {
         {/* Header */}
         <div className="text-center space-y-4">
           <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-sm font-medium border border-primary/20">
-            <Zap className="w-4 h-4" /> خطط مرنة لكل حجم عمل
+            <Zap className="w-4 h-4" /> {t('pricing.flexiblePlans')}
           </div>
-          <h1 className="text-4xl font-bold text-white">الأسعار والخطط</h1>
-          <p className="text-xl text-white/50 max-w-2xl mx-auto">
-            ابدأ مجاناً وطوّر خطتك مع نمو عملك. جميع الخطط تشمل 7 أيام تجريبية مجانية.
-          </p>
+          <h1 className="text-4xl font-bold text-white">{t('pricing.title')}</h1>
+          <p className="text-xl text-white/50 max-w-2xl mx-auto">{t('pricing.subtitle')}</p>
         </div>
 
         {/* Pricing cards */}
@@ -80,11 +81,11 @@ export default function PricingPage() {
                   <p className="text-sm font-semibold text-white/40 uppercase tracking-wide">{pricing.nameAr}</p>
                   <div className="mt-2 flex items-baseline gap-1">
                     {pricing.monthly === 0 ? (
-                      <span className="text-4xl font-bold text-white">مجاني</span>
+                      <span className="text-4xl font-bold text-white">{t('pricing.free')}</span>
                     ) : (
                       <>
                         <span className="text-4xl font-bold text-white">${pricing.monthly}</span>
-                        <span className="text-white/40">/شهر</span>
+                        <span className="text-white/40">{t('pricing.perMonth')}</span>
                       </>
                     )}
                   </div>
@@ -92,9 +93,9 @@ export default function PricingPage() {
 
                 <div className="space-y-2">
                   {[
-                    { label: 'منتجات', val: limits.products },
-                    { label: 'عملاء', val: limits.customers },
-                    { label: 'مستخدمون', val: limits.users },
+                    { label: t('pricing.products'), val: limits.products },
+                    { label: t('pricing.customers'), val: limits.customers },
+                    { label: t('pricing.users'), val: limits.users },
                   ].map((r) => (
                     <div key={r.label} className="flex justify-between text-sm">
                       <span className="text-white/40">{r.label}</span>
@@ -105,12 +106,12 @@ export default function PricingPage() {
 
                 <div className="space-y-2 flex-1">
                   {[
-                    { label: 'التقارير', val: features.reports },
-                    { label: 'تصدير CSV', val: features.exportCSV },
-                    { label: 'النسخ الاحتياطية', val: features.backups },
-                    { label: 'تحليلات AI', val: features.aiInsights },
-                    { label: 'هوية بصرية مخصصة', val: features.customBranding },
-                    { label: 'دعم أولوية', val: features.prioritySupport },
+                    { label: t('pricing.reports'), val: features.reports },
+                    { label: t('pricing.exportCSV'), val: features.exportCSV },
+                    { label: t('pricing.backups'), val: features.backups },
+                    { label: t('pricing.aiInsights'), val: features.aiInsights },
+                    { label: t('pricing.customBranding'), val: features.customBranding },
+                    { label: t('pricing.prioritySupport'), val: features.prioritySupport },
                   ].map((f) => (
                     <div key={f.label} className="flex items-center gap-2 text-sm">
                       {f.val ? (
@@ -131,7 +132,7 @@ export default function PricingPage() {
                       : 'border border-white/10 text-white hover:bg-white/5'
                   }`}
                 >
-                  {plan === 'free' ? 'ابدأ مجاناً' : 'ابدأ التجربة المجانية'}
+                  {plan === 'free' ? t('pricing.startFree') : t('pricing.startTrial')}
                 </Link>
               </div>
             )
@@ -141,12 +142,12 @@ export default function PricingPage() {
         {/* Feature comparison table */}
         <div className="border border-white/10 rounded-3xl overflow-hidden bg-white/[0.02]">
           <div className="px-6 py-4 border-b border-white/10 bg-white/[0.02]">
-            <h2 className="font-bold text-lg text-white">مقارنة تفصيلية</h2>
+            <h2 className="font-bold text-lg text-white">{t('pricing.comparison')}</h2>
           </div>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/10">
-                <th className="text-right px-6 py-3 font-medium text-white/40 w-1/4">الميزة</th>
+                <th className="text-right px-6 py-3 font-medium text-white/40 w-1/4">{t('pricing.feature')}</th>
                 {PLANS.map((p) => (
                   <th key={p} className="px-6 py-3 font-semibold text-center text-white">
                     {PLAN_PRICING[p].nameAr}
@@ -171,7 +172,7 @@ export default function PricingPage() {
                             <X className="w-4 h-4 text-white/20 mx-auto" />
                           )
                         ) : (
-                          <span className={val === 'غير محدود' ? 'text-primary font-bold' : ''}>{val}</span>
+                          <span className={val === t('pricing.unlimited') ? 'text-primary font-bold' : ''}>{val}</span>
                         )}
                       </td>
                     )
@@ -184,13 +185,13 @@ export default function PricingPage() {
 
         {/* CTA */}
         <div className="text-center py-8 space-y-4">
-          <p className="text-white/40">هل لديك أسئلة؟ تواصل معنا</p>
+          <p className="text-white/40">{t('pricing.questions')}</p>
           <Link
             href="/auth/signup"
             className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-3 rounded-2xl font-semibold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
           >
             <Zap className="w-4 h-4" />
-            ابدأ تجربتك المجانية الآن
+            {t('pricing.startFreeTrialNow')}
           </Link>
         </div>
       </div>

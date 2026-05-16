@@ -1,59 +1,29 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getCompanyId } from '@/lib/tenant'
 
-export async function GET(
-  _: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
+export async function GET(_: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params
 
   const admin = createAdminClient()
   const companyId = await getCompanyId()
 
-  const [
-    { data: project },
-    { data: tasks },
-    { data: expenses },
-    { data: payments },
-    { data: files },
-  ] = await Promise.all([
-    admin
-      .from('con_projects')
-      .select('*')
-      .eq('id', id)
-      .eq('company_id', companyId)
-      .single(),
+  const [{ data: project }, { data: tasks }, { data: expenses }, { data: payments }, { data: files }] =
+    await Promise.all([
+      admin.from('con_projects').select('*').eq('id', id).eq('company_id', companyId).single(),
 
-    admin
-      .from('con_tasks')
-      .select('*, con_workers(name, job_type)')
-      .eq('project_id', id),
+      admin.from('con_tasks').select('*, con_workers(name, job_type)').eq('project_id', id),
 
-    admin
-      .from('con_expenses')
-      .select('*')
-      .eq('project_id', id)
-      .order('expense_date', { ascending: false }),
+      admin.from('con_expenses').select('*').eq('project_id', id).order('expense_date', { ascending: false }),
 
-    admin
-      .from('con_payments')
-      .select('*')
-      .eq('project_id', id)
-      .order('payment_date', { ascending: false }),
+      admin.from('con_payments').select('*').eq('project_id', id).order('payment_date', { ascending: false }),
 
-    admin
-      .from('con_files')
-      .select('*')
-      .eq('project_id', id)
-      .order('uploaded_at', { ascending: false }),
-  ])
+      admin.from('con_files').select('*').eq('project_id', id).order('uploaded_at', { ascending: false }),
+    ])
 
   if (!project) {
-    return NextResponse.json(
-      { error: 'المشروع غير موجود' },
-      { status: 404 }
-    )
+    return NextResponse.json({ error: 'Project not found' }, { status: 404 })
   }
 
   return NextResponse.json({
@@ -65,10 +35,7 @@ export async function GET(
   })
 }
 
-export async function PATCH(
-  req: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params
 
   const admin = createAdminClient()
@@ -137,35 +104,22 @@ export async function PATCH(
     .single()
 
   if (error) {
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
   return NextResponse.json(data)
 }
 
-export async function DELETE(
-  _: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(_: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params
 
   const admin = createAdminClient()
   const companyId = await getCompanyId()
 
-  const { error } = await admin
-    .from('con_projects')
-    .delete()
-    .eq('id', id)
-    .eq('company_id', companyId)
+  const { error } = await admin.from('con_projects').delete().eq('id', id).eq('company_id', companyId)
 
   if (error) {
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
   return NextResponse.json({ ok: true })

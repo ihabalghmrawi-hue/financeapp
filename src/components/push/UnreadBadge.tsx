@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/language-provider'
 
 interface UnreadBadgeProps {
   count: number
@@ -9,6 +10,7 @@ interface UnreadBadgeProps {
 }
 
 export function UnreadBadge({ count, className, size = 'md' }: UnreadBadgeProps) {
+  const { t } = useT()
   if (count === 0) {
     return null
   }
@@ -28,7 +30,7 @@ export function UnreadBadge({ count, className, size = 'md' }: UnreadBadgeProps)
         sizeClasses[size],
         className,
       )}
-      aria-label={`${count} إشعارات غير مقروءة`}
+      aria-label={t('notification.push.ariaUnread', { count })}
     >
       {displayCount}
     </span>

@@ -162,20 +162,11 @@ const approvalRoutes: Record<string, ApprovalRoute[]> = {
   ],
 }
 
-function matchRoute(
-  routes: ApprovalRoute[],
-  amount: number
-): ApprovalRoute | undefined {
-  return routes.find(
-    r => amount >= r.minAmount && amount <= r.maxAmount
-  )
+function matchRoute(routes: ApprovalRoute[], amount: number): ApprovalRoute | undefined {
+  return routes.find((r) => amount >= r.minAmount && amount <= r.maxAmount)
 }
 
-export function getApprovalRoute(
-  documentType: string,
-  amount: number,
-  department: string
-): ApprovalRoute {
+export function getApprovalRoute(documentType: string, amount: number, department: string): ApprovalRoute {
   const numericAmount = typeof amount === 'number' && !isNaN(amount) ? amount : 0
   const routes = approvalRoutes[documentType]
 
@@ -205,7 +196,7 @@ export function generateApprovalChain(
   documentType: string,
   amount: number,
   department: string,
-  requesterId: string
+  requesterId: string,
 ): { levels: { role: string; order: number; slaMinutes: number; escalationAfter: number }[] } {
   const route = getApprovalRoute(documentType, amount, department)
   const levels: { role: string; order: number; slaMinutes: number; escalationAfter: number }[] = []
@@ -214,17 +205,16 @@ export function generateApprovalChain(
   const slaPerLevel = route.slaMinutes / route.requiredRoles.length
 
   for (const role of route.requiredRoles) {
-    const slaForRole = role === 'inventory_manager' && documentType === 'stock_adjustment'
-      ? 60
-      : slaPerLevel
+    const slaForRole = role === 'inventory_manager' && documentType === 'stock_adjustment' ? 60 : slaPerLevel
 
     levels.push({
       role,
       order,
       slaMinutes: Math.round(slaForRole),
-      escalationAfter: route.escalationLevels.length > 0
-        ? route.escalationLevels[Math.min(order - 1, route.escalationLevels.length - 1)].afterMinutes
-        : Math.round(slaForRole * 0.75),
+      escalationAfter:
+        route.escalationLevels.length > 0
+          ? route.escalationLevels[Math.min(order - 1, route.escalationLevels.length - 1)].afterMinutes
+          : Math.round(slaForRole * 0.75),
     })
     order++
   }
@@ -232,16 +222,17 @@ export function generateApprovalChain(
   if (
     route.requiresSecondApproval &&
     route.secondApprovalRoles &&
-    !route.requiredRoles.some(r => route.secondApprovalRoles!.includes(r))
+    !route.requiredRoles.some((r) => route.secondApprovalRoles!.includes(r))
   ) {
     for (const role of route.secondApprovalRoles) {
       levels.push({
         role,
         order,
         slaMinutes: Math.round(slaPerLevel),
-        escalationAfter: route.escalationLevels.length > 0
-          ? route.escalationLevels[route.escalationLevels.length - 1].afterMinutes
-          : Math.round(slaPerLevel * 0.75),
+        escalationAfter:
+          route.escalationLevels.length > 0
+            ? route.escalationLevels[route.escalationLevels.length - 1].afterMinutes
+            : Math.round(slaPerLevel * 0.75),
       })
       order++
     }
@@ -252,7 +243,7 @@ export function generateApprovalChain(
 
 export function validateApprovalCompletion(
   chain: { role: string; approved: boolean; timestamp?: number }[],
-  slaMinutes: number
+  slaMinutes: number,
 ): ValidationMessage[] {
   const messages: ValidationMessage[] = []
 
@@ -260,7 +251,7 @@ export function validateApprovalCompletion(
     messages.push({
       id: 'ac-empty-chain',
       type: 'error',
-      message: 'سلسلة الموافقات فارغة، لا توجد مستويات للموافقة',
+      message: 'Approval chain is empty, no approval levels defined',
       field: 'chain',
     })
     return messages
@@ -269,7 +260,7 @@ export function validateApprovalCompletion(
   const now = Date.now()
   let allApproved = true
   let pendingCount = 0
-  let rejectedCount = 0
+  const rejectedCount = 0
 
   for (let i = 0; i < chain.length; i++) {
     const level = chain[i]
@@ -286,7 +277,7 @@ export function validateApprovalCompletion(
           messages.push({
             id: `ac-sla-exceeded-${i}`,
             type: 'error',
-            message: `انتهى وقت مستوى الموافقة "${level.role}" (يتجاوز ${slaMinutes} دقيقة)، يجب التصعيد`,
+            message: `Approval level "${level.role}" has expired (exceeds ${slaMinutes} minutes), must escalate`,
             field: `chain[${i}].timestamp`,
           })
         } else {
@@ -294,7 +285,7 @@ export function validateApprovalCompletion(
           messages.push({
             id: `ac-pending-${i}`,
             type: 'warning',
-            message: `في انتظار موافقة "${level.role}"، الوقت المتبقي ${remaining} دقيقة`,
+            message: `Waiting for approval from "${level.role}", ${remaining} minutes remaining`,
             field: `chain[${i}]`,
           })
         }
@@ -302,7 +293,7 @@ export function validateApprovalCompletion(
         messages.push({
           id: `ac-not-started-${i}`,
           type: 'warning',
-          message: `لم تبدأ بعد عملية الموافقة للمستوى "${level.role}"`,
+          message: `Approval process for level "${level.role}" has not started yet`,
           field: `chain[${i}]`,
         })
       }
@@ -313,7 +304,7 @@ export function validateApprovalCompletion(
     messages.push({
       id: 'ac-complete',
       type: 'success',
-      message: 'جميع مستويات الموافقة مكتملة بنجاح',
+      message: 'All approval levels have been completed successfully',
       field: 'chain',
     })
   }

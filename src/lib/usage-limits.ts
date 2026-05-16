@@ -11,22 +11,22 @@ import { PLAN_LIMITS, type Plan, type PlanLimits } from '@/lib/plans'
 export type LimitKey = keyof PlanLimits
 
 export interface UsageSnapshot {
-  products:         number
-  customers:        number
-  salesThisMonth:   number
+  products: number
+  customers: number
+  salesThisMonth: number
   bookingsThisMonth: number
-  activeUsers:      number
-  storageGB:        number   // approximate — based on file metadata
+  activeUsers: number
+  storageGB: number // approximate — based on file metadata
 }
 
 export interface LimitCheckResult {
-  allowed:   boolean
-  current:   number
-  max:       number          // -1 = unlimited
-  remaining: number          // -1 = unlimited
-  pct:       number          // 0-100, percentage used
-  limitKey:  LimitKey
-  message:   string
+  allowed: boolean
+  current: number
+  max: number // -1 = unlimited
+  remaining: number // -1 = unlimited
+  pct: number // 0-100, percentage used
+  limitKey: LimitKey
+  message: string
 }
 
 // ── Count helpers ──────────────────────────────────────────────────────────────
@@ -52,7 +52,8 @@ async function countCustomers(sb: SupabaseClient, companyId: string): Promise<nu
 
 async function countSalesThisMonth(sb: SupabaseClient, companyId: string): Promise<number> {
   const start = new Date()
-  start.setDate(1); start.setHours(0, 0, 0, 0)
+  start.setDate(1)
+  start.setHours(0, 0, 0, 0)
   const { count } = await sb
     .from('sales')
     .select('id', { count: 'exact', head: true })
@@ -63,7 +64,8 @@ async function countSalesThisMonth(sb: SupabaseClient, companyId: string): Promi
 
 async function countBookingsThisMonth(sb: SupabaseClient, companyId: string): Promise<number> {
   const start = new Date()
-  start.setDate(1); start.setHours(0, 0, 0, 0)
+  start.setDate(1)
+  start.setHours(0, 0, 0, 0)
   const { count } = await sb
     .from('rental_orders')
     .select('id', { count: 'exact', head: true })
@@ -83,18 +85,14 @@ async function countActiveUsers(sb: SupabaseClient, companyId: string): Promise<
 
 // ── Full snapshot ─────────────────────────────────────────────────────────────
 
-export async function getUsageSnapshot(
-  sb:        SupabaseClient,
-  companyId: string,
-): Promise<UsageSnapshot> {
-  const [products, customers, salesThisMonth, bookingsThisMonth, activeUsers] =
-    await Promise.all([
-      countProducts(sb, companyId),
-      countCustomers(sb, companyId),
-      countSalesThisMonth(sb, companyId),
-      countBookingsThisMonth(sb, companyId),
-      countActiveUsers(sb, companyId),
-    ])
+export async function getUsageSnapshot(sb: SupabaseClient, companyId: string): Promise<UsageSnapshot> {
+  const [products, customers, salesThisMonth, bookingsThisMonth, activeUsers] = await Promise.all([
+    countProducts(sb, companyId),
+    countCustomers(sb, companyId),
+    countSalesThisMonth(sb, companyId),
+    countBookingsThisMonth(sb, companyId),
+    countActiveUsers(sb, companyId),
+  ])
 
   return { products, customers, salesThisMonth, bookingsThisMonth, activeUsers, storageGB: 0 }
 }
@@ -102,27 +100,27 @@ export async function getUsageSnapshot(
 // ── Single-resource limit check (fast — one DB query) ─────────────────────────
 
 export async function checkLimit(
-  sb:        SupabaseClient,
+  sb: SupabaseClient,
   companyId: string,
-  plan:      Plan,
-  limitKey:  LimitKey,
+  plan: Plan,
+  limitKey: LimitKey,
 ): Promise<LimitCheckResult> {
   const max = PLAN_LIMITS[plan][limitKey]
 
   const countMap: Record<LimitKey, () => Promise<number>> = {
-    products:         () => countProducts(sb, companyId),
-    customers:        () => countCustomers(sb, companyId),
-    salesPerMonth:    () => countSalesThisMonth(sb, companyId),
+    products: () => countProducts(sb, companyId),
+    customers: () => countCustomers(sb, companyId),
+    salesPerMonth: () => countSalesThisMonth(sb, companyId),
     bookingsPerMonth: () => countBookingsThisMonth(sb, companyId),
-    users:            () => countActiveUsers(sb, companyId),
-    storageGB:        async () => 0,
+    users: () => countActiveUsers(sb, companyId),
+    storageGB: async () => 0,
   }
 
-  const current   = await countMap[limitKey]()
+  const current = await countMap[limitKey]()
   const unlimited = max === -1
   const remaining = unlimited ? -1 : Math.max(0, max - current)
-  const allowed   = unlimited || current < max
-  const pct       = unlimited ? 0 : Math.round((current / max) * 100)
+  const allowed = unlimited || current < max
+  const pct = unlimited ? 0 : Math.round((current / max) * 100)
 
   return { allowed, current, max, remaining, pct, limitKey, message: limitMessages[limitKey] }
 }
@@ -130,51 +128,51 @@ export async function checkLimit(
 // ── Batch check (used in usage dashboard) ────────────────────────────────────
 
 export async function checkAllLimits(
-  sb:        SupabaseClient,
+  sb: SupabaseClient,
   companyId: string,
-  plan:      Plan,
+  plan: Plan,
 ): Promise<Record<LimitKey, LimitCheckResult>> {
   const snapshot = await getUsageSnapshot(sb, companyId)
-  const limits   = PLAN_LIMITS[plan]
+  const limits = PLAN_LIMITS[plan]
 
   const make = (key: LimitKey, current: number): LimitCheckResult => {
-    const max       = limits[key]
+    const max = limits[key]
     const unlimited = max === -1
     const remaining = unlimited ? -1 : Math.max(0, max - current)
-    const allowed   = unlimited || current < max
-    const pct       = unlimited ? 0 : Math.round((current / max) * 100)
+    const allowed = unlimited || current < max
+    const pct = unlimited ? 0 : Math.round((current / max) * 100)
     return { allowed, current, max, remaining, pct, limitKey: key, message: limitMessages[key] }
   }
 
   return {
-    products:         make('products',         snapshot.products),
-    customers:        make('customers',         snapshot.customers),
-    salesPerMonth:    make('salesPerMonth',     snapshot.salesThisMonth),
-    bookingsPerMonth: make('bookingsPerMonth',  snapshot.bookingsThisMonth),
-    users:            make('users',             snapshot.activeUsers),
-    storageGB:        make('storageGB',         snapshot.storageGB),
+    products: make('products', snapshot.products),
+    customers: make('customers', snapshot.customers),
+    salesPerMonth: make('salesPerMonth', snapshot.salesThisMonth),
+    bookingsPerMonth: make('bookingsPerMonth', snapshot.bookingsThisMonth),
+    users: make('users', snapshot.activeUsers),
+    storageGB: make('storageGB', snapshot.storageGB),
   }
 }
 
 // ── Messages ──────────────────────────────────────────────────────────────────
 
 const limitMessages: Record<LimitKey, string> = {
-  products:         'وصلت لحد المنتجات في خطتك الحالية. قم بالترقية لإضافة المزيد.',
-  customers:        'وصلت لحد العملاء في خطتك الحالية. قم بالترقية لإضافة المزيد.',
-  salesPerMonth:    'وصلت لحد الفواتير الشهرية. يتجدد في أول الشهر القادم.',
-  bookingsPerMonth: 'وصلت لحد الحجوزات الشهرية. يتجدد في أول الشهر القادم.',
-  users:            'وصلت لحد المستخدمين في خطتك الحالية. قم بالترقية لإضافة مستخدمين.',
-  storageGB:        'وصلت لحد مساحة التخزين. قم بالترقية لمزيد من المساحة.',
+  products: 'You have reached the product limit in your current plan. Upgrade to add more.',
+  customers: 'You have reached the customer limit in your current plan. Upgrade to add more.',
+  salesPerMonth: 'You have reached the monthly invoice limit. It resets at the start of next month.',
+  bookingsPerMonth: 'You have reached the monthly booking limit. It resets at the start of next month.',
+  users: 'You have reached the user limit in your current plan. Upgrade to add more users.',
+  storageGB: 'You have reached the storage limit. Upgrade for more space.',
 }
 
 // ── HTTP response helpers ─────────────────────────────────────────────────────
 
 export function limitExceededResponse(result: LimitCheckResult) {
   return {
-    error:     result.message,
-    limitKey:  result.limitKey,
-    current:   result.current,
-    max:       result.max,
+    error: result.message,
+    limitKey: result.limitKey,
+    current: result.current,
+    max: result.max,
     upgradeRequired: true,
   }
 }

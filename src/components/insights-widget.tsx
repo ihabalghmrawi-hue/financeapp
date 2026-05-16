@@ -1,7 +1,19 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Sparkles, RefreshCw, Loader2, ChevronDown, ChevronUp, TrendingUp, Package, Users, DollarSign, Brain } from 'lucide-react'
+import {
+  Sparkles,
+  RefreshCw,
+  Loader2,
+  ChevronDown,
+  ChevronUp,
+  TrendingUp,
+  Package,
+  Users,
+  DollarSign,
+  Brain,
+} from 'lucide-react'
+import { useT } from '@/lib/i18n/language-provider'
 import { cn } from '@/lib/utils'
 
 interface Insight {
@@ -15,10 +27,18 @@ interface Insight {
 }
 
 const SEVERITY_STYLES = {
-  danger:  { bar: 'bg-red-500',    badge: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',    icon: '🔴' },
-  warning: { bar: 'bg-amber-500',  badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400', icon: '🟡' },
-  success: { bar: 'bg-green-500',  badge: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400', icon: '🟢' },
-  info:    { bar: 'bg-blue-500',   badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',   icon: '🔵' },
+  danger: { bar: 'bg-red-500', badge: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', icon: '🔴' },
+  warning: {
+    bar: 'bg-amber-500',
+    badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+    icon: '🟡',
+  },
+  success: {
+    bar: 'bg-green-500',
+    badge: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+    icon: '🟢',
+  },
+  info: { bar: 'bg-blue-500', badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', icon: '🔵' },
 }
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
@@ -29,12 +49,12 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
   general: Brain,
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-  sales: 'مبيعات',
-  inventory: 'مخزون',
-  customers: 'عملاء',
-  profit: 'أرباح',
-  general: 'عام',
+const CATEGORY_KEYS: Record<string, string> = {
+  sales: 'insights.sales',
+  inventory: 'insights.inventory',
+  customers: 'insights.customers',
+  profit: 'insights.profit',
+  general: 'insights.general',
 }
 
 interface Props {
@@ -43,6 +63,7 @@ interface Props {
 }
 
 export function InsightsWidget({ initialInsights, compact = false }: Props) {
+  const { t } = useT()
   const [insights, setInsights] = useState<Insight[]>(initialInsights || [])
   const [loading, setLoading] = useState(false)
   const [generating, setGenerating] = useState(false)
@@ -53,7 +74,9 @@ export function InsightsWidget({ initialInsights, compact = false }: Props) {
     setLoading(true)
     try {
       const res = await fetch('/api/ai/insights/generate')
-      if (res.ok) setInsights(await res.json())
+      if (res.ok) {
+        setInsights(await res.json())
+      }
     } finally {
       setLoading(false)
     }
@@ -64,7 +87,9 @@ export function InsightsWidget({ initialInsights, compact = false }: Props) {
     try {
       const res = await fetch('/api/ai/insights/generate', { method: 'POST' })
       const data = await res.json()
-      if (data.hasAI) setHasAI(true)
+      if (data.hasAI) {
+        setHasAI(true)
+      }
       await loadInsights()
     } finally {
       setGenerating(false)
@@ -72,11 +97,13 @@ export function InsightsWidget({ initialInsights, compact = false }: Props) {
   }
 
   useEffect(() => {
-    if (!initialInsights || initialInsights.length === 0) loadInsights()
+    if (!initialInsights || initialInsights.length === 0) {
+      loadInsights()
+    }
   }, [])
 
-  const dangerCount = insights.filter(i => i.severity === 'danger').length
-  const warningCount = insights.filter(i => i.severity === 'warning').length
+  const dangerCount = insights.filter((i) => i.severity === 'danger').length
+  const warningCount = insights.filter((i) => i.severity === 'warning').length
 
   return (
     <div className="bg-card border rounded-2xl overflow-hidden">
@@ -91,28 +118,47 @@ export function InsightsWidget({ initialInsights, compact = false }: Props) {
           </div>
           <div>
             <p className="font-semibold text-sm flex items-center gap-1.5">
-              الرؤى الذكية
-              {hasAI && <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium">AI</span>}
+              {t('insights.title')}
+              {hasAI && (
+                <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium">
+                  AI
+                </span>
+              )}
             </p>
             {insights.length > 0 && (
               <p className="text-xs text-muted-foreground">
-                {dangerCount > 0 && <span className="text-red-500 ml-2">⚠ {dangerCount} تنبيه عاجل</span>}
-                {warningCount > 0 && <span className="text-amber-500">{warningCount} تحذير</span>}
-                {dangerCount === 0 && warningCount === 0 && `${insights.length} رؤية`}
+                {dangerCount > 0 && (
+                  <span className="text-red-500 ml-2">
+                    ⚠ {dangerCount} {t('insights.urgentAlert')}
+                  </span>
+                )}
+                {warningCount > 0 && (
+                  <span className="text-amber-500">
+                    {warningCount} {t('insights.warning')}
+                  </span>
+                )}
+                {dangerCount === 0 && warningCount === 0 && `${insights.length} ${t('insights.insight')}`}
               </p>
             )}
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={e => { e.stopPropagation(); regenerate() }}
+            onClick={(e) => {
+              e.stopPropagation()
+              regenerate()
+            }}
             disabled={generating}
             className="p-1.5 hover:bg-accent rounded-lg text-muted-foreground hover:text-foreground transition-colors"
-            title="تحديث الرؤى"
+            title={t('insights.refresh')}
           >
             {generating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
           </button>
-          {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+          {expanded ? (
+            <ChevronUp className="w-4 h-4 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-muted-foreground" />
+          )}
         </div>
       </div>
 
@@ -122,14 +168,14 @@ export function InsightsWidget({ initialInsights, compact = false }: Props) {
           {loading ? (
             <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground text-sm">
               <Loader2 className="w-4 h-4 animate-spin" />
-              جاري التحليل...
+              {t('insights.analyzing')}
             </div>
           ) : insights.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground text-sm">
               <Sparkles className="w-8 h-8 mx-auto mb-2 opacity-20" />
-              <p>لا توجد رؤى بعد</p>
+              <p>{t('insights.noInsights')}</p>
               <button onClick={regenerate} className="mt-2 text-primary text-xs hover:underline">
-                تحليل البيانات الآن
+                {t('insights.analyzeNow')}
               </button>
             </div>
           ) : (
@@ -149,7 +195,7 @@ export function InsightsWidget({ initialInsights, compact = false }: Props) {
                         <p className="text-xs text-muted-foreground leading-relaxed">{ins.message}</p>
                       </div>
                       <span className={cn('text-[10px] px-1.5 py-0.5 rounded-full font-medium shrink-0', style.badge)}>
-                        {CATEGORY_LABELS[ins.category] || ins.category}
+                        {t(CATEGORY_KEYS[ins.category] || 'insights.general')}
                       </span>
                     </div>
                   </div>
@@ -160,7 +206,7 @@ export function InsightsWidget({ initialInsights, compact = false }: Props) {
           {compact && insights.length > 4 && (
             <div className="px-4 py-2 text-center">
               <a href="/dashboard/insights" className="text-xs text-primary hover:underline">
-                عرض كل الرؤى ({insights.length})
+                {t('insights.viewAll')} ({insights.length})
               </a>
             </div>
           )}

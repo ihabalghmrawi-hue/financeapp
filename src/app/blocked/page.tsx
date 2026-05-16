@@ -1,7 +1,9 @@
 import Link from 'next/link'
 import { ShieldOff, Phone } from 'lucide-react'
+import { getTranslations } from '@/lib/i18n/server'
 
-export default function BlockedPage() {
+export default async function BlockedPage() {
+  const { t } = await getTranslations('ar')
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-6" dir="rtl">
       <div className="max-w-md w-full text-center space-y-6">
@@ -10,18 +12,16 @@ export default function BlockedPage() {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold text-foreground">
-            تم إيقاف الوصول
-          </h1>
+          <h1 className="text-2xl font-bold text-foreground">{t('blocked.accessStopped')}</h1>
           <p className="text-muted-foreground leading-relaxed">
-            اشتراكك منتهي أو تم إيقافه
+            {t('blocked.subscriptionEnded')}
             <br />
-            تواصل مع الإدارة لتجديد الاشتراك
+            {t('blocked.contactAdmin')}
           </p>
         </div>
 
         <div className="bg-card border rounded-2xl p-6 space-y-3">
-          <p className="text-sm font-medium text-foreground">للتواصل مع الإدارة:</p>
+          <p className="text-sm font-medium text-foreground">{t('blocked.contactManagement')}</p>
           <a
             href="tel:01202513941"
             className="flex items-center justify-center gap-2 w-full bg-primary text-primary-foreground rounded-xl py-3 font-medium hover:bg-primary/90 transition-colors"
@@ -35,7 +35,7 @@ export default function BlockedPage() {
           href="/auth/login"
           className="block text-sm text-muted-foreground hover:text-foreground underline underline-offset-2"
         >
-          تسجيل الدخول بحساب آخر
+          {t('blocked.loginDifferentAccount')}
         </Link>
       </div>
     </div>

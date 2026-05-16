@@ -5,8 +5,9 @@ import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { BrandLogo } from '@/components/ui/brand-logo'
 import { SceneBackground } from '@/components/auth/scene-background'
-import { Moon, Sun, Globe, PanelRightClose, PanelRightOpen } from 'lucide-react'
+import { Moon, Sun, PanelRightClose, PanelRightOpen } from 'lucide-react'
 import { useT } from '@/lib/i18n/language-provider'
+import { LanguageSwitcher } from '@/components/i18n/language-switcher'
 
 interface AuthPanelProps {
   children: React.ReactNode
@@ -20,7 +21,7 @@ const variantMap: Record<string, Record<string, 'dark-en' | 'dark-ar' | 'dark-al
 }
 
 export function AuthPanel({ children, title, subtitle }: AuthPanelProps) {
-  const { lang, setLang } = useT()
+  const { lang } = useT()
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
   const [collapsed, setCollapsed] = useState(false)
 
@@ -44,13 +45,10 @@ export function AuthPanel({ children, title, subtitle }: AuthPanelProps) {
           >
             {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
-          <button
-            onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all duration-300 bg-black/20 backdrop-blur-sm text-white/70 hover:text-white hover:bg-black/30"
-          >
-            <Globe className="w-3.5 h-3.5" />
-            {lang === 'ar' ? 'EN' : 'AR'}
-          </button>
+          <LanguageSwitcher
+            variant="compact"
+            className="!bg-black/20 backdrop-blur-sm !text-white/70 hover:!text-white hover:!bg-black/30"
+          />
         </div>
 
         {/* Auth card */}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/language-provider'
 import { CheckCircle2, XCircle, Loader2, Barcode } from 'lucide-react'
 
 interface ScanFeedbackProps {
@@ -14,6 +15,7 @@ interface ScanFeedbackProps {
 }
 
 export function ScanFeedback({ visible, type, message, value, onDismiss, className }: ScanFeedbackProps) {
+  const { t } = useT()
   const [show, setShow] = useState(false)
 
   useEffect(() => {
@@ -41,21 +43,21 @@ export function ScanFeedback({ visible, type, message, value, onDismiss, classNa
       icon: CheckCircle2,
       iconColor: 'text-success',
       iconBg: 'bg-success/20',
-      defaultMessage: 'تم المسح بنجاح',
+      defaultMessage: t('scanFeedback.success'),
     },
     error: {
       bg: 'bg-destructive/10 border-destructive/30',
       icon: XCircle,
       iconColor: 'text-destructive',
       iconBg: 'bg-destructive/20',
-      defaultMessage: 'فشل المسح',
+      defaultMessage: t('scanFeedback.failed'),
     },
     scanning: {
       bg: 'bg-primary/10 border-primary/30',
       icon: Loader2,
       iconColor: 'text-primary',
       iconBg: 'bg-primary/20',
-      defaultMessage: 'جاري المسح...',
+      defaultMessage: t('scanFeedback.scanning'),
     },
   }
 

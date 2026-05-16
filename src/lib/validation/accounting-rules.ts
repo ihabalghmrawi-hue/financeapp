@@ -2,7 +2,7 @@ import type { ValidationMessage } from '@/lib/workbench/types'
 
 export function validateJournalEntry(
   debits: { accountId: string; amount: number }[],
-  credits: { accountId: string; amount: number }[]
+  credits: { accountId: string; amount: number }[],
 ): ValidationMessage[] {
   const messages: ValidationMessage[] = []
 
@@ -10,7 +10,7 @@ export function validateJournalEntry(
     messages.push({
       id: 'je-no-debits',
       type: 'error',
-      message: 'يجب وجود بند مدين واحد على الأقل في القيد المحاسبي',
+      message: 'At least one debit entry is required in the journal entry',
       field: 'debits',
     })
   }
@@ -19,7 +19,7 @@ export function validateJournalEntry(
     messages.push({
       id: 'je-no-credits',
       type: 'error',
-      message: 'يجب وجود بند دائن واحد على الأقل في القيد المحاسبي',
+      message: 'At least one credit entry is required in the journal entry',
       field: 'credits',
     })
   }
@@ -29,7 +29,7 @@ export function validateJournalEntry(
     messages.push({
       id: 'je-max-lines',
       type: 'error',
-      message: 'تجاوز الحد الأقصى لعدد بنود القيد المحاسبي (100 بند كحد أقصى)',
+      message: 'Exceeded maximum number of journal entry lines (100 lines max)',
       field: 'lines',
     })
   }
@@ -44,7 +44,7 @@ export function validateJournalEntry(
       messages.push({
         id: `je-zero-debit-${i}`,
         type: 'error',
-        message: `مبلغ بند المدين في الفهرس ${i} يساوي صفر، يجب إدخال مبلغ صحيح`,
+        message: `Debit entry amount at index ${i} is zero, please enter a valid amount`,
         field: `debits[${i}].amount`,
       })
     }
@@ -52,7 +52,7 @@ export function validateJournalEntry(
       messages.push({
         id: `je-negative-debit-${i}`,
         type: 'error',
-        message: `مبلغ بند المدين في الفهرس ${i} سالب (${d.amount})، المبلغ يجب أن يكون موجباً`,
+        message: `Debit entry amount at index ${i} is negative (${d.amount}), amount must be positive`,
         field: `debits[${i}].amount`,
       })
     }
@@ -60,7 +60,7 @@ export function validateJournalEntry(
       messages.push({
         id: `je-no-account-debit-${i}`,
         type: 'error',
-        message: `بند المدين في الفهرس ${i} لا يحتوي على معرف حساب`,
+        message: `Debit entry at index ${i} does not have an account ID`,
         field: `debits[${i}].accountId`,
       })
     }
@@ -72,7 +72,7 @@ export function validateJournalEntry(
       messages.push({
         id: `je-zero-credit-${i}`,
         type: 'error',
-        message: `مبلغ بند الدائن في الفهرس ${i} يساوي صفر، يجب إدخال مبلغ صحيح`,
+        message: `Credit entry amount at index ${i} is zero, please enter a valid amount`,
         field: `credits[${i}].amount`,
       })
     }
@@ -80,7 +80,7 @@ export function validateJournalEntry(
       messages.push({
         id: `je-negative-credit-${i}`,
         type: 'error',
-        message: `مبلغ بند الدائن في الفهرس ${i} سالب (${c.amount})، المبلغ يجب أن يكون موجباً`,
+        message: `Credit entry amount at index ${i} is negative (${c.amount}), amount must be positive`,
         field: `credits[${i}].amount`,
       })
     }
@@ -88,7 +88,7 @@ export function validateJournalEntry(
       messages.push({
         id: `je-no-account-credit-${i}`,
         type: 'error',
-        message: `بند الدائن في الفهرس ${i} لا يحتوي على معرف حساب`,
+        message: `Credit entry at index ${i} does not have an account ID`,
         field: `credits[${i}].accountId`,
       })
     }
@@ -101,7 +101,7 @@ export function validateJournalEntry(
     messages.push({
       id: 'je-unbalanced',
       type: 'error',
-      message: `القيد المحاسبي غير متوازن: إجمالي المدين (${totalDebits.toFixed(2)}) لا يساوي إجمالي الدائن (${totalCredits.toFixed(2)})`,
+      message: `Journal entry is unbalanced: total debits (${totalDebits.toFixed(2)}) does not equal total credits (${totalCredits.toFixed(2)})`,
       field: 'amount',
     })
   }
@@ -113,7 +113,7 @@ export function validateAccountBalance(
   accountId: string,
   debitChange: number,
   creditChange: number,
-  currentBalance: number
+  currentBalance: number,
 ): ValidationMessage[] {
   const messages: ValidationMessage[] = []
 
@@ -121,7 +121,7 @@ export function validateAccountBalance(
     messages.push({
       id: 'bal-no-account',
       type: 'error',
-      message: 'معرف الحساب مطلوب للتحقق من الرصيد',
+      message: 'Account ID is required for balance validation',
       field: 'accountId',
     })
     return messages
@@ -131,7 +131,7 @@ export function validateAccountBalance(
     messages.push({
       id: 'bal-negative-debit',
       type: 'error',
-      message: 'التغيير في المدين لا يمكن أن يكون سالباً',
+      message: 'Debit change cannot be negative',
       field: 'debitChange',
     })
   }
@@ -140,7 +140,7 @@ export function validateAccountBalance(
     messages.push({
       id: 'bal-negative-credit',
       type: 'error',
-      message: 'التغيير في الدائن لا يمكن أن يكون سالباً',
+      message: 'Credit change cannot be negative',
       field: 'creditChange',
     })
   }
@@ -151,7 +151,7 @@ export function validateAccountBalance(
     messages.push({
       id: 'bal-negative-result',
       type: 'error',
-      message: `الرصيد الناتج سالب (${resultingBalance.toFixed(2)})، حسابات الأصول لا يمكن أن يكون لها رصيد سلبي`,
+      message: `Resulting balance is negative (${resultingBalance.toFixed(2)}), asset accounts cannot have negative balance`,
       field: 'balance',
     })
   }
@@ -161,7 +161,7 @@ export function validateAccountBalance(
     messages.push({
       id: 'bal-credit-limit',
       type: 'warning',
-      message: `الرصيد الناتج (${resultingBalance.toFixed(2)}) يتجاوز حد الائتمان المسموح به (${creditLimit.toFixed(2)})`,
+      message: `Resulting balance (${resultingBalance.toFixed(2)}) exceeds the allowed credit limit (${creditLimit.toFixed(2)})`,
       field: 'balance',
     })
   }
@@ -173,7 +173,7 @@ export function validateInvoiceMatch(
   poAmount: number,
   receiptAmount: number,
   invoiceAmount: number,
-  tolerancePct: number
+  tolerancePct: number,
 ): ValidationMessage[] {
   const messages: ValidationMessage[] = []
 
@@ -181,7 +181,7 @@ export function validateInvoiceMatch(
     messages.push({
       id: 'inv-po-negative',
       type: 'error',
-      message: 'مبلغ أمر الشراء لا يمكن أن يكون سالباً',
+      message: 'Purchase order amount cannot be negative',
       field: 'poAmount',
     })
   }
@@ -190,7 +190,7 @@ export function validateInvoiceMatch(
     messages.push({
       id: 'inv-receipt-negative',
       type: 'error',
-      message: 'مبلغ الإيصال لا يمكن أن يكون سالباً',
+      message: 'Receipt amount cannot be negative',
       field: 'receiptAmount',
     })
   }
@@ -199,7 +199,7 @@ export function validateInvoiceMatch(
     messages.push({
       id: 'inv-amount-negative',
       type: 'error',
-      message: 'مبلغ الفاتورة لا يمكن أن يكون سالباً',
+      message: 'Invoice amount cannot be negative',
       field: 'invoiceAmount',
     })
   }
@@ -208,7 +208,7 @@ export function validateInvoiceMatch(
     messages.push({
       id: 'inv-tolerance-invalid',
       type: 'error',
-      message: 'نسبة التسامح يجب أن تكون بين 0 و 100',
+      message: 'Tolerance percentage must be between 0 and 100',
       field: 'tolerancePct',
     })
   }
@@ -219,7 +219,7 @@ export function validateInvoiceMatch(
       messages.push({
         id: 'inv-po-variance',
         type: 'warning',
-        message: `الفاتورة (${invoiceAmount.toFixed(2)}) لا تتطابق مع أمر الشراء (${poAmount.toFixed(2)}) ضمن نسبة التسامح المسموح بها (${tolerancePct}%)، الفرق الفعلي ${variancePct.toFixed(2)}%`,
+        message: `Invoice (${invoiceAmount.toFixed(2)}) does not match purchase order (${poAmount.toFixed(2)}) within allowed tolerance (${tolerancePct}%), actual variance ${variancePct.toFixed(2)}%`,
         field: 'invoiceAmount',
       })
     }
@@ -231,7 +231,7 @@ export function validateInvoiceMatch(
       messages.push({
         id: 'inv-receipt-variance',
         type: 'warning',
-        message: `كمية الفاتورة لا تتطابق مع كمية الإيصال، الفرق ${receiptVariance.toFixed(2)}`,
+        message: `Invoice quantity does not match receipt quantity, difference ${receiptVariance.toFixed(2)}`,
         field: 'receiptAmount',
       })
     }
@@ -240,12 +240,12 @@ export function validateInvoiceMatch(
   if (poAmount > 0 && receiptAmount > 0 && invoiceAmount > 0) {
     const unitPricePO = poAmount
     const unitPriceInvoice = invoiceAmount
-    const unitPriceVariance = Math.abs(unitPriceInvoice - unitPricePO) / unitPricePO * 100
+    const unitPriceVariance = (Math.abs(unitPriceInvoice - unitPricePO) / unitPricePO) * 100
     if (unitPriceVariance > tolerancePct) {
       messages.push({
         id: 'inv-price-variance',
         type: 'warning',
-        message: `سعر الوحدة في الفاتورة يختلف عن أمر الشراء بنسبة ${unitPriceVariance.toFixed(2)}% وهي تتجاوز نسبة التسامح المسموح بها`,
+        message: `Unit price in invoice differs from purchase order by ${unitPriceVariance.toFixed(2)}%, which exceeds the allowed tolerance`,
         field: 'unitPrice',
       })
     }
@@ -255,7 +255,7 @@ export function validateInvoiceMatch(
     messages.push({
       id: 'inv-zero-amounts',
       type: 'info',
-      message: 'كل من أمر الشراء والفاتورة بمبلغ صفر، يرجى التحقق من صحة البيانات',
+      message: 'Both purchase order and invoice have zero amount, please verify the data',
       field: 'amount',
     })
   }
@@ -267,7 +267,7 @@ export function validateReconciliation(
   statementBalance: number,
   bookBalance: number,
   difference: number,
-  threshold: number
+  threshold: number,
 ): ValidationMessage[] {
   const messages: ValidationMessage[] = []
 
@@ -275,7 +275,7 @@ export function validateReconciliation(
     messages.push({
       id: 'rec-threshold-negative',
       type: 'error',
-      message: 'قيمة الحد المسموح به لا يمكن أن تكون سالبة',
+      message: 'Threshold value cannot be negative',
       field: 'threshold',
     })
     return messages
@@ -287,21 +287,21 @@ export function validateReconciliation(
     messages.push({
       id: 'rec-matched',
       type: 'success',
-      message: 'تمت المطابقة بنجاح: رصيد كشف الحساب مطابق للرصيد الدفتري',
+      message: 'Reconciliation successful: statement balance matches book balance',
       field: 'difference',
     })
   } else if (absDifference <= threshold) {
     messages.push({
       id: 'rec-within-threshold',
       type: 'info',
-      message: `الفرق (${difference.toFixed(2)}) ضمن الحد المسموح به (${threshold.toFixed(2)})، يوصى بالتحقق من العناصر غير المطابقة`,
+      message: `Difference (${difference.toFixed(2)}) is within allowed threshold (${threshold.toFixed(2)}), recommended to check unmatched items`,
       field: 'difference',
     })
   } else {
     messages.push({
       id: 'rec-exceeds-threshold',
       type: 'error',
-      message: `الفرق (${difference.toFixed(2)}) يتجاوز الحد المسموح به (${threshold.toFixed(2)})، يجب التحقيق في الفرق وتحديد العناصر غير المطابقة`,
+      message: `Difference (${difference.toFixed(2)}) exceeds allowed threshold (${threshold.toFixed(2)}), must investigate and identify unmatched items`,
       field: 'difference',
     })
   }
@@ -311,7 +311,7 @@ export function validateReconciliation(
     messages.push({
       id: 'rec-unreconciled-items',
       type: 'warning',
-      message: `الفرق (${difference.toFixed(2)}) قد يكون ناتجاً عن عناصر غير مطابقة، يرجى مراجعة كشف الحساب والرصيد الدفتري للعناصر المعلقة`,
+      message: `Difference (${difference.toFixed(2)}) may be due to unmatched items, please review statement and book balance for pending items`,
       field: 'difference',
     })
   }
@@ -320,7 +320,7 @@ export function validateReconciliation(
 }
 
 export function validateFinancialClose(
-  accounts: { id: string; balance: number; reconciled: boolean }[]
+  accounts: { id: string; balance: number; reconciled: boolean }[],
 ): ValidationMessage[] {
   const messages: ValidationMessage[] = []
 
@@ -328,38 +328,38 @@ export function validateFinancialClose(
     messages.push({
       id: 'close-no-accounts',
       type: 'error',
-      message: 'لا توجد حسابات لإغلاق الفترة المالية',
+      message: 'No accounts to close the financial period',
       field: 'accounts',
     })
     return messages
   }
 
-  const unreconciled = accounts.filter(a => !a.reconciled)
+  const unreconciled = accounts.filter((a) => !a.reconciled)
   if (unreconciled.length > 0) {
     messages.push({
       id: 'close-unreconciled',
       type: 'error',
-      message: `يوجد ${unreconciled.length} حساب/حسابات غير مطابقة يجب تسويتها قبل إغلاق الفترة: ${unreconciled.map(a => a.id).join('، ')}`,
+      message: `${unreconciled.length} account(s) are not reconciled and must be reconciled before closing the period: ${unreconciled.map((a) => a.id).join(', ')}`,
       field: 'reconciled',
     })
   }
 
-  const openBalances = accounts.filter(a => a.balance !== 0)
+  const openBalances = accounts.filter((a) => a.balance !== 0)
   if (openBalances.length > 0) {
     messages.push({
       id: 'close-open-balances',
       type: 'warning',
-      message: `يوجد ${openBalances.length} حساب/حسابات بأرصدة مفتوحة غير مصفاة: ${openBalances.map(a => `${a.id} (${a.balance.toFixed(2)})`).join('، ')}`,
+      message: `${openBalances.length} account(s) have unfiltered open balances: ${openBalances.map((a) => `${a.id} (${a.balance.toFixed(2)})`).join(', ')}`,
       field: 'balance',
     })
   }
 
-  const reconciledCount = accounts.filter(a => a.reconciled).length
+  const reconciledCount = accounts.filter((a) => a.reconciled).length
   if (reconciledCount === accounts.length) {
     messages.push({
       id: 'close-all-reconciled',
       type: 'success',
-      message: 'جميع الحسابات مطابقة وجاهزة لإغلاق الفترة المالية',
+      message: 'All accounts are reconciled and ready for period closing',
       field: 'reconciled',
     })
   }
@@ -367,14 +367,14 @@ export function validateFinancialClose(
   messages.push({
     id: 'close-subsidiaries',
     type: 'info',
-    message: 'يرجى التأكد من تأكيد جميع الشركات التابعة قبل إتمام عملية الإغلاق',
+    message: 'Please ensure all subsidiaries have confirmed before completing the closing process',
     field: 'subsidiaries',
   })
 
   messages.push({
     id: 'close-unposted-entries',
     type: 'info',
-    message: 'يرجى التأكد من عدم وجود قيود محاسبية غير مرحلة قبل إغلاق الفترة',
+    message: 'Please ensure there are no unposted journal entries before closing the period',
     field: 'entries',
   })
 

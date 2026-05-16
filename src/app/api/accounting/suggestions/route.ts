@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireCompany, isAuthError } from '@/lib/auth-guard'
 import { ok, Errors } from '@/lib/api-response'
@@ -6,7 +6,9 @@ import { AIAccountingEngine } from '@/lib/accounting/index'
 
 export async function POST(req: NextRequest) {
   const ctx = requireCompany(req)
-  if (isAuthError(ctx)) return ctx
+  if (isAuthError(ctx)) {
+    return ctx
+  }
 
   const supabase = createAdminClient()
   const engine = new AIAccountingEngine(supabase, ctx.companyId)
@@ -37,6 +39,6 @@ export async function POST(req: NextRequest) {
     }
 
     default:
-      return Errors.badRequest('إجراء غير معروف')
+      return Errors.badRequest('Unknown action')
   }
 }

@@ -3,14 +3,19 @@ import { createClient } from '@/lib/supabase/server'
 import { getCompanyId } from '@/lib/tenant'
 
 export async function GET() {
-  const supabase   = createClient()
+  const supabase = createClient()
   const company_id = await getCompanyId()
-  const today      = new Date().toISOString().slice(0, 10)
-  const sevenDays  = new Date(Date.now() - 7 * 86400_000).toISOString().slice(0, 10)
+  const today = new Date().toISOString().slice(0, 10)
+  const sevenDays = new Date(Date.now() - 7 * 86400_000).toISOString().slice(0, 10)
 
   const notifications: Array<{
-    id: string; type: string; title: string; body: string
-    severity: 'info' | 'warning' | 'error'; created_at: string; read: boolean
+    id: string
+    type: string
+    title: string
+    body: string
+    severity: 'info' | 'warning' | 'error'
+    created_at: string
+    read: boolean
   }> = []
 
   // 1. Low-stock products (qty < 5)
@@ -23,15 +28,15 @@ export async function GET() {
     .limit(5)
 
   for (const item of lowStock || []) {
-    const name = (item.products as any)?.name || 'منتج'
+    const name = (item.products as any)?.name || 'Product'
     notifications.push({
-      id:         `low-${name}`,
-      type:       'low_stock',
-      title:      'مخزون منخفض',
-      body:       `${name} — ${item.quantity} وحدة متبقية`,
-      severity:   'warning',
+      id: `low-${name}`,
+      type: 'low_stock',
+      title: 'Low Stock',
+      body: `${name} — ${item.quantity} unit(s) remaining`,
+      severity: 'warning',
       created_at: new Date().toISOString(),
-      read:       false,
+      read: false,
     })
   }
 
@@ -44,15 +49,15 @@ export async function GET() {
     .limit(3)
 
   for (const item of outStock || []) {
-    const name = (item.products as any)?.name || 'منتج'
+    const name = (item.products as any)?.name || 'Product'
     notifications.push({
-      id:         `out-${name}`,
-      type:       'out_of_stock',
-      title:      'نفاد المخزون',
-      body:       `${name} — نفد من المخزون`,
-      severity:   'error',
+      id: `out-${name}`,
+      type: 'out_of_stock',
+      title: 'Out of Stock',
+      body: `${name} — out of stock`,
+      severity: 'error',
       created_at: new Date().toISOString(),
-      read:       false,
+      read: false,
     })
   }
 
@@ -66,13 +71,13 @@ export async function GET() {
 
   if ((unpaidCount ?? 0) > 0) {
     notifications.push({
-      id:         'unpaid-sales',
-      type:       'unpaid_invoices',
-      title:      'فواتير غير مدفوعة',
-      body:       `${unpaidCount} فاتورة بانتظار السداد هذا الأسبوع`,
-      severity:   'warning',
+      id: 'unpaid-sales',
+      type: 'unpaid_invoices',
+      title: 'Unpaid Invoices',
+      body: `${unpaidCount} invoice(s) pending payment this week`,
+      severity: 'warning',
       created_at: new Date().toISOString(),
-      read:       false,
+      read: false,
     })
   }
 
@@ -86,13 +91,13 @@ export async function GET() {
   const todayTotal = (todaySales || []).reduce((s, r) => s + (r.total || 0), 0)
   if (todaySales && todaySales.length > 0) {
     notifications.push({
-      id:         'today-sales',
-      type:       'daily_summary',
-      title:      'ملخص اليوم',
-      body:       `${todaySales.length} فاتورة · إجمالي ${todayTotal.toFixed(2)}`,
-      severity:   'info',
+      id: 'today-sales',
+      type: 'daily_summary',
+      title: 'Today Summary',
+      body: `${todaySales.length} invoice(s) · Total ${todayTotal.toFixed(2)}`,
+      severity: 'info',
       created_at: new Date().toISOString(),
-      read:       true,
+      read: true,
     })
   }
 
@@ -106,18 +111,18 @@ export async function GET() {
 
   if ((overdueCount ?? 0) > 0) {
     notifications.push({
-      id:         'overdue-customers',
-      type:       'customer_debt',
-      title:      'ذمم عملاء',
-      body:       `${overdueCount} عميل لديهم أرصدة مستحقة`,
-      severity:   'info',
+      id: 'overdue-customers',
+      type: 'customer_debt',
+      title: 'Customer Debts',
+      body: `${overdueCount} customer(s) have outstanding balances`,
+      severity: 'info',
       created_at: new Date().toISOString(),
-      read:       true,
+      read: true,
     })
   }
 
   return NextResponse.json({
     notifications,
-    unread: notifications.filter(n => !n.read).length,
+    unread: notifications.filter((n) => !n.read).length,
   })
 }

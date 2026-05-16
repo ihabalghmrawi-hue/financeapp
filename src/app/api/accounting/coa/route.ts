@@ -1,24 +1,27 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient }      from '@/lib/supabase/server'
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { getCompanyId }      from '@/lib/tenant'
+import { getCompanyId } from '@/lib/tenant'
 import { ensureCOA, buildAccountTree } from '@/lib/accounting/index'
 
 // ── GET: full chart of accounts (as tree) ────────────────────
 export async function GET(req: NextRequest) {
-  const supabase   = createClient()
-  const company_id = req.headers.get('x-tenant-id') || await getCompanyId()
-  const flat       = req.nextUrl.searchParams.get('flat') === 'true'
+  const supabase = createClient()
+  const company_id = req.headers.get('x-tenant-id') || (await getCompanyId())
+  const flat = req.nextUrl.searchParams.get('flat') === 'true'
 
   try {
     const { data: accounts } = await supabase
       .from('accounts')
-      .select(`
+      .select(
+        `
         id, code, name, name_ar, type, subtype,
         parent_id, level, is_postable, is_header,
         normal_balance, current_balance, account_group,
         is_active, is_system, description
-      `)
+      `,
+      )
       .eq('company_id', company_id)
       .order('code', { ascending: true })
 
@@ -27,20 +30,26 @@ export async function GET(req: NextRequest) {
       const { accounts: seeded } = await ensureCOA(createAdminClient(), company_id)
       const { data: seededAccounts } = await supabase
         .from('accounts')
-        .select(`
+        .select(
+          `
           id, code, name, name_ar, type, subtype,
           parent_id, level, is_postable, is_header,
           normal_balance, current_balance, account_group,
           is_active, is_system, description
-        `)
+        `,
+        )
         .eq('company_id', company_id)
         .order('code', { ascending: true })
 
-      if (flat) return NextResponse.json(seededAccounts || [])
+      if (flat) {
+        return NextResponse.json(seededAccounts || [])
+      }
       return NextResponse.json(buildAccountTree((seededAccounts || []) as any))
     }
 
-    if (flat) return NextResponse.json(accounts)
+    if (flat) {
+      return NextResponse.json(accounts)
+    }
     return NextResponse.json(buildAccountTree(accounts as any))
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
@@ -49,22 +58,15 @@ export async function GET(req: NextRequest) {
 
 // ── POST: create custom account ───────────────────────────────
 export async function POST(req: NextRequest) {
-  const supabase   = createAdminClient()
-  const company_id = req.headers.get('x-tenant-id') || await getCompanyId()
+  const supabase = createAdminClient()
+  const company_id = req.headers.get('x-tenant-id') || (await getCompanyId())
 
   try {
     const body = await req.json()
-    const {
-      code, name, name_ar, type, subtype,
-      parent_id, normal_balance, description,
-      account_group, level,
-    } = body
+    const { code, name, name_ar, type, subtype, parent_id, normal_balance, description, account_group, level } = body
 
     if (!code || !name || !type) {
-      return NextResponse.json(
-        { error: 'رمز الحساب والاسم والنوع مطلوبة' },
-        { status: 400 },
-      )
+      return NextResponse.json({ error: 'Account code, name, and type are required' }, { status: 400 })
     }
 
     // Check code uniqueness for this company
@@ -76,30 +78,23 @@ export async function POST(req: NextRequest) {
       .maybeSingle()
 
     if (existing) {
-      return NextResponse.json(
-        { error: `رمز الحساب ${code} موجود بالفعل` },
-        { status: 409 },
-      )
+      return NextResponse.json({ error: `Account code ${code} already exists` }, { status: 409 })
     }
 
     // Determine level from parent
     let accountLevel = level || 3
-    let is_header    = false
-    let is_postable  = true
+    let is_header = false
+    let is_postable = true
 
     if (parent_id) {
-      const { data: parent } = await supabase
-        .from('accounts')
-        .select('level')
-        .eq('id', parent_id)
-        .maybeSingle()
+      const { data: parent } = await supabase.from('accounts').select('level').eq('id', parent_id).maybeSingle()
       if (parent) {
         accountLevel = Math.min(3, (parent.level || 2) + 1) as 1 | 2 | 3
       }
     }
 
     if (accountLevel < 3) {
-      is_header   = true
+      is_header = true
       is_postable = false
     }
 
@@ -109,21 +104,19 @@ export async function POST(req: NextRequest) {
         company_id,
         code,
         name,
-        name_ar:        name_ar || name,
+        name_ar: name_ar || name,
         type,
-        subtype:        subtype || null,
-        parent_id:      parent_id || null,
-        level:          accountLevel,
+        subtype: subtype || null,
+        parent_id: parent_id || null,
+        level: accountLevel,
         is_header,
         is_postable,
-        normal_balance: normal_balance || (
-          ['asset', 'cogs', 'expense'].includes(type) ? 'debit' : 'credit'
-        ),
-        description:    description || null,
-        account_group:  account_group || null,
+        normal_balance: normal_balance || (['asset', 'cogs', 'expense'].includes(type) ? 'debit' : 'credit'),
+        description: description || null,
+        account_group: account_group || null,
         current_balance: 0,
-        is_active:       true,
-        is_system:       false,
+        is_active: true,
+        is_system: false,
       })
       .select('*')
       .single()
@@ -140,15 +133,15 @@ export async function POST(req: NextRequest) {
 
 // ── PATCH: update account ─────────────────────────────────────
 export async function PATCH(req: NextRequest) {
-  const supabase   = createAdminClient()
-  const company_id = req.headers.get('x-tenant-id') || await getCompanyId()
+  const supabase = createAdminClient()
+  const company_id = req.headers.get('x-tenant-id') || (await getCompanyId())
 
   try {
     const body = await req.json()
     const { id, ...updates } = body
 
     if (!id) {
-      return NextResponse.json({ error: 'معرف الحساب مطلوب' }, { status: 400 })
+      return NextResponse.json({ error: 'Account ID is required' }, { status: 400 })
     }
 
     // Prevent modifying system accounts' critical fields
@@ -160,7 +153,7 @@ export async function PATCH(req: NextRequest) {
       .maybeSingle()
 
     if (!existing) {
-      return NextResponse.json({ error: 'الحساب غير موجود' }, { status: 404 })
+      return NextResponse.json({ error: 'Account not found' }, { status: 404 })
     }
 
     // Strip protected fields for system accounts

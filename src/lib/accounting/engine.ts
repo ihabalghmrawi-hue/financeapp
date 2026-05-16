@@ -8,12 +8,17 @@
  * Double-entry invariant: SUM(debit) === SUM(credit) always enforced.
  */
 
-import { SupabaseClient }           from '@supabase/supabase-js'
-import { AccountingEvent, DEFAULT_ACCOUNTS } from './events'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { AccountingEvent } from './events'
+import { DEFAULT_ACCOUNTS } from './events'
 
 export class InsufficientFundsError extends Error {
-  constructor(public accountName: string, public available: number, public required: number) {
-    super(`رصيد غير كافٍ في ${accountName}: المتاح ${available}، المطلوب ${required}`)
+  constructor(
+    public accountName: string,
+    public available: number,
+    public required: number,
+  ) {
+    super(`Insufficient balance in ${accountName}: available ${available}, required ${required}`)
     this.name = 'InsufficientFundsError'
   }
 }
@@ -26,19 +31,16 @@ export class AccountingEngineError extends Error {
 }
 
 interface ResolvedLine {
-  accountId:   string
+  accountId: string
   accountCode: string
-  debit:       number
-  credit:      number
+  debit: number
+  credit: number
   description: string
 }
 
 // ── Core engine function ──────────────────────────────────────────────────────
 
-export async function postAccountingEvent(
-  supabase: SupabaseClient,
-  event:    AccountingEvent,
-): Promise<string> {
+export async function postAccountingEvent(supabase: SupabaseClient, event: AccountingEvent): Promise<string> {
   const { companyId, type, amount, description, reference, sourceId, source, date } = event
   const entryDate = date ?? new Date().toISOString().slice(0, 10)
 
@@ -54,11 +56,11 @@ export async function postAccountingEvent(
   }
 
   // 3. Validate balance
-  const totalDebit  = lines.reduce((s, l) => s + l.debit,  0)
+  const totalDebit = lines.reduce((s, l) => s + l.debit, 0)
   const totalCredit = lines.reduce((s, l) => s + l.credit, 0)
   if (Math.abs(totalDebit - totalCredit) > 0.005) {
     throw new AccountingEngineError(
-      `القيد غير متوازن: مدين=${totalDebit} دائن=${totalCredit} للمرجع ${reference}`
+      `Journal entry unbalanced: debit=${totalDebit} credit=${totalCredit} for reference ${reference}`,
     )
   }
 
@@ -66,42 +68,40 @@ export async function postAccountingEvent(
   const { data: entry, error: entryError } = await supabase
     .from('journal_entries')
     .insert({
-      company_id:  companyId,
-      period_id:   period?.id ?? null,
+      company_id: companyId,
+      period_id: period?.id ?? null,
       reference,
-      date:        entryDate,
+      date: entryDate,
       description,
-      source:      source ?? deriveSource(type),
-      source_id:   sourceId ?? null,
-      status:      'posted',
-      is_posted:   true,
-      posted_at:   new Date().toISOString(),
+      source: source ?? deriveSource(type),
+      source_id: sourceId ?? null,
+      status: 'posted',
+      is_posted: true,
+      posted_at: new Date().toISOString(),
     })
     .select('id')
     .single()
 
   if (entryError || !entry) {
-    throw new AccountingEngineError(`فشل إنشاء القيد المحاسبي: ${entryError?.message}`)
+    throw new AccountingEngineError(`Failed to create journal entry: ${entryError?.message}`)
   }
 
   // 5. Insert journal_entry_lines
-  const { error: linesError } = await supabase
-    .from('journal_entry_lines')
-    .insert(
-      lines.map((l, i) => ({
-        journal_entry_id: entry.id,
-        account_id:       l.accountId,
-        description:      l.description,
-        debit:            l.debit,
-        credit:           l.credit,
-        sort_order:       i,
-      }))
-    )
+  const { error: linesError } = await supabase.from('journal_entry_lines').insert(
+    lines.map((l, i) => ({
+      journal_entry_id: entry.id,
+      account_id: l.accountId,
+      description: l.description,
+      debit: l.debit,
+      credit: l.credit,
+      sort_order: i,
+    })),
+  )
 
   if (linesError) {
     // Rollback: delete the entry header
     await supabase.from('journal_entries').delete().eq('id', entry.id)
-    throw new AccountingEngineError(`فشل إنشاء سطور القيد: ${linesError.message}`)
+    throw new AccountingEngineError(`Failed to create journal entry lines: ${linesError.message}`)
   }
 
   return entry.id
@@ -110,10 +110,10 @@ export async function postAccountingEvent(
 // ── Reverse a posted journal entry ───────────────────────────────────────────
 
 export async function reverseJournalEntry(
-  supabase:  SupabaseClient,
-  entryId:   string,
+  supabase: SupabaseClient,
+  entryId: string,
   companyId: string,
-  date?:     string,
+  date?: string,
 ): Promise<string> {
   const { data: original } = await supabase
     .from('journal_entries')
@@ -122,45 +122,47 @@ export async function reverseJournalEntry(
     .eq('company_id', companyId)
     .single()
 
-  if (!original) throw new AccountingEngineError('القيد غير موجود')
-  if (original.status === 'reversed') throw new AccountingEngineError('القيد محوّل بالفعل')
+  if (!original) {
+    throw new AccountingEngineError('Journal entry not found')
+  }
+  if (original.status === 'reversed') {
+    throw new AccountingEngineError('Journal entry already reversed')
+  }
 
   const lines = (original.journal_entry_lines as any[]).map((l: any) => ({
-    journal_entry_id: '',   // will be set after insert
-    account_id:       l.account_id,
-    description:      `عكس: ${l.description ?? ''}`,
-    debit:            l.credit,    // swap debit/credit
-    credit:           l.debit,
-    sort_order:       l.sort_order,
+    journal_entry_id: '', // will be set after insert
+    account_id: l.account_id,
+    description: `Reversal: ${l.description ?? ''}`,
+    debit: l.credit, // swap debit/credit
+    credit: l.debit,
+    sort_order: l.sort_order,
   }))
 
   const { data: reversal, error } = await supabase
     .from('journal_entries')
     .insert({
-      company_id:  companyId,
-      period_id:   original.period_id,
-      reference:   `REV-${original.reference}`,
-      date:        date ?? new Date().toISOString().slice(0, 10),
-      description: `عكس قيد: ${original.description}`,
-      source:      original.source,
-      source_id:   original.source_id,
-      status:      'posted',
-      is_posted:   true,
-      posted_at:   new Date().toISOString(),
+      company_id: companyId,
+      period_id: original.period_id,
+      reference: `REV-${original.reference}`,
+      date: date ?? new Date().toISOString().slice(0, 10),
+      description: `Reversal of entry: ${original.description}`,
+      source: original.source,
+      source_id: original.source_id,
+      status: 'posted',
+      is_posted: true,
+      posted_at: new Date().toISOString(),
       reversed_by: entryId,
     })
     .select('id')
     .single()
 
-  if (error || !reversal) throw new AccountingEngineError(`فشل عكس القيد: ${error?.message}`)
+  if (error || !reversal) {
+    throw new AccountingEngineError(`Failed to reverse journal entry: ${error?.message}`)
+  }
 
-  await supabase.from('journal_entry_lines').insert(
-    lines.map(l => ({ ...l, journal_entry_id: reversal.id }))
-  )
+  await supabase.from('journal_entry_lines').insert(lines.map((l) => ({ ...l, journal_entry_id: reversal.id })))
 
-  await supabase.from('journal_entries')
-    .update({ status: 'reversed' })
-    .eq('id', entryId)
+  await supabase.from('journal_entries').update({ status: 'reversed' }).eq('id', entryId)
 
   return reversal.id
 }
@@ -168,11 +170,11 @@ export async function reverseJournalEntry(
 // ── Get account balance ───────────────────────────────────────────────────────
 
 export async function getAccountBalance(
-  supabase:    SupabaseClient,
-  accountId:   string,
-  companyId:   string,
-  fromDate?:   string,
-  toDate?:     string,
+  supabase: SupabaseClient,
+  accountId: string,
+  companyId: string,
+  fromDate?: string,
+  toDate?: string,
 ): Promise<{ debit: number; credit: number; balance: number; nature: string }> {
   let query = supabase
     .from('journal_entry_lines')
@@ -187,7 +189,7 @@ export async function getAccountBalance(
       .eq('company_id', companyId)
       .eq('is_posted', true)
       .gte(fromDate ? 'date' : 'id', fromDate ?? '')
-      .lte(toDate   ? 'date' : 'id', toDate   ?? '')
+      .lte(toDate ? 'date' : 'id', toDate ?? '')
 
     const entryIds = (entries.data ?? []).map((e: any) => e.id)
     if (entryIds.length) {
@@ -196,21 +198,17 @@ export async function getAccountBalance(
   }
 
   const { data } = await query
-  const totalDebit  = (data ?? []).reduce((s: number, l: any) => s + Number(l.debit),  0)
+  const totalDebit = (data ?? []).reduce((s: number, l: any) => s + Number(l.debit), 0)
   const totalCredit = (data ?? []).reduce((s: number, l: any) => s + Number(l.credit), 0)
-  const nature      = (data as any)?.[0]?.accounts?.nature ?? 'debit'
-  const balance     = nature === 'debit' ? totalDebit - totalCredit : totalCredit - totalDebit
+  const nature = (data as any)?.[0]?.accounts?.nature ?? 'debit'
+  const balance = nature === 'debit' ? totalDebit - totalCredit : totalCredit - totalDebit
 
   return { debit: totalDebit, credit: totalCredit, balance, nature }
 }
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
 
-async function resolveOpenPeriod(
-  supabase:  SupabaseClient,
-  companyId: string,
-  date:      string,
-) {
+async function resolveOpenPeriod(supabase: SupabaseClient, companyId: string, date: string) {
   const { data } = await supabase
     .from('fiscal_periods')
     .select('id')
@@ -222,11 +220,7 @@ async function resolveOpenPeriod(
   return data
 }
 
-async function resolveAccountByCode(
-  supabase:   SupabaseClient,
-  companyId:  string,
-  code:       string,
-): Promise<string> {
+async function resolveAccountByCode(supabase: SupabaseClient, companyId: string, code: string): Promise<string> {
   const { data } = await supabase
     .from('chart_of_accounts')
     .select('id')
@@ -236,15 +230,15 @@ async function resolveAccountByCode(
     .maybeSingle()
 
   if (!data?.id) {
-    throw new AccountingEngineError(`حساب غير موجود: ${code}`)
+    throw new AccountingEngineError(`Account not found: ${code}`)
   }
   return data.id
 }
 
 async function resolveAutoLines(
-  supabase:  SupabaseClient,
+  supabase: SupabaseClient,
   companyId: string,
-  event:     AccountingEvent,
+  event: AccountingEvent,
 ): Promise<ResolvedLine[]> {
   const { type, amount, description } = event
 
@@ -256,110 +250,124 @@ async function resolveAutoLines(
     .eq('event_type', type)
     .maybeSingle()
 
-  let debitId:  string
+  let debitId: string
   let creditId: string
 
   if (mapping) {
-    debitId  = mapping.debit_account
+    debitId = mapping.debit_account
     creditId = mapping.credit_account
   } else {
     // Fall back to default COA codes
     const [dr, cr] = getDefaultMapping(type)
-    debitId  = await resolveAccountByCode(supabase, companyId, event.debitAccountCode  ?? dr)
+    debitId = await resolveAccountByCode(supabase, companyId, event.debitAccountCode ?? dr)
     creditId = await resolveAccountByCode(supabase, companyId, event.creditAccountCode ?? cr)
   }
 
   return [
-    { accountId: debitId,  accountCode: '', debit: amount, credit: 0,      description },
-    { accountId: creditId, accountCode: '', debit: 0,      credit: amount, description },
+    { accountId: debitId, accountCode: '', debit: amount, credit: 0, description },
+    { accountId: creditId, accountCode: '', debit: 0, credit: amount, description },
   ]
 }
 
 async function resolveExplicitLines(
-  supabase:   SupabaseClient,
-  companyId:  string,
-  rawLines:   NonNullable<AccountingEvent['lines']>,
+  supabase: SupabaseClient,
+  companyId: string,
+  rawLines: NonNullable<AccountingEvent['lines']>,
 ): Promise<ResolvedLine[]> {
-  return Promise.all(rawLines.map(async l => ({
-    accountId:   await resolveAccountByCode(supabase, companyId, l.accountCode),
-    accountCode: l.accountCode,
-    debit:       l.debit,
-    credit:      l.credit,
-    description: l.description ?? '',
-  })))
+  return Promise.all(
+    rawLines.map(async (l) => ({
+      accountId: await resolveAccountByCode(supabase, companyId, l.accountCode),
+      accountCode: l.accountCode,
+      debit: l.debit,
+      credit: l.credit,
+      description: l.description ?? '',
+    })),
+  )
 }
 
 function getDefaultMapping(type: AccountingEvent['type']): [string, string] {
   const A = DEFAULT_ACCOUNTS
   const map: Record<string, [string, string]> = {
-    sale_cash:           [A.CASH,               A.SALES_REVENUE],
-    sale_credit:         [A.ACCOUNTS_RECEIVABLE, A.SALES_REVENUE],
-    sale_cogs:           [A.COST_OF_GOODS_SOLD,  A.INVENTORY],
-    sale_payment:        [A.CASH,               A.ACCOUNTS_RECEIVABLE],
-    sale_return_cash:    [A.SALES_REVENUE,       A.CASH],
-    sale_return_credit:  [A.SALES_REVENUE,       A.ACCOUNTS_RECEIVABLE],
-    sale_return_cogs:    [A.INVENTORY,           A.COST_OF_GOODS_SOLD],
-    purchase_cash:       [A.INVENTORY,           A.CASH],
-    purchase_credit:     [A.INVENTORY,           A.ACCOUNTS_PAYABLE],
-    purchase_payment:    [A.ACCOUNTS_PAYABLE,    A.CASH],
-    expense_cash:        [A.MISCELLANEOUS,       A.CASH],
-    expense_accrual:     [A.MISCELLANEOUS,       A.ACCOUNTS_PAYABLE],
-    treasury_transfer:   [A.CASH,               A.CASH],   // overridden by explicit lines
-    rental_revenue:      [A.CASH,               A.RENTAL_REVENUE],
-    inventory_adjustment:[A.INVENTORY,           A.INVENTORY_ADJUSTMENT],
-    construction_expense:[A.CONSTRUCTION_LABOR,  A.CASH],
+    sale_cash: [A.CASH, A.SALES_REVENUE],
+    sale_credit: [A.ACCOUNTS_RECEIVABLE, A.SALES_REVENUE],
+    sale_cogs: [A.COST_OF_GOODS_SOLD, A.INVENTORY],
+    sale_payment: [A.CASH, A.ACCOUNTS_RECEIVABLE],
+    sale_return_cash: [A.SALES_REVENUE, A.CASH],
+    sale_return_credit: [A.SALES_REVENUE, A.ACCOUNTS_RECEIVABLE],
+    sale_return_cogs: [A.INVENTORY, A.COST_OF_GOODS_SOLD],
+    purchase_cash: [A.INVENTORY, A.CASH],
+    purchase_credit: [A.INVENTORY, A.ACCOUNTS_PAYABLE],
+    purchase_payment: [A.ACCOUNTS_PAYABLE, A.CASH],
+    expense_cash: [A.MISCELLANEOUS, A.CASH],
+    expense_accrual: [A.MISCELLANEOUS, A.ACCOUNTS_PAYABLE],
+    treasury_transfer: [A.CASH, A.CASH], // overridden by explicit lines
+    rental_revenue: [A.CASH, A.RENTAL_REVENUE],
+    inventory_adjustment: [A.INVENTORY, A.INVENTORY_ADJUSTMENT],
+    construction_expense: [A.CONSTRUCTION_LABOR, A.CASH],
   }
   return map[type] ?? [A.MISCELLANEOUS, A.CASH]
 }
 
 function deriveSource(type: AccountingEvent['type']): string {
-  if (type.startsWith('sale'))         return 'sale'
-  if (type.startsWith('purchase'))     return 'purchase'
-  if (type.startsWith('expense'))      return 'expense'
-  if (type.startsWith('rental'))       return 'rental'
-  if (type.startsWith('construction')) return 'construction'
-  if (type === 'treasury_transfer')    return 'treasury'
+  if (type.startsWith('sale')) {
+    return 'sale'
+  }
+  if (type.startsWith('purchase')) {
+    return 'purchase'
+  }
+  if (type.startsWith('expense')) {
+    return 'expense'
+  }
+  if (type.startsWith('rental')) {
+    return 'rental'
+  }
+  if (type.startsWith('construction')) {
+    return 'construction'
+  }
+  if (type === 'treasury_transfer') {
+    return 'treasury'
+  }
   return 'manual'
 }
 
 // ── Convenience wrappers ──────────────────────────────────────────────────────
 
 export async function postSaleEntry(
-  supabase:   SupabaseClient,
-  companyId:  string,
+  supabase: SupabaseClient,
+  companyId: string,
   opts: {
-    saleId:         string
-    invoiceNumber:  string
-    total:          number
-    cogsTotal:      number
-    isCredit:       boolean
-    date?:          string
-  }
+    saleId: string
+    invoiceNumber: string
+    total: number
+    cogsTotal: number
+    isCredit: boolean
+    date?: string
+  },
 ): Promise<string> {
   const { saleId, invoiceNumber, total, cogsTotal, isCredit, date } = opts
 
   // Revenue line
   const revenueEntryId = await postAccountingEvent(supabase, {
-    type:        isCredit ? 'sale_credit' : 'sale_cash',
+    type: isCredit ? 'sale_credit' : 'sale_cash',
     companyId,
-    amount:      total,
-    description: `مبيعات ${invoiceNumber}`,
-    reference:   invoiceNumber,
-    sourceId:    saleId,
-    source:      'sale',
+    amount: total,
+    description: `Sales ${invoiceNumber}`,
+    reference: invoiceNumber,
+    sourceId: saleId,
+    source: 'sale',
     date,
   })
 
   // COGS line (if inventory tracked)
   if (cogsTotal > 0) {
     await postAccountingEvent(supabase, {
-      type:        'sale_cogs',
+      type: 'sale_cogs',
       companyId,
-      amount:      cogsTotal,
-      description: `تكلفة مبيعات ${invoiceNumber}`,
-      reference:   `COGS-${invoiceNumber}`,
-      sourceId:    saleId,
-      source:      'sale',
+      amount: cogsTotal,
+      description: `Cost of Sales ${invoiceNumber}`,
+      reference: `COGS-${invoiceNumber}`,
+      sourceId: saleId,
+      source: 'sale',
       date,
     })
   }
@@ -368,50 +376,50 @@ export async function postSaleEntry(
 }
 
 export async function postExpenseEntry(
-  supabase:   SupabaseClient,
-  companyId:  string,
+  supabase: SupabaseClient,
+  companyId: string,
   opts: {
-    expenseId:      string
-    reference:      string
-    amount:         number
-    description:    string
-    categoryCode?:  string  // COA code for the expense account
-    date?:          string
-  }
+    expenseId: string
+    reference: string
+    amount: number
+    description: string
+    categoryCode?: string // COA code for the expense account
+    date?: string
+  },
 ): Promise<string> {
   return postAccountingEvent(supabase, {
-    type:               'expense_cash',
+    type: 'expense_cash',
     companyId,
-    amount:             opts.amount,
-    description:        opts.description,
-    reference:          opts.reference,
-    sourceId:           opts.expenseId,
-    source:             'expense',
-    date:               opts.date,
-    debitAccountCode:   opts.categoryCode ?? DEFAULT_ACCOUNTS.MISCELLANEOUS,
-    creditAccountCode:  DEFAULT_ACCOUNTS.CASH,
+    amount: opts.amount,
+    description: opts.description,
+    reference: opts.reference,
+    sourceId: opts.expenseId,
+    source: 'expense',
+    date: opts.date,
+    debitAccountCode: opts.categoryCode ?? DEFAULT_ACCOUNTS.MISCELLANEOUS,
+    creditAccountCode: DEFAULT_ACCOUNTS.CASH,
   })
 }
 
 export async function postPurchaseEntry(
-  supabase:   SupabaseClient,
-  companyId:  string,
+  supabase: SupabaseClient,
+  companyId: string,
   opts: {
-    purchaseId:     string
-    invoiceNumber:  string
-    total:          number
-    isCredit:       boolean
-    date?:          string
-  }
+    purchaseId: string
+    invoiceNumber: string
+    total: number
+    isCredit: boolean
+    date?: string
+  },
 ): Promise<string> {
   return postAccountingEvent(supabase, {
-    type:       opts.isCredit ? 'purchase_credit' : 'purchase_cash',
+    type: opts.isCredit ? 'purchase_credit' : 'purchase_cash',
     companyId,
-    amount:     opts.total,
-    description:`مشتريات ${opts.invoiceNumber}`,
-    reference:  opts.invoiceNumber,
-    sourceId:   opts.purchaseId,
-    source:     'purchase',
-    date:       opts.date,
+    amount: opts.total,
+    description: `Purchases ${opts.invoiceNumber}`,
+    reference: opts.invoiceNumber,
+    sourceId: opts.purchaseId,
+    source: 'purchase',
+    date: opts.date,
   })
 }

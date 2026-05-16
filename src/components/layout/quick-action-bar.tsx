@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ShoppingCart, Calendar, Plus, User, Package, DollarSign, RotateCcw, Shirt } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/language-provider'
 import type { Features } from '@/lib/features'
 
 interface Action {
@@ -16,28 +17,39 @@ interface Action {
 function getActions(features: Features): Action[] {
   if (features.hasRental) {
     return [
-      { label: 'حجز جديد', href: '/dashboard/rentals/bookings/new', icon: Calendar, primary: true },
-      { label: 'فستان جديد', href: '/dashboard/rentals/dresses', icon: Shirt },
-      { label: 'التقويم', href: '/dashboard/rentals/calendar', icon: Calendar },
-      { label: 'إرجاع', href: '/dashboard/rentals/returns', icon: RotateCcw },
+      {
+        label: t('layout.quickActions.newBooking'),
+        href: '/dashboard/rentals/bookings/new',
+        icon: Calendar,
+        primary: true,
+      },
+      { label: t('layout.quickActions.newDress'), href: '/dashboard/rentals/dresses', icon: Shirt },
+      { label: t('layout.quickActions.calendar'), href: '/dashboard/rentals/calendar', icon: Calendar },
+      { label: t('layout.quickActions.return'), href: '/dashboard/rentals/returns', icon: RotateCcw },
     ]
   }
   const actions: Action[] = []
   if (features.showPOS) {
-    actions.push({ label: 'بيع جديد', href: '/dashboard/pos', icon: ShoppingCart, primary: true })
+    actions.push({ label: t('layout.quickActions.newSale'), href: '/dashboard/pos', icon: ShoppingCart, primary: true })
   }
-  actions.push({ label: 'منتج جديد', href: '/dashboard/inventory', icon: Package, primary: !features.showPOS })
-  actions.push({ label: 'عميل جديد', href: '/dashboard/customers', icon: User })
+  actions.push({
+    label: t('layout.quickActions.newProduct'),
+    href: '/dashboard/inventory',
+    icon: Package,
+    primary: !features.showPOS,
+  })
+  actions.push({ label: t('layout.quickActions.newCustomer'), href: '/dashboard/customers', icon: User })
   if (features.showPurchases) {
-    actions.push({ label: 'فاتورة شراء', href: '/dashboard/purchases', icon: Plus })
+    actions.push({ label: t('layout.quickActions.purchaseInvoice'), href: '/dashboard/purchases', icon: Plus })
   }
-  actions.push({ label: 'مصروف', href: '/dashboard/expenses', icon: DollarSign })
+  actions.push({ label: t('layout.quickActions.expense'), href: '/dashboard/expenses', icon: DollarSign })
   return actions
 }
 
 const HIDDEN_PATHS = ['/dashboard/pos', '/dashboard/rentals/bookings/new']
 
 export function QuickActionBar({ features }: { features: Features }) {
+  const { t } = useT()
   const pathname = usePathname()
   if (HIDDEN_PATHS.some((p) => pathname.startsWith(p))) {
     return null

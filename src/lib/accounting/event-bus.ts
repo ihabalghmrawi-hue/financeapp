@@ -72,7 +72,7 @@ export class AccountingEventBus {
         const anomalies = await ai.detectAnomalies()
         if (anomalies.length > 0) {
           await this.supabase.from('ai_insights').insert(
-            anomalies.map(a => ({
+            anomalies.map((a) => ({
               company_id: this.companyId,
               category: 'anomaly',
               type: a.type,
@@ -80,7 +80,7 @@ export class AccountingEventBus {
               severity: a.severity,
               confidence: a.severity === 'high' ? 0.9 : 0.7,
               metadata: a.details,
-            }))
+            })),
           )
         }
       }
@@ -90,12 +90,11 @@ export class AccountingEventBus {
 
 // ── Worker: Process Recurring Journals ──────────────────────────
 export async function processRecurringJournals(supabase: SupabaseClient) {
-  const { data: companies } = await supabase
-    .from('companies')
-    .select('id')
-    .eq('is_active', true)
+  const { data: companies } = await supabase.from('companies').select('id').eq('is_active', true)
 
-  if (!companies) return { processed: 0, results: [] }
+  if (!companies) {
+    return { processed: 0, results: [] }
+  }
 
   let totalProcessed = 0
   const allResults: Array<{ company_id: string; results: any[] }> = []
@@ -103,7 +102,7 @@ export async function processRecurringJournals(supabase: SupabaseClient) {
   for (const company of companies) {
     const engine = new RecurringJournalEngine(supabase, company.id)
     const results = await engine.processDueJournals()
-    totalProcessed += results.filter(r => r.status === 'success').length
+    totalProcessed += results.filter((r) => r.status === 'success').length
     allResults.push({ company_id: company.id, results })
   }
 
@@ -112,12 +111,11 @@ export async function processRecurringJournals(supabase: SupabaseClient) {
 
 // ── Worker: Suggest Reconciliations ─────────────────────────────
 export async function suggestReconciliations(supabase: SupabaseClient) {
-  const { data: companies } = await supabase
-    .from('companies')
-    .select('id')
-    .eq('is_active', true)
+  const { data: companies } = await supabase.from('companies').select('id').eq('is_active', true)
 
-  if (!companies) return []
+  if (!companies) {
+    return []
+  }
 
   const suggestions: Array<{ company_id: string; count: number }> = []
 
@@ -130,7 +128,7 @@ export async function suggestReconciliations(supabase: SupabaseClient) {
         company_id: company.id,
         category: 'reconciliation_suggestion',
         type: 'reconciliation',
-        message: `تم اقتراح ${recs.length} تسوية`,
+        message: `${recs.length} reconciliation(s) suggested`,
         severity: 'info',
         confidence: 0.8,
         metadata: { suggestions: recs.slice(0, 10) },
@@ -143,12 +141,11 @@ export async function suggestReconciliations(supabase: SupabaseClient) {
 
 // ── Worker: Integrity Check ─────────────────────────────────────
 export async function runIntegrityChecks(supabase: SupabaseClient) {
-  const { data: companies } = await supabase
-    .from('companies')
-    .select('id')
-    .eq('is_active', true)
+  const { data: companies } = await supabase.from('companies').select('id').eq('is_active', true)
 
-  if (!companies) return []
+  if (!companies) {
+    return []
+  }
 
   const results: Array<{ company_id: string; passed: boolean; issues: number }> = []
 

@@ -3,13 +3,43 @@
 import { useState, useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import {
-  Package, Box, Warehouse, Truck, BarChart3, Search,
-  Filter, ArrowUpDown, Plus, Download, CheckCircle2, XCircle,
-  AlertTriangle, Eye, Clock, User, FileText, ArrowLeftRight,
-  Sparkles, Shield, Activity, TrendingUp, TrendingDown, MapPin,
-  Hash, Scale, QrCode, ChevronLeft, ChevronRight,
-  Circle, CircleDot, Route, Send, RotateCcw,
-  ArrowRight, ArrowLeft, CornerDownLeft,
+  Package,
+  Box,
+  Warehouse,
+  Truck,
+  BarChart3,
+  Search,
+  Filter,
+  ArrowUpDown,
+  Plus,
+  Download,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  Eye,
+  Clock,
+  User,
+  FileText,
+  ArrowLeftRight,
+  Sparkles,
+  Shield,
+  Activity,
+  TrendingUp,
+  TrendingDown,
+  MapPin,
+  Hash,
+  Scale,
+  QrCode,
+  ChevronLeft,
+  ChevronRight,
+  Circle,
+  CircleDot,
+  Route,
+  Send,
+  RotateCcw,
+  ArrowRight,
+  ArrowLeft,
+  CornerDownLeft,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EnterpriseBreadcrumbs } from '@/components/enterprise/Navigation/Breadcrumbs'
@@ -20,33 +50,59 @@ import { AuditOverlay } from '@/components/workbench/AuditOverlay'
 import { OperationalCommenting } from '@/components/workbench/OperationalCommenting'
 import { CrossEntityInspector } from '@/components/workbench/CrossEntityInspector'
 import { WorkbenchMetricCard } from '@/components/workbench/WorkbenchMetricCard'
-import { generateMockInventoryItems, generateMockStockMovements, generateMockWarehouseTransfers } from '@/lib/workbench/mock-data'
+import {
+  generateMockInventoryItems,
+  generateMockStockMovements,
+  generateMockWarehouseTransfers,
+} from '@/lib/workbench/mock-data'
 import type { InventoryItem, ValidationMessage, AIInsight, WorkbenchMetric, InspectorTab } from '@/lib/workbench/types'
+import { useT } from '@/lib/i18n/language-provider'
 
 const employeeNames = [
-  'أحمد محمد', 'سارة خالد', 'فهد العتيبي', 'نورة عبدالله',
-  'ماجد الحربي', 'ريم الشهري', 'خالد القحطاني',
+  'أحمد محمد',
+  'سارة خالد',
+  'فهد العتيبي',
+  'نورة عبدالله',
+  'ماجد الحربي',
+  'ريم الشهري',
+  'خالد القحطاني',
 ]
 
 const itemNames = [
-  'مواد خام أ', 'مواد خام ب', 'عبوات كرتون', 'أكياس بلاستيك',
-  'قطع غيار م أ', 'زيوت تشحيم', 'مذيبات كيميائية', 'فلاتر تهوية',
-  'أحزمة نقل', 'صمامات تحكم', 'مواسير صلب', 'كوابل كهربائية',
-  'مفاتيح كهربائية', 'محولات طاقة', 'مراوح تهوية', 'أجهزة قياس',
-  'دهانات صناعية', 'مواد تنظيف', 'قفازات واقية', 'أحذية سلامة',
-  'خوذ أمان', 'نظارات واقية', 'معدات لحام', 'أدوات يدوية', 'معدات قياس',
+  'مواد خام أ',
+  'مواد خام ب',
+  'عبوات كرتون',
+  'أكياس بلاستيك',
+  'قطع غيار م أ',
+  'زيوت تشحيم',
+  'مذيبات كيميائية',
+  'فلاتر تهوية',
+  'أحزمة نقل',
+  'صمامات تحكم',
+  'مواسير صلب',
+  'كوابل كهربائية',
+  'مفاتيح كهربائية',
+  'محولات طاقة',
+  'مراوح تهوية',
+  'أجهزة قياس',
+  'دهانات صناعية',
+  'مواد تنظيف',
+  'قفازات واقية',
+  'أحذية سلامة',
+  'خوذ أمان',
+  'نظارات واقية',
+  'معدات لحام',
+  'أدوات يدوية',
+  'معدات قياس',
 ]
 
 const warehouses = [
-  'المستودع الرئيسي', 'مستودع المواد الخام', 'مستودع المواد الكيميائية',
-  'مستودع التعبئة', 'مستودع الصيانة',
+  'المستودع الرئيسي',
+  'مستودع المواد الخام',
+  'مستودع المواد الكيميائية',
+  'مستودع التعبئة',
+  'مستودع الصيانة',
 ]
-
-const priorityLabels: Record<string, string> = {
-  high: 'عالية',
-  medium: 'متوسطة',
-  low: 'منخفضة',
-}
 
 const priorityColors: Record<string, string> = {
   high: 'text-red-600 bg-red-50 border-red-200',
@@ -118,13 +174,19 @@ function generateTransferOrders(count: number): TransferOrder[] {
   return Array.from({ length: count }, (_, idx) => {
     const from = randomChoice(warehouses)
     let to = randomChoice(warehouses.filter((w) => w !== from))
-    if (!to) to = warehouses[0]
+    if (!to) {
+      to = warehouses[0]
+    }
 
     const statuses: TransferOrder['status'][] = ['نشط', 'مكتمل', 'قيد النقل', 'معلق', 'ملغي']
     const w = [25, 30, 20, 15, 10]
     const totalW = w.reduce((a, b) => a + b, 0)
     let r = Math.random() * totalW
-    const status = statuses.find((_, i) => { r -= w[i]; return r <= 0 }) ?? 'مكتمل'
+    const status =
+      statuses.find((_, i) => {
+        r -= w[i]
+        return r <= 0
+      }) ?? 'مكتمل'
     const priority = randomChoice(['high', 'medium', 'low'] as const)
 
     const itemCount = randomInt(1, 5)
@@ -145,24 +207,56 @@ function generateTransferOrders(count: number): TransferOrder[] {
     const allShipped = items.every((i) => i.confirmedShip)
     const allReceived = items.every((i) => i.confirmedReceive)
 
-    const pickStatus: TransferOrder['pickStatus'] = allPicked ? 'completed' : items.some((i) => i.confirmedPick) ? 'partial' : 'pending'
-    const shipStatus: TransferOrder['shipStatus'] = allShipped ? 'completed' : items.some((i) => i.confirmedShip) ? 'partial' : 'pending'
-    const receiveStatus: TransferOrder['receiveStatus'] = allReceived ? 'completed' : items.some((i) => i.confirmedReceive) ? 'partial' : 'pending'
+    const pickStatus: TransferOrder['pickStatus'] = allPicked
+      ? 'completed'
+      : items.some((i) => i.confirmedPick)
+        ? 'partial'
+        : 'pending'
+    const shipStatus: TransferOrder['shipStatus'] = allShipped
+      ? 'completed'
+      : items.some((i) => i.confirmedShip)
+        ? 'partial'
+        : 'pending'
+    const receiveStatus: TransferOrder['receiveStatus'] = allReceived
+      ? 'completed'
+      : items.some((i) => i.confirmedReceive)
+        ? 'partial'
+        : 'pending'
 
     const timeline: TransferTimelineEntry[] = [
       { status: 'تم إنشاء أمر التحويل', date: randomDate(30), actor: randomChoice(employeeNames), icon: 'FileText' },
     ]
     if (status !== 'ملغي') {
-      timeline.push({ status: 'تم اعتماد الأمر', date: randomDate(25), actor: randomChoice(employeeNames), icon: 'CheckCircle2' })
+      timeline.push({
+        status: 'تم اعتماد الأمر',
+        date: randomDate(25),
+        actor: randomChoice(employeeNames),
+        icon: 'CheckCircle2',
+      })
     }
     if (pickStatus !== 'pending') {
-      timeline.push({ status: 'تم التأكيد على التعبئة', date: randomDate(20), actor: randomChoice(employeeNames), icon: 'Package' })
+      timeline.push({
+        status: 'تم التأكيد على التعبئة',
+        date: randomDate(20),
+        actor: randomChoice(employeeNames),
+        icon: 'Package',
+      })
     }
     if (shipStatus !== 'pending') {
-      timeline.push({ status: 'تم تأكيد الشحن', date: randomDate(15), actor: randomChoice(employeeNames), icon: 'Truck' })
+      timeline.push({
+        status: 'تم تأكيد الشحن',
+        date: randomDate(15),
+        actor: randomChoice(employeeNames),
+        icon: 'Truck',
+      })
     }
     if (receiveStatus !== 'pending') {
-      timeline.push({ status: 'تم تأكيد الاستلام', date: randomDate(5), actor: randomChoice(employeeNames), icon: 'CheckCircle2' })
+      timeline.push({
+        status: 'تم تأكيد الاستلام',
+        date: randomDate(5),
+        actor: randomChoice(employeeNames),
+        icon: 'CheckCircle2',
+      })
     }
 
     return {
@@ -184,10 +278,18 @@ function generateTransferOrders(count: number): TransferOrder[] {
       requestedBy: randomChoice(employeeNames),
       approvedBy: Math.random() > 0.3 ? randomChoice(employeeNames) : null,
       notes: randomChoice(['نقل لإعادة التوزيع', 'نقل للتخزين', 'تحويل للإنتاج', 'إعادة تموين']),
-      validationMessages: Math.random() > 0.6 ? [
-        { id: generateId('msg'), type: 'warning', message: 'المخزون في المصدر غير كافٍ لبعض الأصناف', field: 'المخزون' },
-        { id: generateId('msg'), type: 'info', message: 'السعة في الوجهة كافية', field: 'السعة' },
-      ] : [],
+      validationMessages:
+        Math.random() > 0.6
+          ? [
+              {
+                id: generateId('msg'),
+                type: 'warning',
+                message: 'المخزون في المصدر غير كافٍ لبعض الأصناف',
+                field: 'المخزون',
+              },
+              { id: generateId('msg'), type: 'info', message: 'السعة في الوجهة كافية', field: 'السعة' },
+            ]
+          : [],
     }
   })
 }
@@ -206,30 +308,33 @@ const confirmStatusColors: Record<string, string> = {
   completed: 'text-green-600 bg-green-100',
 }
 
-const confirmStatusLabels: Record<string, string> = {
-  pending: 'معلق',
-  partial: 'جزئي',
-  completed: 'مكتمل',
-}
-
 function formatDate(date: number): string {
   return new Date(date).toLocaleDateString('ar-SA', {
-    year: 'numeric', month: 'short', day: 'numeric',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
   })
 }
 
 function formatDateTime(date: number): string {
   return new Date(date).toLocaleDateString('ar-SA', {
-    year: 'numeric', month: 'short', day: 'numeric',
-    hour: '2-digit', minute: '2-digit',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   })
 }
 
 const timelineIcons: Record<string, React.ComponentType<{ className?: string }>> = {
-  FileText, CheckCircle2, Package, Truck,
+  FileText,
+  CheckCircle2,
+  Package,
+  Truck,
 }
 
 export function TransferOperationsWorkbench() {
+  const { t } = useT()
   const [transfers] = useState<TransferOrder[]>(() => generateTransferOrders(15))
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState<string>('الكل')
@@ -239,12 +344,30 @@ export function TransferOperationsWorkbench() {
   const [inspectorOpen, setInspectorOpen] = useState(true)
   const [inspectorTab, setInspectorTab] = useState('info')
 
-  const selected = useMemo(
-    () => transfers.find((t) => t.id === selectedId) ?? null,
-    [transfers, selectedId],
-  )
+  const priorityLabels: Record<string, string> = {
+    high: t('inventoryWorkbench.transfer.priorityHigh'),
+    medium: t('inventoryWorkbench.transfer.priorityMedium'),
+    low: t('inventoryWorkbench.transfer.priorityLow'),
+  }
+
+  const confirmStatusLabels: Record<string, string> = {
+    pending: t('inventoryWorkbench.transfer.confirmPending'),
+    partial: t('inventoryWorkbench.transfer.confirmPartial'),
+    completed: t('inventoryWorkbench.transfer.confirmCompleted'),
+  }
+
+  const selected = useMemo(() => transfers.find((t) => t.id === selectedId) ?? null, [transfers, selectedId])
 
   const filterOptions = ['الكل', 'نشط', 'مكتمل', 'قيد النقل', 'معلق', 'ملغي']
+
+  const filterLabels: Record<string, string> = {
+    الكل: t('inventoryWorkbench.transfer.all'),
+    نشط: t('inventoryWorkbench.transfer.statusActive'),
+    مكتمل: t('inventoryWorkbench.transfer.statusCompleted'),
+    'قيد النقل': t('inventoryWorkbench.transfer.statusInTransit'),
+    معلق: t('inventoryWorkbench.transfer.statusPending'),
+    ملغي: t('inventoryWorkbench.transfer.statusCancelled'),
+  }
 
   const filteredTransfers = useMemo(() => {
     let result = transfers
@@ -273,21 +396,47 @@ export function TransferOperationsWorkbench() {
     const inTransit = transfers.filter((t) => t.status === 'قيد النقل').length
     const pending = transfers.filter((t) => t.status === 'معلق').length
     return [
-      { id: 'active', label: 'تحويلات نشطة', value: active, icon: 'Package', severity: 'info' },
-      { id: 'completed', label: 'مكتملة اليوم', value: completed, icon: 'Package', severity: 'success', change: 20, trend: 'up' },
-      { id: 'transit', label: 'قيد النقل', value: inTransit, icon: 'Package', severity: 'warning' },
-      { id: 'pending', label: 'معلقة', value: pending, icon: 'Package', severity: pending > 3 ? 'critical' : 'info' },
+      {
+        id: 'active',
+        label: t('inventoryWorkbench.transfer.activeTransfers'),
+        value: active,
+        icon: 'Package',
+        severity: 'info',
+      },
+      {
+        id: 'completed',
+        label: t('inventoryWorkbench.transfer.completedToday'),
+        value: completed,
+        icon: 'Package',
+        severity: 'success',
+        change: 20,
+        trend: 'up',
+      },
+      {
+        id: 'transit',
+        label: t('inventoryWorkbench.transfer.inTransit'),
+        value: inTransit,
+        icon: 'Package',
+        severity: 'warning',
+      },
+      {
+        id: 'pending',
+        label: t('inventoryWorkbench.transfer.pendingApproval'),
+        value: pending,
+        icon: 'Package',
+        severity: pending > 3 ? 'critical' : 'info',
+      },
     ]
-  }, [transfers])
+  }, [transfers, t])
 
   const allValidationMessages = useMemo(() => {
     return transfers.flatMap((t) => t.validationMessages)
   }, [transfers])
 
   const inspectorTabs: InspectorTab[] = [
-    { id: 'info', label: 'توفر المخزون', icon: 'info' },
-    { id: 'history', label: 'استلام سابق', icon: 'activity' },
-    { id: 'documents', label: 'المستندات', icon: 'file' },
+    { id: 'info', label: t('inventoryWorkbench.transfer.tabStockAvailability'), icon: 'info' },
+    { id: 'history', label: t('inventoryWorkbench.transfer.tabReceivingHistory'), icon: 'activity' },
+    { id: 'documents', label: t('inventoryWorkbench.transfer.tabDocuments'), icon: 'file' },
   ]
 
   const handleSelect = (id: string) => {
@@ -296,10 +445,10 @@ export function TransferOperationsWorkbench() {
 
   return (
     <WorkbenchShell
-      title="منصة عمليات التحويل"
+      title={t('inventoryWorkbench.transfer.title')}
       breadcrumbs={[
-        { label: 'المخزون' },
-        { label: 'عمليات التحويل' },
+        { label: t('inventoryWorkbench.transfer.breadcrumbInventory') },
+        { label: t('inventoryWorkbench.transfer.breadcrumbTransfers') },
       ]}
       metrics={metrics}
       sidebarWidth={420}
@@ -319,7 +468,7 @@ export function TransferOperationsWorkbench() {
                       : 'bg-muted text-muted-foreground hover:bg-muted/80',
                   )}
                 >
-                  {opt}
+                  {filterLabels[opt]}
                   {opt !== 'الكل' && (
                     <span className="mr-1 text-[10px] opacity-70">
                       ({transfers.filter((t) => t.status === opt).length})
@@ -335,7 +484,7 @@ export function TransferOperationsWorkbench() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="بحث برقم التحويل أو المستودع..."
+                placeholder={t('inventoryWorkbench.transfer.searchPlaceholder')}
                 className="flex h-9 w-full rounded-lg border border-input bg-background pr-10 pl-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
             </div>
@@ -345,7 +494,7 @@ export function TransferOperationsWorkbench() {
             {filteredTransfers.length === 0 && (
               <div className="flex flex-col items-center justify-center py-16 text-center px-4">
                 <Truck className="h-12 w-12 text-muted-foreground/30 mb-3" />
-                <p className="text-sm text-muted-foreground">لا توجد تحويلات مطابقة</p>
+                <p className="text-sm text-muted-foreground">{t('inventoryWorkbench.transfer.noMatchingTransfers')}</p>
               </div>
             )}
             {filteredTransfers.map((tr) => {
@@ -380,21 +529,29 @@ export function TransferOperationsWorkbench() {
                         <span className="font-medium truncate">{tr.toWarehouse}</span>
                       </div>
                       <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                        <span dir="ltr">{tr.totalQuantity} قطعة</span>
+                        <span dir="ltr">
+                          {tr.totalQuantity} {t('inventoryWorkbench.transfer.pieces')}
+                        </span>
                         <span>|</span>
-                        <span>{tr.totalItems} صنف</span>
+                        <span>
+                          {tr.totalItems} {t('inventoryWorkbench.transfer.items')}
+                        </span>
                         <span>|</span>
-                        <span>مطلوب: {formatDate(tr.expectedDate)}</span>
+                        <span>
+                          {t('inventoryWorkbench.transfer.required')} {formatDate(tr.expectedDate)}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2 mt-1">
                         <span className={cn('text-[10px] px-1.5 py-0.5 rounded', confirmStatusColors[tr.pickStatus])}>
-                          تعبئة: {confirmStatusLabels[tr.pickStatus]}
+                          {t('inventoryWorkbench.transfer.pick')}: {confirmStatusLabels[tr.pickStatus]}
                         </span>
                         <span className={cn('text-[10px] px-1.5 py-0.5 rounded', confirmStatusColors[tr.shipStatus])}>
-                          شحن: {confirmStatusLabels[tr.shipStatus]}
+                          {t('inventoryWorkbench.transfer.ship')}: {confirmStatusLabels[tr.shipStatus]}
                         </span>
-                        <span className={cn('text-[10px] px-1.5 py-0.5 rounded', confirmStatusColors[tr.receiveStatus])}>
-                          استلام: {confirmStatusLabels[tr.receiveStatus]}
+                        <span
+                          className={cn('text-[10px] px-1.5 py-0.5 rounded', confirmStatusColors[tr.receiveStatus])}
+                        >
+                          {t('inventoryWorkbench.transfer.receive')}: {confirmStatusLabels[tr.receiveStatus]}
                         </span>
                       </div>
                     </div>
@@ -406,7 +563,8 @@ export function TransferOperationsWorkbench() {
 
           <div className="p-3 border-t flex items-center justify-between">
             <span className="text-xs text-muted-foreground">
-              {filteredTransfers.length} من {transfers.length} تحويل
+              {filteredTransfers.length} {t('inventoryWorkbench.transfer.of')} {transfers.length}{' '}
+              {t('inventoryWorkbench.transfer.transfers')}
             </span>
             <div className="flex gap-1">
               <Button variant="ghost" size="icon" className="h-7 w-7" disabled>
@@ -420,13 +578,33 @@ export function TransferOperationsWorkbench() {
         </div>
       }
       actions={[
-        { id: 'new', label: 'تحويل جديد', type: 'primary', handler: () => {} },
-        { id: 'confirm-ship', label: 'تأكيد الشحن', type: 'secondary', handler: () => {} },
-        { id: 'confirm-receive', label: 'تأكيد الاستلام', type: 'secondary', handler: () => {} },
-        { id: 'track', label: 'تتبع', type: 'ghost', handler: () => {} },
-        { id: 'cancel', label: 'إلغاء', type: 'danger', handler: () => {} },
-        { id: 'audit', label: 'سجل التدقيق', type: 'ghost', handler: () => setAuditOpen(!auditOpen) },
-        { id: 'ai', label: 'تحليل ذكي', type: 'ghost', handler: () => setAiOpen(!aiOpen) },
+        { id: 'new', label: t('inventoryWorkbench.transfer.newTransfer'), type: 'primary', handler: () => {} },
+        {
+          id: 'confirm-ship',
+          label: t('inventoryWorkbench.transfer.confirmShipment'),
+          type: 'secondary',
+          handler: () => {},
+        },
+        {
+          id: 'confirm-receive',
+          label: t('inventoryWorkbench.transfer.confirmReceipt'),
+          type: 'secondary',
+          handler: () => {},
+        },
+        { id: 'track', label: t('inventoryWorkbench.transfer.track'), type: 'ghost', handler: () => {} },
+        { id: 'cancel', label: t('inventoryWorkbench.transfer.cancelTransfer'), type: 'danger', handler: () => {} },
+        {
+          id: 'audit',
+          label: t('inventoryWorkbench.transfer.auditLog'),
+          type: 'ghost',
+          handler: () => setAuditOpen(!auditOpen),
+        },
+        {
+          id: 'ai',
+          label: t('inventoryWorkbench.transfer.smartAnalysis'),
+          type: 'ghost',
+          handler: () => setAiOpen(!aiOpen),
+        },
       ]}
       inspectorTabs={inspectorTabs}
       inspectorOpen={inspectorOpen}
@@ -440,32 +618,40 @@ export function TransferOperationsWorkbench() {
               {inspectorTab === 'info' && (
                 <div className="space-y-4">
                   <div className="rounded-xl border bg-card p-4">
-                    <h4 className="text-sm font-semibold mb-3">توفر المخزون في المصدر</h4>
+                    <h4 className="text-sm font-semibold mb-3">
+                      {t('inventoryWorkbench.transfer.sourceAvailability')}
+                    </h4>
                     {selected.items.slice(0, 4).map((item) => (
                       <div key={item.id} className="flex items-center gap-3 py-2 border-b last:border-b-0">
                         <div className="flex-1 min-w-0">
                           <p className="text-sm truncate">{item.name}</p>
                           <p className="text-xs text-muted-foreground">{item.sku}</p>
                         </div>
-                        <span className="text-sm font-medium" dir="ltr">{item.quantity}</span>
+                        <span className="text-sm font-medium" dir="ltr">
+                          {item.quantity}
+                        </span>
                         <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
                       </div>
                     ))}
                     <p className="text-xs text-muted-foreground mt-2">
-                      جميع الأصناف متوفرة في المخزون
+                      {t('inventoryWorkbench.transfer.allItemsAvailable')}
                     </p>
                   </div>
                   <div className="rounded-xl border bg-card p-4">
-                    <h4 className="text-sm font-semibold mb-3">السعة في الوجهة</h4>
+                    <h4 className="text-sm font-semibold mb-3">
+                      {t('inventoryWorkbench.transfer.destinationCapacity')}
+                    </h4>
                     <div className="space-y-2">
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">السعة المتاحة</span>
+                        <span className="text-sm text-muted-foreground">
+                          {t('inventoryWorkbench.transfer.availableCapacity')}
+                        </span>
                         <span className="text-sm font-medium">85%</span>
                       </div>
                       <div className="h-2 bg-muted rounded-full overflow-hidden">
                         <div className="h-full bg-green-500 rounded-full" style={{ width: '85%' }} />
                       </div>
-                      <p className="text-xs text-green-600">السعة كافية لاستقبال الشحنة</p>
+                      <p className="text-xs text-green-600">{t('inventoryWorkbench.transfer.capacitySufficient')}</p>
                     </div>
                   </div>
                 </div>
@@ -473,42 +659,39 @@ export function TransferOperationsWorkbench() {
 
               {inspectorTab === 'history' && (
                 <div className="space-y-3">
-                  <h4 className="text-sm font-semibold">استلام سابق في الوجهة</h4>
-                  {transfers.filter((t) => t.toWarehouse === selected.toWarehouse && t.id !== selected.id).slice(0, 4).map((t) => (
-                    <div key={t.id} className="flex items-center gap-3 p-3 rounded-lg border bg-card">
-                      <div className="p-1.5 rounded-lg bg-green-100">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
+                  <h4 className="text-sm font-semibold">{t('inventoryWorkbench.transfer.previousReceipts')}</h4>
+                  {transfers
+                    .filter((t) => t.toWarehouse === selected.toWarehouse && t.id !== selected.id)
+                    .slice(0, 4)
+                    .map((t) => (
+                      <div key={t.id} className="flex items-center gap-3 p-3 rounded-lg border bg-card">
+                        <div className="p-1.5 rounded-lg bg-green-100">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium">{t.number}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {t.fromWarehouse} ← {t.toWarehouse}
+                          </p>
+                        </div>
+                        <span className="text-xs text-muted-foreground">{formatDate(t.expectedDate)}</span>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium">{t.number}</p>
-                        <p className="text-xs text-muted-foreground">{t.fromWarehouse} ← {t.toWarehouse}</p>
-                      </div>
-                      <span className="text-xs text-muted-foreground">{formatDate(t.expectedDate)}</span>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               )}
 
               {inspectorTab === 'documents' && (
-                <CrossEntityInspector
-                  entityType="inventory"
-                  entityId={selected.number}
-                />
+                <CrossEntityInspector entityType="inventory" entityId={selected.number} />
               )}
             </>
           ) : (
             <div className="flex items-center justify-center h-full">
-              <p className="text-sm text-muted-foreground">اختر تحويلاً من القائمة</p>
+              <p className="text-sm text-muted-foreground">{t('inventoryWorkbench.transfer.selectTransferHint')}</p>
             </div>
           )}
         </>
       }
-      validationBar={
-        <RealtimeValidationBar
-          messages={allValidationMessages}
-          onDismiss={(id) => {}}
-        />
-      }
+      validationBar={<RealtimeValidationBar messages={allValidationMessages} onDismiss={(id) => {}} />}
       aiPanel={
         <AIAssistancePanel
           open={aiOpen}
@@ -525,8 +708,8 @@ export function TransferOperationsWorkbench() {
               <div className="p-4 rounded-2xl bg-muted inline-flex mb-4">
                 <Route className="h-12 w-12 text-muted-foreground/40" />
               </div>
-              <h3 className="text-lg font-semibold mb-1">اختر تحويلاً من القائمة</h3>
-              <p className="text-sm text-muted-foreground">اختر أمر تحويل لعرض تفاصيله الكاملة</p>
+              <h3 className="text-lg font-semibold mb-1">{t('inventoryWorkbench.transfer.selectTransferTitle')}</h3>
+              <p className="text-sm text-muted-foreground">{t('inventoryWorkbench.transfer.selectTransferDesc')}</p>
             </div>
           </div>
         ) : (
@@ -535,10 +718,10 @@ export function TransferOperationsWorkbench() {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <span className={cn('text-xs px-2 py-0.5 rounded', statusColors[selected.status])}>
-                    {selected.status}
+                    {filterLabels[selected.status]}
                   </span>
                   <span className={cn('text-[10px] px-1.5 py-0.5 rounded', priorityColors[selected.priority])}>
-                    أولوية {priorityLabels[selected.priority]}
+                    {t('inventoryWorkbench.transfer.priority')} {priorityLabels[selected.priority]}
                   </span>
                   <span className="text-xs text-muted-foreground">{selected.number}</span>
                 </div>
@@ -552,19 +735,19 @@ export function TransferOperationsWorkbench() {
                 {selected.pickStatus !== 'completed' && (
                   <Button variant="default" size="sm" className="h-8 text-xs gap-1">
                     <Package className="h-3.5 w-3.5" />
-                    تأكيد التعبئة
+                    {t('inventoryWorkbench.transfer.confirmPick')}
                   </Button>
                 )}
                 {selected.shipStatus !== 'completed' && selected.pickStatus === 'completed' && (
                   <Button variant="default" size="sm" className="h-8 text-xs gap-1">
                     <Truck className="h-3.5 w-3.5" />
-                    تأكيد الشحن
+                    {t('inventoryWorkbench.transfer.confirmShip')}
                   </Button>
                 )}
                 {selected.receiveStatus !== 'completed' && selected.shipStatus === 'completed' && (
                   <Button variant="default" size="sm" className="h-8 text-xs gap-1">
                     <CheckCircle2 className="h-3.5 w-3.5" />
-                    تأكيد الاستلام
+                    {t('inventoryWorkbench.transfer.confirmReceive')}
                   </Button>
                 )}
               </div>
@@ -577,49 +760,68 @@ export function TransferOperationsWorkbench() {
                     <Warehouse className="h-8 w-8 text-blue-600" />
                   </div>
                   <p className="text-sm font-bold">{selected.fromWarehouse}</p>
-                  <p className="text-xs text-muted-foreground">المصدر</p>
+                  <p className="text-xs text-muted-foreground">{t('inventoryWorkbench.transfer.source')}</p>
                 </div>
 
                 <div className="flex-1 max-w-[300px]">
                   <div className="relative">
                     <div className="h-1 bg-primary/30 rounded-full mt-8">
-                      <div className={cn(
-                        'h-1 rounded-full transition-all',
-                        selected.status === 'مكتمل' ? 'w-full bg-green-500' :
-                        selected.receiveStatus !== 'pending' ? 'w-3/4 bg-blue-500' :
-                        selected.shipStatus !== 'pending' ? 'w-1/2 bg-amber-500' :
-                        selected.pickStatus !== 'pending' ? 'w-1/4 bg-purple-500' : 'w-0',
-                      )} />
+                      <div
+                        className={cn(
+                          'h-1 rounded-full transition-all',
+                          selected.status === 'مكتمل'
+                            ? 'w-full bg-green-500'
+                            : selected.receiveStatus !== 'pending'
+                              ? 'w-3/4 bg-blue-500'
+                              : selected.shipStatus !== 'pending'
+                                ? 'w-1/2 bg-amber-500'
+                                : selected.pickStatus !== 'pending'
+                                  ? 'w-1/4 bg-purple-500'
+                                  : 'w-0',
+                        )}
+                      />
                     </div>
                     <div className="flex justify-between mt-2">
                       <div className="text-center">
-                        <span className={cn(
-                          'text-[10px] px-1.5 py-0.5 rounded',
-                          selected.pickStatus === 'completed' ? 'bg-green-100 text-green-700' :
-                          selected.pickStatus === 'partial' ? 'bg-amber-100 text-amber-700' :
-                          'bg-gray-100 text-gray-400',
-                        )}>
-                          تعبئة
+                        <span
+                          className={cn(
+                            'text-[10px] px-1.5 py-0.5 rounded',
+                            selected.pickStatus === 'completed'
+                              ? 'bg-green-100 text-green-700'
+                              : selected.pickStatus === 'partial'
+                                ? 'bg-amber-100 text-amber-700'
+                                : 'bg-gray-100 text-gray-400',
+                          )}
+                        >
+                          {t('inventoryWorkbench.transfer.pick')}
                         </span>
                       </div>
                       <div className="text-center">
-                        <span className={cn(
-                          'text-[10px] px-1.5 py-0.5 rounded',
-                          selected.shipStatus === 'completed' ? 'bg-green-100 text-green-700' :
-                          selected.shipStatus === 'partial' ? 'bg-amber-100 text-amber-700' :
-                          'bg-gray-100 text-gray-400',
-                        )}>
-                          شحن
+                        <span
+                          className={cn(
+                            'text-[10px] px-1.5 py-0.5 rounded',
+                            selected.shipStatus === 'completed'
+                              ? 'bg-green-100 text-green-700'
+                              : selected.shipStatus === 'partial'
+                                ? 'bg-amber-100 text-amber-700'
+                                : 'bg-gray-100 text-gray-400',
+                          )}
+                        >
+                          {t('inventoryWorkbench.transfer.ship')}
                         </span>
                       </div>
                       <div className="text-center">
-                        <span className={cn(
-                          'text-[10px] px-1.5 py-0.5 rounded',
-                          selected.receiveStatus === 'completed' ? 'bg-green-100 text-green-700' :
-                          selected.receiveStatus === 'partial' ? 'bg-amber-100 text-amber-700' :
-                          'bg-gray-100 text-gray-400',
-                        )}>
-                          استلام
+                        <span
+                          className={cn(
+                            'text-[10px] px-1.5 py-0.5 rounded',
+                            selected.receiveStatus === 'completed'
+                              ? 'bg-green-100 text-green-700'
+                              : selected.receiveStatus === 'partial'
+                                ? 'bg-amber-100 text-amber-700'
+                                : 'bg-gray-100 text-gray-400',
+                          )}
+                        >
+                          {t('inventoryWorkbench.transfer.receive')}
                         </span>
                       </div>
                     </div>
@@ -631,7 +833,7 @@ export function TransferOperationsWorkbench() {
                     <Warehouse className="h-8 w-8 text-green-600" />
                   </div>
                   <p className="text-sm font-bold">{selected.toWarehouse}</p>
-                  <p className="text-xs text-muted-foreground">الوجهة</p>
+                  <p className="text-xs text-muted-foreground">{t('inventoryWorkbench.transfer.destination')}</p>
                 </div>
               </div>
             </div>
@@ -639,7 +841,7 @@ export function TransferOperationsWorkbench() {
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div className="rounded-xl border bg-card p-4">
-                  <h3 className="text-sm font-semibold mb-3">أصناف التحويل</h3>
+                  <h3 className="text-sm font-semibold mb-3">{t('inventoryWorkbench.transfer.transferItems')}</h3>
                   <div className="space-y-2">
                     {selected.items.map((item) => (
                       <div key={item.id} className="flex items-center gap-3 p-2 rounded-lg bg-muted/30">
@@ -661,36 +863,50 @@ export function TransferOperationsWorkbench() {
                 </div>
 
                 <div className="rounded-xl border bg-card p-4">
-                  <h3 className="text-sm font-semibold mb-3">معلومات عامة</h3>
+                  <h3 className="text-sm font-semibold mb-3">{t('inventoryWorkbench.transfer.generalInfo')}</h3>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">طلب بواسطة</span>
+                      <span className="text-sm text-muted-foreground">
+                        {t('inventoryWorkbench.transfer.requestedBy')}
+                      </span>
                       <span className="text-sm font-medium">{selected.requestedBy}</span>
                     </div>
                     {selected.approvedBy && (
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">اعتمد بواسطة</span>
+                        <span className="text-sm text-muted-foreground">
+                          {t('inventoryWorkbench.transfer.approvedBy')}
+                        </span>
                         <span className="text-sm font-medium">{selected.approvedBy}</span>
                       </div>
                     )}
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">تاريخ التسليم المتوقع</span>
+                      <span className="text-sm text-muted-foreground">
+                        {t('inventoryWorkbench.transfer.expectedDelivery')}
+                      </span>
                       <span className="text-sm font-medium">{formatDate(selected.expectedDate)}</span>
                     </div>
                     {selected.actualDate && (
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">تاريخ التسليم الفعلي</span>
+                        <span className="text-sm text-muted-foreground">
+                          {t('inventoryWorkbench.transfer.actualDelivery')}
+                        </span>
                         <span className="text-sm font-medium">{formatDate(selected.actualDate)}</span>
                       </div>
                     )}
                     {selected.actualDate && (
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">فرق الوقت</span>
-                        <span className={cn(
-                          'text-sm font-medium',
-                          selected.actualDate <= selected.expectedDate ? 'text-green-600' : 'text-red-600',
-                        )}>
-                          {selected.actualDate <= selected.expectedDate ? 'قبل الموعد' : 'بعد الموعد'}
+                        <span className="text-sm text-muted-foreground">
+                          {t('inventoryWorkbench.transfer.timeDifference')}
+                        </span>
+                        <span
+                          className={cn(
+                            'text-sm font-medium',
+                            selected.actualDate <= selected.expectedDate ? 'text-green-600' : 'text-red-600',
+                          )}
+                        >
+                          {selected.actualDate <= selected.expectedDate
+                            ? t('inventoryWorkbench.transfer.beforeDeadline')
+                            : t('inventoryWorkbench.transfer.afterDeadline')}
                         </span>
                       </div>
                     )}
@@ -701,7 +917,9 @@ export function TransferOperationsWorkbench() {
                   <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <AlertTriangle className="h-4 w-4 text-amber-600" />
-                      <h3 className="text-sm font-semibold text-amber-800">رسائل التحقق</h3>
+                      <h3 className="text-sm font-semibold text-amber-800">
+                        {t('inventoryWorkbench.transfer.validationMessages')}
+                      </h3>
                     </div>
                     <div className="space-y-2">
                       {selected.validationMessages.map((msg) => (
@@ -717,24 +935,34 @@ export function TransferOperationsWorkbench() {
 
               <div className="space-y-4">
                 <div className="rounded-xl border bg-card p-4">
-                  <h3 className="text-sm font-semibold mb-3">حالة التأكيد</h3>
+                  <h3 className="text-sm font-semibold mb-3">{t('inventoryWorkbench.transfer.confirmStatus')}</h3>
                   <div className="space-y-4">
                     <div>
                       <div className="flex justify-between text-sm mb-1">
-                        <span className="text-muted-foreground">تعبئة</span>
+                        <span className="text-muted-foreground">{t('inventoryWorkbench.transfer.pick')}</span>
                         <span className={cn('text-xs px-1.5 py-0.5 rounded', confirmStatusColors[selected.pickStatus])}>
                           {confirmStatusLabels[selected.pickStatus]}
                         </span>
                       </div>
                       <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div className={cn(
-                          'h-full rounded-full',
-                          selected.pickStatus === 'completed' ? 'bg-green-500' :
-                          selected.pickStatus === 'partial' ? 'bg-amber-500' : 'bg-gray-300',
-                        )} style={{
-                          width: selected.pickStatus === 'completed' ? '100%' :
-                                 selected.pickStatus === 'partial' ? '50%' : '0%',
-                        }} />
+                        <div
+                          className={cn(
+                            'h-full rounded-full',
+                            selected.pickStatus === 'completed'
+                              ? 'bg-green-500'
+                              : selected.pickStatus === 'partial'
+                                ? 'bg-amber-500'
+                                : 'bg-gray-300',
+                          )}
+                          style={{
+                            width:
+                              selected.pickStatus === 'completed'
+                                ? '100%'
+                                : selected.pickStatus === 'partial'
+                                  ? '50%'
+                                  : '0%',
+                          }}
+                        />
                       </div>
                     </div>
                     <div>
@@ -745,32 +973,54 @@ export function TransferOperationsWorkbench() {
                         </span>
                       </div>
                       <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div className={cn(
-                          'h-full rounded-full',
-                          selected.shipStatus === 'completed' ? 'bg-green-500' :
-                          selected.shipStatus === 'partial' ? 'bg-amber-500' : 'bg-gray-300',
-                        )} style={{
-                          width: selected.shipStatus === 'completed' ? '100%' :
-                                 selected.shipStatus === 'partial' ? '50%' : '0%',
-                        }} />
+                        <div
+                          className={cn(
+                            'h-full rounded-full',
+                            selected.shipStatus === 'completed'
+                              ? 'bg-green-500'
+                              : selected.shipStatus === 'partial'
+                                ? 'bg-amber-500'
+                                : 'bg-gray-300',
+                          )}
+                          style={{
+                            width:
+                              selected.shipStatus === 'completed'
+                                ? '100%'
+                                : selected.shipStatus === 'partial'
+                                  ? '50%'
+                                  : '0%',
+                          }}
+                        />
                       </div>
                     </div>
                     <div>
                       <div className="flex justify-between text-sm mb-1">
                         <span className="text-muted-foreground">استلام</span>
-                        <span className={cn('text-xs px-1.5 py-0.5 rounded', confirmStatusColors[selected.receiveStatus])}>
+                        <span
+                          className={cn('text-xs px-1.5 py-0.5 rounded', confirmStatusColors[selected.receiveStatus])}
+                        >
                           {confirmStatusLabels[selected.receiveStatus]}
                         </span>
                       </div>
                       <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div className={cn(
-                          'h-full rounded-full',
-                          selected.receiveStatus === 'completed' ? 'bg-green-500' :
-                          selected.receiveStatus === 'partial' ? 'bg-amber-500' : 'bg-gray-300',
-                        )} style={{
-                          width: selected.receiveStatus === 'completed' ? '100%' :
-                                 selected.receiveStatus === 'partial' ? '50%' : '0%',
-                        }} />
+                        <div
+                          className={cn(
+                            'h-full rounded-full',
+                            selected.receiveStatus === 'completed'
+                              ? 'bg-green-500'
+                              : selected.receiveStatus === 'partial'
+                                ? 'bg-amber-500'
+                                : 'bg-gray-300',
+                          )}
+                          style={{
+                            width:
+                              selected.receiveStatus === 'completed'
+                                ? '100%'
+                                : selected.receiveStatus === 'partial'
+                                  ? '50%'
+                                  : '0%',
+                          }}
+                        />
                       </div>
                     </div>
                   </div>
@@ -785,10 +1035,14 @@ export function TransferOperationsWorkbench() {
                       return (
                         <div key={idx} className="flex items-start gap-3 relative">
                           <div className="flex flex-col items-center">
-                            <div className={cn(
-                              'p-1 rounded-full',
-                              entry.status.includes('تم') ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600',
-                            )}>
+                            <div
+                              className={cn(
+                                'p-1 rounded-full',
+                                entry.status.includes('تم')
+                                  ? 'bg-green-100 text-green-600'
+                                  : 'bg-blue-100 text-blue-600',
+                              )}
+                            >
                               <Icon className="h-3.5 w-3.5" />
                             </div>
                             {!isLast && <div className="w-px flex-1 bg-border min-h-[24px]" />}
@@ -821,9 +1075,7 @@ export function TransferOperationsWorkbench() {
               </div>
             </div>
 
-            <OperationalCommenting
-              comments={[]}
-            />
+            <OperationalCommenting comments={[]} />
           </div>
         )}
       </div>

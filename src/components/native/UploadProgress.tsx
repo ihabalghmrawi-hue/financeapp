@@ -2,6 +2,7 @@
 
 import { cn } from '@/lib/utils'
 import type { UploadProgress as UploadProgressType } from '@/lib/native/types'
+import { useT } from '@/lib/i18n/language-provider'
 import { Upload, CheckCircle2, XCircle, Loader2 } from 'lucide-react'
 
 interface UploadProgressProps {
@@ -11,6 +12,7 @@ interface UploadProgressProps {
 }
 
 export function UploadProgressComponent({ uploads, onDismiss, className }: UploadProgressProps) {
+  const { t } = useT()
   if (uploads.length === 0) {
     return null
   }
@@ -50,9 +52,9 @@ export function UploadProgressComponent({ uploads, onDismiss, className }: Uploa
               <p className="text-xs font-medium truncate">{upload.fileName}</p>
               <p className="text-[10px] text-muted-foreground mt-0.5">
                 {upload.status === 'uploading' && `${upload.progress}% (${Math.round(upload.speed / 1024)} KB/s)`}
-                {upload.status === 'completed' && 'اكتمل الرفع'}
-                {upload.status === 'failed' && (upload.error ?? 'فشل الرفع')}
-                {upload.status === 'queued' && 'في الانتظار...'}
+                {upload.status === 'completed' && t('uploadProgress.completed')}
+                {upload.status === 'failed' && (upload.error ?? t('uploadProgress.failed'))}
+                {upload.status === 'queued' && t('uploadProgress.queued')}
               </p>
             </div>
 
@@ -61,7 +63,7 @@ export function UploadProgressComponent({ uploads, onDismiss, className }: Uploa
                 onClick={() => onDismiss(upload.fileId)}
                 className="text-[10px] text-primary hover:underline shrink-0"
               >
-                إخفاء
+                {t('uploadProgress.hide')}
               </button>
             )}
           </div>

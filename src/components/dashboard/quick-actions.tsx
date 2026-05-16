@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useT } from '@/lib/i18n/language-provider'
 import { Plus, FileText, BarChart3, BookOpen } from 'lucide-react'
 
 interface QuickActionsProps {
@@ -8,31 +9,32 @@ interface QuickActionsProps {
 }
 
 export function QuickActions({ companyId }: QuickActionsProps) {
+  const { t } = useT()
   const actions = [
     {
-      label: 'قيد جديد',
-      description: 'إضافة معاملة',
+      label: t('dashboard.quickActions.newEntry'),
+      description: t('dashboard.quickActions.addTransaction'),
       href: '/dashboard/transactions/new',
       icon: Plus,
       color: 'bg-primary text-white hover:bg-primary/90',
     },
     {
-      label: 'قيد محاسبي',
-      description: 'قيد يومية',
+      label: t('dashboard.quickActions.journalEntry'),
+      description: t('dashboard.quickActions.dailyEntry'),
       href: '/dashboard/journal/new',
       icon: BookOpen,
       color: 'bg-purple-600 text-white hover:bg-purple-700',
     },
     {
-      label: 'التقارير',
-      description: 'عرض التقارير',
+      label: t('nav.reports'),
+      description: t('dashboard.quickActions.viewReports'),
       href: '/dashboard/reports',
       icon: BarChart3,
       color: 'bg-emerald-600 text-white hover:bg-emerald-700',
     },
     {
-      label: 'كشف حساب',
-      description: 'طباعة التقرير',
+      label: t('dashboard.quickActions.statement'),
+      description: t('dashboard.quickActions.printReport'),
       href: '/dashboard/reports?type=statement',
       icon: FileText,
       color: 'bg-orange-500 text-white hover:bg-orange-600',

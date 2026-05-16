@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/language-provider'
 import { Wifi, WifiOff, RefreshCw } from 'lucide-react'
 
 interface NetworkStatusProps {
@@ -10,6 +11,7 @@ interface NetworkStatusProps {
 }
 
 export function NetworkStatus({ className }: NetworkStatusProps) {
+  const { t } = useT()
   const [online, setOnline] = useState(true)
   const [show, setShow] = useState(false)
 
@@ -48,17 +50,17 @@ export function NetworkStatus({ className }: NetworkStatusProps) {
           {online ? (
             <>
               <Wifi className="w-3.5 h-3.5" />
-              تمت استعادة الاتصال
+              {t('networkStatus.connected')}
             </>
           ) : (
             <>
               <WifiOff className="w-3.5 h-3.5" />
-              لا يوجد اتصال بالإنترنت
+              {t('networkStatus.disconnected')}
               <button
                 onClick={() => window.location.reload()}
                 className="flex items-center gap-1 px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 transition-colors"
               >
-                <RefreshCw className="w-3 h-3" /> إعادة المحاولة
+                <RefreshCw className="w-3 h-3" /> {t('common.tryAgain')}
               </button>
             </>
           )}

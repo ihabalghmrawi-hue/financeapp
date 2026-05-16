@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/language-provider'
 
 interface LoadingScreenProps {
   message?: string
@@ -9,7 +10,9 @@ interface LoadingScreenProps {
   className?: string
 }
 
-export function LoadingScreen({ message = 'جاري التحميل...', variant = 'default', className }: LoadingScreenProps) {
+export function LoadingScreen({ message: propMessage, variant = 'default', className }: LoadingScreenProps) {
+  const { t } = useT()
+  const message = propMessage ?? t('common.loading')
   return (
     <div className={cn('flex flex-col items-center justify-center min-h-[60vh]', className)}>
       {variant === 'branded' ? (

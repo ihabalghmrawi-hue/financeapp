@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { Wallet, Building2, Smartphone, Plus } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
+import { useT } from '@/lib/i18n/language-provider'
 import type { Wallet as WalletType } from '@/types/database'
 
 interface WalletSummaryProps {
@@ -23,6 +24,7 @@ const walletColors = {
 }
 
 export function WalletSummary({ wallets, currency }: WalletSummaryProps) {
+  const { t } = useT()
   const totalBalance = wallets.reduce((s, w) => s + Number(w.current_balance), 0)
 
   return (
@@ -35,17 +37,15 @@ export function WalletSummary({ wallets, currency }: WalletSummaryProps) {
             إدارة
           </Link>
         </div>
-        <p className="text-2xl font-bold text-foreground mt-2">
-          {formatCurrency(totalBalance, currency)}
-        </p>
-        <p className="text-xs text-muted-foreground">إجمالي الأرصدة</p>
+        <p className="text-2xl font-bold text-foreground mt-2">{formatCurrency(totalBalance, currency)}</p>
+        <p className="text-xs text-muted-foreground">{t('dashboard.walletSummary.totalBalance')}</p>
       </div>
 
       {/* Wallets List */}
       <div className="p-4 space-y-2">
         {wallets.length === 0 ? (
           <div className="text-center py-4">
-            <p className="text-sm text-muted-foreground">لا توجد محافظ</p>
+            <p className="text-sm text-muted-foreground">{t('dashboard.walletSummary.noWallets')}</p>
           </div>
         ) : (
           wallets.slice(0, 4).map((wallet) => {
@@ -61,11 +61,13 @@ export function WalletSummary({ wallets, currency }: WalletSummaryProps) {
                   <Icon className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">
-                    {wallet.name_ar || wallet.name}
-                  </p>
+                  <p className="text-sm font-medium text-foreground truncate">{wallet.name_ar || wallet.name}</p>
                   <p className="text-xs text-muted-foreground capitalize">
-                    {wallet.type === 'cash' ? 'نقدي' : wallet.type === 'bank' ? 'بنكي' : 'رقمي'}
+                    {wallet.type === 'cash'
+                      ? t('wallet.types.cash')
+                      : wallet.type === 'bank'
+                        ? t('wallet.types.bank')
+                        : t('wallet.types.digital')}
                   </p>
                 </div>
                 <p className="text-sm font-semibold text-foreground shrink-0">
@@ -81,7 +83,7 @@ export function WalletSummary({ wallets, currency }: WalletSummaryProps) {
           className="flex items-center justify-center gap-2 w-full p-2.5 rounded-lg border border-dashed border-border hover:border-primary hover:text-primary text-muted-foreground text-sm transition-colors mt-2"
         >
           <Plus className="w-4 h-4" />
-          إضافة محفظة
+          {t('dashboard.walletSummary.addWallet')}
         </Link>
       </div>
     </div>

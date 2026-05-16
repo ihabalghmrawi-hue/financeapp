@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react'
 import type { Features } from '@/lib/features'
 import { NotificationsPanel } from './notifications-panel'
 import { useT } from '@/lib/i18n/language-provider'
+import { LanguageSwitcher } from '@/components/i18n/language-switcher'
 
 const pageTitles: Record<string, string> = {
   '/dashboard': 'nav.dashboard',
@@ -76,6 +77,8 @@ export function TopBar({ company, user, staff, features }: TopBarProps) {
         >
           {mounted && theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
         </button>
+
+        <LanguageSwitcher variant="compact" />
 
         <NotificationsPanel />
 

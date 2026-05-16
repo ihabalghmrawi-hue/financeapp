@@ -42,19 +42,8 @@ export {
 export type { LedgerEntry, LedgerAccount } from './ledger'
 
 // Financial Statements
-export {
-  generateIncomeStatement,
-  generateBalanceSheet,
-  generateTrialBalance,
-  generateCashFlow,
-} from './statements'
-export type {
-  StatementLine,
-  IncomeStatement,
-  BalanceSheet,
-  TrialBalance,
-  CashFlow,
-} from './statements'
+export { generateIncomeStatement, generateBalanceSheet, generateTrialBalance, generateCashFlow } from './statements'
+export type { StatementLine, IncomeStatement, BalanceSheet, TrialBalance, CashFlow } from './statements'
 
 // Auto-Post Engine
 export {
@@ -71,11 +60,7 @@ export {
 
 // ── Enterprise Modules ──────────────────────────────────────
 export * from './enterprise-types'
-export {
-  PostingRulesEngine,
-  allocateToCostCenters,
-  allocateToBranches,
-} from './posting-rules'
+export { PostingRulesEngine, allocateToCostCenters, allocateToBranches } from './posting-rules'
 export {
   ReconciliationEngine,
   getAgedReceivables,
@@ -88,28 +73,24 @@ export { AIAccountingEngine } from './ai-accounting'
 export { AccountingEventBus, processRecurringJournals, suggestReconciliations, runIntegrityChecks } from './event-bus'
 
 // ── Backward Compatibility Aliases ────────────────────────────
-export { postSaleJournal     as postSaleEntry     } from './auto-post'
+export { postSaleJournal as postSaleEntry } from './auto-post'
 export { postPurchaseJournal as postPurchaseEntry } from './auto-post'
-export { postExpenseJournal  as postExpenseEntry  } from './auto-post'
+export { postExpenseJournal as postExpenseEntry } from './auto-post'
 
 // Re-export updateWallet (copied inline for backward compatibility)
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 export async function updateWallet(
-  supabase:       SupabaseClient,
-  company_id:     string,
-  amount:         number,
-  description:    string,
-  reference_id:   string,
+  supabase: SupabaseClient,
+  company_id: string,
+  amount: number,
+  description: string,
+  reference_id: string,
   reference_type: string,
   payment_method = 'cash',
-  wallet_id?:     string,
+  wallet_id?: string,
 ): Promise<{ ok: boolean; error?: string; new_balance?: number }> {
-  let query = supabase
-    .from('wallets')
-    .select('id, current_balance')
-    .eq('company_id', company_id)
-    .eq('is_active', true)
+  let query = supabase.from('wallets').select('id, current_balance').eq('company_id', company_id).eq('is_active', true)
 
   if (wallet_id) {
     query = query.eq('id', wallet_id)
@@ -124,21 +105,30 @@ export async function updateWallet(
       .from('wallets')
       .insert({
         company_id,
-        name:            'الصندوق الرئيسي',
-        name_ar:         'الصندوق الرئيسي',
-        type:            'cash',
+        name: 'Main Cash Register',
+        name_ar: 'Main Cash Register',
+        type: 'cash',
         current_balance: 0,
         initial_balance: 0,
-        is_default:      true,
-        is_active:       true,
+        is_default: true,
+        is_active: true,
       })
       .select('id, current_balance')
       .single()
 
     if (wErr || !newWallet) {
-      return { ok: false, error: `فشل إنشاء الصندوق: ${wErr?.message}` }
+      return { ok: false, error: `Failed to create cash register: ${wErr?.message}` }
     }
-    return updateWallet(supabase, company_id, amount, description, reference_id, reference_type, payment_method, newWallet.id)
+    return updateWallet(
+      supabase,
+      company_id,
+      amount,
+      description,
+      reference_id,
+      reference_type,
+      payment_method,
+      newWallet.id,
+    )
   }
 
   const new_balance = Number(wallet.current_balance || 0) + amount
@@ -147,20 +137,22 @@ export async function updateWallet(
     .update({ current_balance: new_balance, updated_at: new Date().toISOString() })
     .eq('id', wallet.id)
 
-  if (updateErr) return { ok: false, error: `فشل تحديث الصندوق: ${updateErr.message}` }
+  if (updateErr) {
+    return { ok: false, error: `Failed to update cash register: ${updateErr.message}` }
+  }
 
   await supabase.from('transactions').insert({
     company_id,
-    wallet_id:        wallet.id,
-    type:             amount >= 0 ? 'income' : 'expense',
-    amount:           Math.abs(amount),
+    wallet_id: wallet.id,
+    type: amount >= 0 ? 'income' : 'expense',
+    amount: Math.abs(amount),
     description,
-    description_ar:   description,
+    description_ar: description,
     reference_id,
     reference_type,
     payment_method,
     transaction_date: new Date().toISOString().slice(0, 10),
-    status:           'completed',
+    status: 'completed',
   })
 
   return { ok: true, new_balance }

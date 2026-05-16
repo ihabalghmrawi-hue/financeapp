@@ -2,11 +2,9 @@
 
 import { useState, useMemo } from 'react'
 import { cn } from '@/lib/utils'
-import {
-  CheckCircle2, XCircle, Clock, User, AlertTriangle,
-  Search, Filter, ArrowUpDown,
-} from 'lucide-react'
+import { CheckCircle2, XCircle, Clock, User, AlertTriangle, Search, Filter, ArrowUpDown } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { useT } from '@/lib/i18n/language-provider'
 import type { ApprovalHistoryEntry } from '@/lib/timeline/types'
 
 interface ApprovalHistoryProps {
@@ -15,17 +13,17 @@ interface ApprovalHistoryProps {
 }
 
 const decisionFilters = [
-  { key: 'all', label: 'الكل' },
-  { key: 'approved', label: 'موافق' },
-  { key: 'rejected', label: 'مرفوض' },
-  { key: 'pending', label: 'معلق' },
-  { key: 'delegated', label: 'مفوض' },
-  { key: 'escalated', label: 'مصعد' },
+  { key: 'all', labelKey: 'approvalHistory.decision.all' },
+  { key: 'approved', labelKey: 'approvalHistory.decision.approved' },
+  { key: 'rejected', labelKey: 'approvalHistory.decision.rejected' },
+  { key: 'pending', labelKey: 'approvalHistory.decision.pending' },
+  { key: 'delegated', labelKey: 'approvalHistory.decision.delegated' },
+  { key: 'escalated', labelKey: 'approvalHistory.decision.escalated' },
 ] as const
 
 const sortOptions = [
-  { key: 'date', label: 'حسب التاريخ' },
-  { key: 'priority', label: 'حسب الأولوية' },
+  { key: 'date', labelKey: 'approvalHistory.sort.date' },
+  { key: 'priority', labelKey: 'approvalHistory.sort.priority' },
 ]
 
 const priorityColors: Record<string, string> = {
@@ -51,15 +49,20 @@ const decisionIcons: Record<string, typeof CheckCircle2> = {
   escalated: AlertTriangle,
 }
 
-const decisionLabels: Record<string, string> = {
-  approved: 'تمت الموافقة',
-  rejected: 'مرفوض',
-  pending: 'معلق',
-  delegated: 'مفوض',
-  escalated: 'مصعد',
+const decisionKeys: Record<string, string> = {
+  approved: 'approvalHistory.decisionLabel.approved',
+  rejected: 'approvalHistory.decisionLabel.rejected',
+  pending: 'approvalHistory.decisionLabel.pending',
+  delegated: 'approvalHistory.decisionLabel.delegated',
+  escalated: 'approvalHistory.decisionLabel.escalated',
 }
 
-function calculateSLADisplay(slaMinutes: number, createdAt: number, respondedAt?: number) {
+function calculateSLADisplay(
+  slaMinutes: number,
+  createdAt: number,
+  t: (key: string, params?: Record<string, string | number>) => string,
+  respondedAt?: number,
+) {
   const slaMs = slaMinutes * 60 * 1000
   const now = Date.now()
   const end = respondedAt || now
@@ -73,17 +76,17 @@ function calculateSLADisplay(slaMinutes: number, createdAt: number, respondedAt?
     if (isOverdue) {
       const overBy = Math.abs(remaining)
       const mins = Math.round(overBy / 60000)
-      label = `تجاوز بـ ${mins} دقيقة`
+      label = t('approvalHistory.sla.exceededBy', { count: mins })
     } else {
       const mins = Math.round(remaining / 60000)
-      label = `ضمن SLA (${mins} دقيقة متبقية)`
+      label = t('approvalHistory.sla.within', { count: mins })
     }
   } else {
     if (isOverdue) {
-      label = 'متأخر عن SLA'
+      label = t('approvalHistory.sla.late')
     } else {
       const mins = Math.round(remaining / 60000)
-      label = `${mins} دقيقة متبقية`
+      label = t('approvalHistory.sla.remaining', { count: mins })
     }
   }
 
@@ -91,16 +94,20 @@ function calculateSLADisplay(slaMinutes: number, createdAt: number, respondedAt?
 }
 
 export function ApprovalHistory({ entries, className }: ApprovalHistoryProps) {
+  const { t, lang } = useT()
   const [filter, setFilter] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState<'date' | 'priority'>('date')
 
-  const kpi = useMemo(() => ({
-    total: entries.length,
-    approved: entries.filter((e) => e.decision === 'approved').length,
-    rejected: entries.filter((e) => e.decision === 'rejected').length,
-    pending: entries.filter((e) => e.decision === 'pending').length,
-  }), [entries])
+  const kpi = useMemo(
+    () => ({
+      total: entries.length,
+      approved: entries.filter((e) => e.decision === 'approved').length,
+      rejected: entries.filter((e) => e.decision === 'rejected').length,
+      pending: entries.filter((e) => e.decision === 'pending').length,
+    }),
+    [entries],
+  )
 
   const filtered = useMemo(() => {
     let result = [...entries]
@@ -115,7 +122,7 @@ export function ApprovalHistory({ entries, className }: ApprovalHistoryProps) {
         (e) =>
           e.title.toLowerCase().includes(q) ||
           e.workflowName.toLowerCase().includes(q) ||
-          e.requestedBy.name.toLowerCase().includes(q)
+          e.requestedBy.name.toLowerCase().includes(q),
       )
     }
 
@@ -133,19 +140,19 @@ export function ApprovalHistory({ entries, className }: ApprovalHistoryProps) {
     <div className={cn('space-y-4', className)} dir="rtl">
       <div className="grid grid-cols-4 gap-3">
         <div className="rounded-lg border bg-card p-3 text-center">
-          <p className="text-xs text-muted-foreground">إجمالي الموافقات</p>
+          <p className="text-xs text-muted-foreground">{t('approvalHistory.stats.total')}</p>
           <p className="text-xl font-bold mt-1">{kpi.total}</p>
         </div>
         <div className="rounded-lg border bg-card p-3 text-center">
-          <p className="text-xs text-muted-foreground">تمت الموافقة</p>
+          <p className="text-xs text-muted-foreground">{t('approvalHistory.stats.approved')}</p>
           <p className="text-xl font-bold mt-1 text-green-600">{kpi.approved}</p>
         </div>
         <div className="rounded-lg border bg-card p-3 text-center">
-          <p className="text-xs text-muted-foreground">مرفوضة</p>
+          <p className="text-xs text-muted-foreground">{t('approvalHistory.stats.rejected')}</p>
           <p className="text-xl font-bold mt-1 text-red-600">{kpi.rejected}</p>
         </div>
         <div className="rounded-lg border bg-card p-3 text-center">
-          <p className="text-xs text-muted-foreground">معلقة</p>
+          <p className="text-xs text-muted-foreground">{t('approvalHistory.stats.pending')}</p>
           <p className="text-xl font-bold mt-1 text-yellow-600">{kpi.pending}</p>
         </div>
       </div>
@@ -160,10 +167,10 @@ export function ApprovalHistory({ entries, className }: ApprovalHistoryProps) {
               'whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition-colors',
               filter === f.key
                 ? 'bg-primary text-primary-foreground'
-                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80',
             )}
           >
-            {f.label}
+            {t(f.labelKey)}
           </button>
         ))}
       </div>
@@ -175,7 +182,7 @@ export function ApprovalHistory({ entries, className }: ApprovalHistoryProps) {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="بحث في الموافقات..."
+            placeholder={t('approvalHistory.searchPlaceholder')}
             className="w-full rounded-lg border border-input bg-background py-2 pr-10 pl-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
         </div>
@@ -187,7 +194,9 @@ export function ApprovalHistory({ entries, className }: ApprovalHistoryProps) {
             className="bg-transparent text-xs font-medium outline-none"
           >
             {sortOptions.map((opt) => (
-              <option key={opt.key} value={opt.key}>{opt.label}</option>
+              <option key={opt.key} value={opt.key}>
+                {t(opt.labelKey)}
+              </option>
             ))}
           </select>
         </div>
@@ -197,12 +206,12 @@ export function ApprovalHistory({ entries, className }: ApprovalHistoryProps) {
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
             <XCircle className="h-10 w-10 mb-3 opacity-30" />
-            <p className="text-sm">لا توجد موافقات للعرض</p>
+            <p className="text-sm">{t('approvalHistory.noApprovals')}</p>
           </div>
         ) : (
           filtered.map((entry) => {
             const DecisionIcon = decisionIcons[entry.decision]
-            const slaInfo = calculateSLADisplay(entry.slaMinutes, entry.createdAt, entry.respondedAt)
+            const slaInfo = calculateSLADisplay(entry.slaMinutes, entry.createdAt, t, entry.respondedAt)
             return (
               <div
                 key={entry.id}
@@ -212,16 +221,20 @@ export function ApprovalHistory({ entries, className }: ApprovalHistoryProps) {
                   <div className="flex items-center gap-2 min-w-0">
                     <Badge variant="outline" className={cn('gap-1', decisionColors[entry.decision])}>
                       <DecisionIcon className="h-3 w-3" />
-                      {decisionLabels[entry.decision]}
+                      {t(decisionKeys[entry.decision])}
                     </Badge>
                     <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
                       {entry.workflowName} / {entry.stepName}
                     </span>
                   </div>
                   <Badge variant="outline" className={cn('text-[10px]', priorityColors[entry.priority])}>
-                    {entry.priority === 'critical' ? 'حرج' :
-                     entry.priority === 'high' ? 'عالية' :
-                     entry.priority === 'medium' ? 'متوسطة' : 'منخفضة'}
+                    {entry.priority === 'critical'
+                      ? t('notification.priority.critical')
+                      : entry.priority === 'high'
+                        ? t('notification.priority.high')
+                        : entry.priority === 'medium'
+                          ? t('notification.priority.medium')
+                          : t('notification.priority.low')}
                   </Badge>
                 </div>
 
@@ -230,17 +243,17 @@ export function ApprovalHistory({ entries, className }: ApprovalHistoryProps) {
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <User className="h-3 w-3" />
-                    طلب: {entry.requestedBy.name}
+                    {t('approvalHistory.requestedBy', { name: entry.requestedBy.name })}
                   </span>
                   {entry.decidedBy && (
                     <span className="flex items-center gap-1">
                       <User className="h-3 w-3" />
-                      قرار: {entry.decidedBy.name}
+                      {t('approvalHistory.decidedBy', { name: entry.decidedBy.name })}
                     </span>
                   )}
                   <span className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
-                    {new Date(entry.createdAt).toLocaleString('ar-SA')}
+                    {new Date(entry.createdAt).toLocaleString(lang === 'ar' ? 'ar-SA' : 'en-US')}
                   </span>
                 </div>
 
@@ -249,7 +262,7 @@ export function ApprovalHistory({ entries, className }: ApprovalHistoryProps) {
                     <div
                       className={cn(
                         'h-full rounded-full transition-all',
-                        slaInfo.isOverdue ? 'bg-destructive' : 'bg-green-500'
+                        slaInfo.isOverdue ? 'bg-destructive' : 'bg-green-500',
                       )}
                       style={{ width: `${Math.min(slaInfo.percentage, 100)}%` }}
                     />
@@ -260,15 +273,13 @@ export function ApprovalHistory({ entries, className }: ApprovalHistoryProps) {
                 </div>
 
                 {entry.comments && (
-                  <p className="text-xs text-muted-foreground bg-muted/50 rounded-md p-2">
-                    {entry.comments}
-                  </p>
+                  <p className="text-xs text-muted-foreground bg-muted/50 rounded-md p-2">{entry.comments}</p>
                 )}
 
                 {entry.escalationCount > 0 && (
                   <div className="flex items-center gap-1 text-xs text-orange-600">
                     <AlertTriangle className="h-3 w-3" />
-                    <span>تم التصعيد {entry.escalationCount} مرة</span>
+                    <span>{t('approvalHistory.escalated', { count: entry.escalationCount })}</span>
                   </div>
                 )}
               </div>

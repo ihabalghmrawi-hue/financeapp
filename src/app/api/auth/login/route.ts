@@ -1,52 +1,57 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient }              from '@/lib/supabase/server'
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 import { signSession, hashPin, SESSION_COOKIE } from '@/lib/session'
-import { PinLoginSchema }            from '@/validators/auth'
+import { PinLoginSchema } from '@/validators/auth'
 import { ok, err, Errors, validationError } from '@/lib/api-response'
-import type { PinLoginResponse }     from '@/validators/auth'
+import type { PinLoginResponse } from '@/validators/auth'
 import { getCompanyId } from '@/lib/tenant'
-import { recordLoginAttempt }        from '@/lib/auth-tracking'
+import { recordLoginAttempt } from '@/lib/auth-tracking'
 
-const ADMIN_PIN  = process.env.ADMIN_PIN || '1234'
+const ADMIN_PIN = process.env.ADMIN_PIN || '1234'
 
 export async function POST(req: NextRequest) {
   const COMPANY_ID = await getCompanyId()
   // 1. Parse & validate input
   let body: unknown
-  try { body = await req.json() } catch {
-    return Errors.badRequest('طلب غير صالح')
+  try {
+    body = await req.json()
+  } catch {
+    return Errors.badRequest('Invalid request')
   }
 
   const parsed = PinLoginSchema.safeParse(body)
-  if (!parsed.success) return validationError(parsed.error)
+  if (!parsed.success) {
+    return validationError(parsed.error)
+  }
 
   const { pin } = parsed.data
-  const pinHash  = await hashPin(pin)
+  const pinHash = await hashPin(pin)
 
   // 2. Admin PIN shortcut
   const adminHash = await hashPin(ADMIN_PIN)
   if (pinHash === adminHash) {
     const session = {
-      id:          'admin',
-      name:        'المدير',
-      role:        'admin',
+      id: 'admin',
+      name: 'Admin',
+      role: 'admin',
       permissions: ['*'],
-      companyId:   COMPANY_ID,
-      loginAt:     Date.now(),
+      companyId: COMPANY_ID,
+      loginAt: Date.now(),
     }
     const token = await signSession(session)
-    const res   = ok<PinLoginResponse>({ success: true, name: session.name, role: session.role })
+    const res = ok<PinLoginResponse>({ success: true, name: session.name, role: session.role })
     res.cookies.set(SESSION_COOKIE, token, {
       httpOnly: true,
       sameSite: 'lax',
-      maxAge:   60 * 60 * 12,
-      path:     '/',
+      maxAge: 60 * 60 * 12,
+      path: '/',
     })
     return res
   }
 
   // 3. Look up staff by PIN hash (flat query — no joins to avoid schema cache issues)
-  const supabase        = createClient()
+  const supabase = createClient()
   const { data: staff } = await supabase
     .from('staff_users')
     .select('id, name, role_id, is_active')
@@ -57,7 +62,7 @@ export async function POST(req: NextRequest) {
 
   if (!staff) {
     recordLoginAttempt(createClient(), `pin:${parsed.data.pin}`, false, req)
-    return err('INVALID_PIN', 'رقم سري خاطئ', 401)
+    return err('INVALID_PIN', 'Invalid PIN', 401)
   }
 
   recordLoginAttempt(createClient(), `staff:${staff.name}`, true, req)
@@ -80,19 +85,21 @@ export async function POST(req: NextRequest) {
         .select('id, name, name_ar')
         .eq('id', staff.role_id)
         .single()
-      if (r2) role = { name: r2.name, name_ar: r2.name_ar, permissions: [] }
+      if (r2) {
+        role = { name: r2.name, name_ar: r2.name_ar, permissions: [] }
+      }
     }
   }
 
   const permissions: string[] = role.permissions ?? []
 
   const session = {
-    id:          staff.id,
-    name:        staff.name,
-    role:        role.name || 'cashier',
+    id: staff.id,
+    name: staff.name,
+    role: role.name || 'cashier',
     permissions,
-    companyId:   COMPANY_ID,
-    loginAt:     Date.now(),
+    companyId: COMPANY_ID,
+    loginAt: Date.now(),
   }
 
   const token = await signSession(session)
@@ -104,8 +111,8 @@ export async function POST(req: NextRequest) {
   res.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: 'lax',
-    maxAge:   60 * 60 * 12,
-    path:     '/',
+    maxAge: 60 * 60 * 12,
+    path: '/',
   })
   return res
 }

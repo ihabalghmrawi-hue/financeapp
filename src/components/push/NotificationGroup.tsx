@@ -7,6 +7,7 @@ import { ActionableNotificationCard } from './ActionableNotificationCard'
 import { UnreadBadge } from './UnreadBadge'
 import { PriorityIndicator } from './PriorityIndicator'
 import { ChevronDown, ChevronLeft } from 'lucide-react'
+import { useT } from '@/lib/i18n/language-provider'
 
 interface NotificationGroupProps {
   group: NotificationGroupType
@@ -16,6 +17,7 @@ interface NotificationGroupProps {
 }
 
 export function NotificationGroupComponent({ group, onAction, onDismiss, className }: NotificationGroupProps) {
+  const { t } = useT()
   const [expanded, setExpanded] = useState(true)
 
   const unreadCount =
@@ -52,7 +54,9 @@ export function NotificationGroupComponent({ group, onAction, onDismiss, classNa
             </div>
           ))}
           {group.count > 5 && (
-            <button className="text-xs text-primary hover:underline mr-3 px-2 py-1">عرض الكل ({group.count})</button>
+            <button className="text-xs text-primary hover:underline mr-3 px-2 py-1">
+              {t('notification.push.showAll', { count: group.count })}
+            </button>
           )}
         </div>
       )}

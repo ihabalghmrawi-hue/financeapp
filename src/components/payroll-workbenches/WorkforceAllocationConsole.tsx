@@ -2,7 +2,52 @@
 
 import { useState, useMemo, useCallback } from 'react'
 import { cn } from '@/lib/utils'
-import { Users, FileText, CheckCircle2, AlertTriangle, Clock, User, Search, Filter, ArrowUpDown, RefreshCw, Download, Printer, Plus, Eye, Edit3, X, Ban, Send, Sparkles, TrendingUp, TrendingDown, DollarSign, ArrowRight, PanelRightOpen, PanelRightClose, Loader2, MoreHorizontal, CheckSquare, Shield, MessageSquare, Paperclip, History, Calendar, Banknote, Briefcase, Percent, Calculator, CreditCard, Fingerprint, Coffee, Home, Heart, Stethoscope, GraduationCap } from 'lucide-react'
+import {
+  Users,
+  FileText,
+  CheckCircle2,
+  AlertTriangle,
+  Clock,
+  User,
+  Search,
+  Filter,
+  ArrowUpDown,
+  RefreshCw,
+  Download,
+  Printer,
+  Plus,
+  Eye,
+  Edit3,
+  X,
+  Ban,
+  Send,
+  Sparkles,
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  ArrowRight,
+  PanelRightOpen,
+  PanelRightClose,
+  Loader2,
+  MoreHorizontal,
+  CheckSquare,
+  Shield,
+  MessageSquare,
+  Paperclip,
+  History,
+  Calendar,
+  Banknote,
+  Briefcase,
+  Percent,
+  Calculator,
+  CreditCard,
+  Fingerprint,
+  Coffee,
+  Home,
+  Heart,
+  Stethoscope,
+  GraduationCap,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EnterpriseBreadcrumbs } from '@/components/enterprise/Navigation/Breadcrumbs'
 import { WorkbenchShell } from '@/components/workbench/WorkbenchShell'
@@ -13,8 +58,27 @@ import { CrossEntityInspector } from '@/components/workbench/CrossEntityInspecto
 import { AuditOverlay } from '@/components/workbench/AuditOverlay'
 import { OperationalCommenting } from '@/components/workbench/OperationalCommenting'
 import { WorkbenchMetricCard } from '@/components/workbench/WorkbenchMetricCard'
-import { generateMockPayrollRuns, generateMockPayrollEmployees, generateMockValidationMessages, generateMockAIInsights, generateMockAuditTrail, generateMockDocuments, generateMockOperationalComments } from '@/lib/workbench/mock-data'
-import type { PayrollRun, PayrollEmployee, ValidationMessage, AIInsight, AuditTrailEntry, OperationalComment, WorkbenchMetric, WorkbenchAction, InspectorTab } from '@/lib/workbench/types'
+import { useT } from '@/lib/i18n/language-provider'
+import {
+  generateMockPayrollRuns,
+  generateMockPayrollEmployees,
+  generateMockValidationMessages,
+  generateMockAIInsights,
+  generateMockAuditTrail,
+  generateMockDocuments,
+  generateMockOperationalComments,
+} from '@/lib/workbench/mock-data'
+import type {
+  PayrollRun,
+  PayrollEmployee,
+  ValidationMessage,
+  AIInsight,
+  AuditTrailEntry,
+  OperationalComment,
+  WorkbenchMetric,
+  WorkbenchAction,
+  InspectorTab,
+} from '@/lib/workbench/types'
 
 interface DepartmentAllocation {
   id: string
@@ -42,39 +106,79 @@ interface EmployeeAllocation {
 }
 
 const departments = [
-  { id: 'finance', name: 'المالية', budgeted: 12 },
-  { id: 'procurement', name: 'المشتريات', budgeted: 15 },
-  { id: 'sales', name: 'المبيعات', budgeted: 25 },
-  { id: 'hr', name: 'الموارد البشرية', budgeted: 8 },
-  { id: 'it', name: 'تكنولوجيا المعلومات', budgeted: 10 },
-  { id: 'warehouse', name: 'المستودعات', budgeted: 20 },
-  { id: 'maintenance', name: 'الصيانة', budgeted: 14 },
-  { id: 'marketing', name: 'التسويق', budgeted: 8 },
+  { id: 'finance', nameKey: 'payroll.dept.finance', budgeted: 12 },
+  { id: 'procurement', nameKey: 'payroll.dept.procurement', budgeted: 15 },
+  { id: 'sales', nameKey: 'payroll.dept.sales', budgeted: 25 },
+  { id: 'hr', nameKey: 'payroll.dept.hr', budgeted: 8 },
+  { id: 'it', nameKey: 'payroll.dept.it', budgeted: 10 },
+  { id: 'warehouse', nameKey: 'payroll.dept.warehouse', budgeted: 20 },
+  { id: 'maintenance', nameKey: 'payroll.dept.maintenance', budgeted: 14 },
+  { id: 'marketing', nameKey: 'payroll.dept.marketing', budgeted: 8 },
 ]
 
 const employeeNamesAlloc = [
-  'أحمد محمد', 'سارة خالد', 'فهد العتيبي', 'نورة عبدالله',
-  'ماجد الحربي', 'ريم الشهري', 'خالد القحطاني', 'هند السلمي',
-  'سعود المطيري', 'منال الغامدي', 'عبدالله الزهراني', 'أمل الشمري',
-  'نايف الدوسري', 'مريم البقمي', 'تركي العنزي', 'لينا الحارثي',
-  'بدر العجمي', 'نوف الشهراني', 'سلطان القرشي', 'حنان الثقفي',
+  'أحمد محمد',
+  'سارة خالد',
+  'فهد العتيبي',
+  'نورة عبدالله',
+  'ماجد الحربي',
+  'ريم الشهري',
+  'خالد القحطاني',
+  'هند السلمي',
+  'سعود المطيري',
+  'منال الغامدي',
+  'عبدالله الزهراني',
+  'أمل الشمري',
+  'نايف الدوسري',
+  'مريم البقمي',
+  'تركي العنزي',
+  'لينا الحارثي',
+  'بدر العجمي',
+  'نوف الشهراني',
+  'سلطان القرشي',
+  'حنان الثقفي',
 ]
 
 const roleOptions = [
-  'مدير', 'محلل مالي', 'محاسب', 'مشتري', 'مندوب مبيعات',
-  'أخصائي موارد بشرية', 'مطور برمجيات', 'أخصائي دعم فني',
-  'مسؤول مستودع', 'فني صيانة', 'أخصائي تسويق', 'مدير مشروع',
+  'مدير',
+  'محلل مالي',
+  'محاسب',
+  'مشتري',
+  'مندوب مبيعات',
+  'أخصائي موارد بشرية',
+  'مطور برمجيات',
+  'أخصائي دعم فني',
+  'مسؤول مستودع',
+  'فني صيانة',
+  'أخصائي تسويق',
+  'مدير مشروع',
 ]
 
 const projectOptions = [
-  'تطبيق ERP', 'تحسين العمليات', 'التوسع السوقي', 'أتمتة المشتريات',
-  'إدارة المخزون', 'التحول الرقمي', 'تحليل البيانات', 'تدريب الموظفين',
+  'تطبيق ERP',
+  'تحسين العمليات',
+  'التوسع السوقي',
+  'أتمتة المشتريات',
+  'إدارة المخزون',
+  'التحول الرقمي',
+  'تحليل البيانات',
+  'تدريب الموظفين',
   'غير مرتبط بمشروع',
 ]
 
 const skillOptions = [
-  'Excel', 'ERP', 'PowerBI', 'SQL', 'Python', 'SAP', 'Oracle',
-  'إدارة المشاريع', 'تحليل البيانات', 'القيادة', 'التفاوض', 'اللغة الإنجليزية',
+  'Excel',
+  'ERP',
+  'PowerBI',
+  'SQL',
+  'Python',
+  'SAP',
+  'Oracle',
+  'إدارة المشاريع',
+  'تحليل البيانات',
+  'القيادة',
+  'التفاوض',
+  'اللغة الإنجليزية',
 ]
 
 function generateMockDepartmentAllocations(): DepartmentAllocation[] {
@@ -87,6 +191,7 @@ function generateMockDepartmentAllocations(): DepartmentAllocation[] {
     const avgSalary = Math.floor(5000 + Math.random() * 10000)
     return {
       ...dep,
+      name: dep.nameKey,
       headcount,
       allocated,
       available,
@@ -99,15 +204,15 @@ function generateMockDepartmentAllocations(): DepartmentAllocation[] {
 
 function generateMockEmployeeAllocations(): EmployeeAllocation[] {
   return Array.from({ length: 20 }, (_, idx) => {
-    const departmentsList = departments.map((d) => d.name)
+    const departmentsList = departments.map((d) => d.nameKey)
     const deptName = departmentsList[idx % departmentsList.length]
     const utilPercent = Math.floor(40 + Math.random() * 60)
     const skillsCount = 2 + Math.floor(Math.random() * 4)
     const shuffled = [...skillOptions].sort(() => Math.random() - 0.5)
     return {
-      id: 'emp-alloc-'+idx,
+      id: `emp-alloc-${idx}`,
       name: employeeNamesAlloc[idx % employeeNamesAlloc.length],
-      employeeId: 'EMP-'+String(100 + idx).padStart(3, '0'),
+      employeeId: `EMP-${String(100 + idx).padStart(3, '0')}`,
       department: deptName,
       role: roleOptions[Math.floor(Math.random() * roleOptions.length)],
       project: projectOptions[Math.floor(Math.random() * projectOptions.length)],
@@ -119,10 +224,10 @@ function generateMockEmployeeAllocations(): EmployeeAllocation[] {
   })
 }
 
-const allocationStatusLabels: Record<string, string> = {
-  full: 'متفرغ',
-  partial: 'جزئي',
-  unavailable: 'غير متاح',
+const allocationStatusKeys: Record<string, string> = {
+  full: 'payroll.availability.full',
+  partial: 'payroll.availability.partial',
+  unavailable: 'payroll.availability.unavailable',
 }
 
 const allocationStatusColors: Record<string, string> = {
@@ -132,6 +237,7 @@ const allocationStatusColors: Record<string, string> = {
 }
 
 export function WorkforceAllocationConsole() {
+  const { t, lang } = useT()
   const [departmentData] = useState<DepartmentAllocation[]>(() => generateMockDepartmentAllocations())
   const [employeeAllocations] = useState<EmployeeAllocation[]>(() => generateMockEmployeeAllocations())
   const [selectedDeptId, setSelectedDeptId] = useState<string | null>(null)
@@ -156,12 +262,16 @@ export function WorkforceAllocationConsole() {
   const totalUtilization = totalHeadcount > 0 ? Math.round((totalAllocated / totalHeadcount) * 100) : 0
 
   const selectedDept = useMemo(() => {
-    if (!selectedDeptId) return null
+    if (!selectedDeptId) {
+      return null
+    }
     return departmentData.find((d) => d.id === selectedDeptId) ?? null
   }, [selectedDeptId, departmentData])
 
   const selectedEmployee = useMemo(() => {
-    if (!selectedEmpId) return null
+    if (!selectedEmpId) {
+      return null
+    }
     return employeeAllocations.find((e) => e.id === selectedEmpId) ?? null
   }, [selectedEmpId, employeeAllocations])
 
@@ -172,42 +282,87 @@ export function WorkforceAllocationConsole() {
     }
     if (searchQuery) {
       const q = searchQuery.toLowerCase()
-      result = result.filter((e) => e.name.toLowerCase().includes(q) || e.employeeId.toLowerCase().includes(q) || e.role.toLowerCase().includes(q))
+      result = result.filter(
+        (e) =>
+          e.name.toLowerCase().includes(q) ||
+          e.employeeId.toLowerCase().includes(q) ||
+          e.role.toLowerCase().includes(q),
+      )
     }
     return result
   }, [employeeAllocations, selectedDept, searchQuery])
 
-  const metrics: WorkbenchMetric[] = useMemo(() => [
-    { id: 'headcount', label: 'إجمالي القوى العاملة', value: totalHeadcount, icon: 'Users', severity: 'info' },
-    { id: 'allocated', label: 'مخصص', value: totalAllocated, icon: 'CheckCircle2', severity: 'success', change: 5, trend: 'up' },
-    { id: 'available', label: 'متاح', value: totalAvailable, icon: 'Users', severity: 'info' },
-    { id: 'vacancies', label: 'شواغر', value: totalVacancies, icon: 'AlertTriangle', severity: totalVacancies > 0 ? 'warning' : 'success' },
-    { id: 'utilization', label: 'نسبة الاستغلال', value: totalUtilization+'%', icon: 'Percent', severity: totalUtilization > 90 ? 'warning' : totalUtilization > 70 ? 'info' : 'critical' },
-  ], [totalHeadcount, totalAllocated, totalAvailable, totalVacancies, totalUtilization])
+  const metrics: WorkbenchMetric[] = useMemo(
+    () => [
+      { id: 'headcount', labelKey: 'payroll.metric.headcount', value: totalHeadcount, icon: 'Users', severity: 'info' },
+      {
+        id: 'allocated',
+        labelKey: 'payroll.metric.allocated',
+        value: totalAllocated,
+        icon: 'CheckCircle2',
+        severity: 'success',
+        change: 5,
+        trend: 'up',
+      },
+      { id: 'available', labelKey: 'payroll.metric.available', value: totalAvailable, icon: 'Users', severity: 'info' },
+      {
+        id: 'vacancies',
+        labelKey: 'payroll.metric.vacancies',
+        value: totalVacancies,
+        icon: 'AlertTriangle',
+        severity: totalVacancies > 0 ? 'warning' : 'success',
+      },
+      {
+        id: 'utilization',
+        labelKey: 'payroll.metric.utilization',
+        value: `${totalUtilization}%`,
+        icon: 'Percent',
+        severity: totalUtilization > 90 ? 'warning' : totalUtilization > 70 ? 'info' : 'critical',
+      },
+    ],
+    [totalHeadcount, totalAllocated, totalAvailable, totalVacancies, totalUtilization],
+  )
 
-  const actions: WorkbenchAction[] = useMemo(() => [
-    { id: 'assign', label: 'تعيين موظف', type: 'primary', icon: 'Plus', handler: () => {} },
-    { id: 'transfer', label: 'نقل موظف', type: 'secondary', icon: 'ArrowRight', handler: () => {} },
-    { id: 'vacancy', label: 'شاغر جديد', type: 'secondary', icon: 'Plus', handler: () => {} },
-    { id: 'audit', label: 'سجل التدقيق', type: 'ghost', icon: 'Shield', handler: () => setAuditOpen(true) },
-  ], [])
+  const actions: WorkbenchAction[] = useMemo(
+    () => [
+      { id: 'assign', labelKey: 'payroll.action.assign', type: 'primary', icon: 'Plus', handler: () => {} },
+      { id: 'transfer', labelKey: 'payroll.action.transfer', type: 'secondary', icon: 'ArrowRight', handler: () => {} },
+      { id: 'vacancy', labelKey: 'payroll.action.vacancy', type: 'secondary', icon: 'Plus', handler: () => {} },
+      {
+        id: 'audit',
+        labelKey: 'payroll.action.audit',
+        type: 'ghost',
+        icon: 'Shield',
+        handler: () => setAuditOpen(true),
+      },
+    ],
+    [],
+  )
 
-  const inspectorTabs: InspectorTab[] = useMemo(() => [
-    { id: 'info', label: 'معلومات التخصيص', icon: 'info' },
-    { id: 'skills', label: 'المهارات', icon: 'file' },
-    { id: 'projects', label: 'المشاريع', icon: 'alert' },
-    { id: 'comments', label: 'تعليقات', icon: 'message', badge: comments.filter((c) => !c.resolved).length },
-    { id: 'activity', label: 'النشاط', icon: 'activity' },
-  ], [comments])
+  const inspectorTabs: InspectorTab[] = useMemo(
+    () => [
+      { id: 'info', labelKey: 'payroll.inspector.info', icon: 'info' },
+      { id: 'skills', labelKey: 'payroll.inspector.skills', icon: 'file' },
+      { id: 'projects', labelKey: 'payroll.inspector.projects', icon: 'alert' },
+      {
+        id: 'comments',
+        labelKey: 'payroll.inspector.comments',
+        icon: 'message',
+        badge: comments.filter((c) => !c.resolved).length,
+      },
+      { id: 'activity', labelKey: 'payroll.inspector.activity', icon: 'activity' },
+    ],
+    [comments],
+  )
 
   return (
     <WorkbenchShell
-      title="كونسول تخصيص القوى العاملة"
-      description="إدارة توزيع الموظفين وتخصيص الموارد حسب الإدارات والمشاريع"
+      title={t('payroll.title')}
+      description={t('payroll.description')}
       breadcrumbs={[
-        { label: 'الرئيسية', icon: Home },
-        { label: 'الرواتب', icon: Banknote },
-        { label: 'تخصيص القوى العاملة', icon: Briefcase },
+        { label: t('nav.dashboard'), icon: Home },
+        { label: t('payroll.breadcrumb'), icon: Banknote },
+        { label: t('payroll.title'), icon: Briefcase },
       ]}
       metrics={metrics}
       actions={actions}
@@ -225,12 +380,12 @@ export function WorkforceAllocationConsole() {
           tabs={inspectorTabs}
           activeTab={inspectorTab}
           onTabChange={setInspectorTab}
-          title="تفاصيل الموظف"
+          title={t('payroll.employeeDetail.title')}
         >
           {!selectedEmployee ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <Users className="h-12 w-12 text-muted-foreground/30 mb-3" />
-              <p className="text-sm text-muted-foreground">اختر موظفاً لعرض التفاصيل</p>
+              <p className="text-sm text-muted-foreground">{t('payroll.employeeDetail.selectHint')}</p>
             </div>
           ) : inspectorTab === 'info' ? (
             <div className="space-y-6" dir="rtl">
@@ -243,95 +398,132 @@ export function WorkforceAllocationConsole() {
                     <h4 className="font-semibold">{selectedEmployee.name}</h4>
                     <p className="text-xs text-muted-foreground">{selectedEmployee.employeeId}</p>
                   </div>
-                  <span className={cn('px-2 py-0.5 rounded-full text-[10px] font-medium mr-auto', allocationStatusColors[selectedEmployee.availability])}>
-                    {allocationStatusLabels[selectedEmployee.availability]}
+                  <span
+                    className={cn(
+                      'px-2 py-0.5 rounded-full text-[10px] font-medium mr-auto',
+                      allocationStatusColors[selectedEmployee.availability],
+                    )}
+                  >
+                    {t(allocationStatusKeys[selectedEmployee.availability])}
                   </span>
                 </div>
               </div>
               <div className="rounded-xl border p-4 space-y-3">
-                <h4 className="text-sm font-semibold">التخصيص الحالي</h4>
+                <h4 className="text-sm font-semibold">{t('payroll.employeeDetail.currentAllocation')}</h4>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <p className="text-xs text-muted-foreground">القسم</p>
-                    <p className="font-medium">{selectedEmployee.department}</p>
+                    <p className="text-xs text-muted-foreground">{t('payroll.employeeDetail.department')}</p>
+                    <p className="font-medium">{t(selectedEmployee.department)}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">المسمى الوظيفي</p>
+                    <p className="text-xs text-muted-foreground">{t('payroll.employeeDetail.jobTitle')}</p>
                     <p className="font-medium">{selectedEmployee.role}</p>
                   </div>
                   <div className="col-span-2">
-                    <p className="text-xs text-muted-foreground">المشروع</p>
+                    <p className="text-xs text-muted-foreground">{t('payroll.employeeDetail.project')}</p>
                     <p className="font-medium">{selectedEmployee.project}</p>
                   </div>
                 </div>
               </div>
               <div className="rounded-xl border p-4 space-y-3">
-                <h4 className="text-sm font-semibold">نسبة الاستغلال</h4>
+                <h4 className="text-sm font-semibold">{t('payroll.employeeDetail.utilizationRate')}</h4>
                 <div className="flex items-center gap-4">
                   <div className="flex-1">
                     <div className="h-3 bg-muted rounded-full overflow-hidden">
-                      <div className={cn('h-full rounded-full transition-all', selectedEmployee.utilizationPercent > 80 ? 'bg-green-500' : selectedEmployee.utilizationPercent > 40 ? 'bg-amber-500' : 'bg-red-500')} style={{ width: selectedEmployee.utilizationPercent+'%' }} />
+                      <div
+                        className={cn(
+                          'h-full rounded-full transition-all',
+                          selectedEmployee.utilizationPercent > 80
+                            ? 'bg-green-500'
+                            : selectedEmployee.utilizationPercent > 40
+                              ? 'bg-amber-500'
+                              : 'bg-red-500',
+                        )}
+                        style={{ width: `${selectedEmployee.utilizationPercent}%` }}
+                      />
                     </div>
                   </div>
-                  <span className={cn('text-lg font-bold', selectedEmployee.utilizationPercent > 80 ? 'text-green-600' : selectedEmployee.utilizationPercent > 40 ? 'text-amber-600' : 'text-red-600')}>{selectedEmployee.utilizationPercent}%</span>
+                  <span
+                    className={cn(
+                      'text-lg font-bold',
+                      selectedEmployee.utilizationPercent > 80
+                        ? 'text-green-600'
+                        : selectedEmployee.utilizationPercent > 40
+                          ? 'text-amber-600'
+                          : 'text-red-600',
+                    )}
+                  >
+                    {selectedEmployee.utilizationPercent}%
+                  </span>
                 </div>
               </div>
               <div className="rounded-xl border p-4">
-                <h4 className="text-sm font-semibold mb-3">المهارات</h4>
+                <h4 className="text-sm font-semibold mb-3">{t('payroll.employeeDetail.skills')}</h4>
                 <div className="flex flex-wrap gap-1.5">
                   {selectedEmployee.skills.map((skill) => (
-                    <span key={skill} className="px-2 py-1 rounded-md bg-primary/5 text-primary text-xs font-medium">{skill}</span>
+                    <span key={skill} className="px-2 py-1 rounded-md bg-primary/5 text-primary text-xs font-medium">
+                      {skill}
+                    </span>
                   ))}
                 </div>
               </div>
               <div className="rounded-xl border p-4">
-                <h4 className="text-sm font-semibold mb-3">تاريخ التعيين</h4>
-                <p className="text-sm">{new Date(selectedEmployee.startDate).toLocaleDateString('ar-SA')}</p>
+                <h4 className="text-sm font-semibold mb-3">{t('payroll.employeeDetail.startDate')}</h4>
+                <p className="text-sm">
+                  {new Date(selectedEmployee.startDate).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')}
+                </p>
               </div>
             </div>
           ) : inspectorTab === 'skills' ? (
             <div className="space-y-4" dir="rtl">
               <div className="rounded-xl border p-4">
-                <h4 className="text-sm font-semibold mb-3">المهارات المسجلة</h4>
+                <h4 className="text-sm font-semibold mb-3">{t('payroll.employeeDetail.recordedSkills')}</h4>
                 <div className="flex flex-wrap gap-2">
                   {selectedEmployee.skills.map((skill) => (
-                    <span key={skill} className="px-3 py-1.5 rounded-lg bg-primary/5 text-primary text-sm font-medium">{skill}</span>
+                    <span key={skill} className="px-3 py-1.5 rounded-lg bg-primary/5 text-primary text-sm font-medium">
+                      {skill}
+                    </span>
                   ))}
                 </div>
               </div>
               <div className="rounded-xl border p-4">
-                <h4 className="text-sm font-semibold mb-3">الفجوات المهارية</h4>
-                <p className="text-xs text-muted-foreground">لا توجد فجوات مهارية محددة</p>
+                <h4 className="text-sm font-semibold mb-3">{t('payroll.employeeDetail.skillGaps')}</h4>
+                <p className="text-xs text-muted-foreground">{t('payroll.employeeDetail.noSkillGaps')}</p>
               </div>
             </div>
           ) : inspectorTab === 'projects' ? (
             <div className="space-y-4" dir="rtl">
               <div className="rounded-xl border p-4">
-                <h4 className="text-sm font-semibold mb-3">المشاريع الحالية</h4>
+                <h4 className="text-sm font-semibold mb-3">{t('payroll.employeeDetail.currentProjects')}</h4>
                 <div className="p-3 rounded-lg bg-primary/5">
                   <p className="text-sm font-medium">{selectedEmployee.project}</p>
-                  <p className="text-xs text-muted-foreground mt-1">المشروع الرئيسي</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t('payroll.employeeDetail.mainProject')}</p>
                 </div>
               </div>
               <div className="rounded-xl border p-4">
-                <h4 className="text-sm font-semibold mb-3">المشاريع السابقة</h4>
-                <p className="text-xs text-muted-foreground">لا توجد مشاريع سابقة</p>
+                <h4 className="text-sm font-semibold mb-3">{t('payroll.employeeDetail.pastProjects')}</h4>
+                <p className="text-xs text-muted-foreground">{t('payroll.employeeDetail.noPastProjects')}</p>
               </div>
             </div>
           ) : inspectorTab === 'comments' ? (
             <OperationalCommenting comments={comments} />
           ) : (
             <div className="space-y-3" dir="rtl">
-              <h4 className="text-sm font-semibold">النشاط الحديث</h4>
+              <h4 className="text-sm font-semibold">{t('payroll.employeeDetail.recentActivity')}</h4>
               {auditEntries.slice(0, 8).map((entry) => (
-                <div key={entry.id} className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/30 transition-colors">
+                <div
+                  key={entry.id}
+                  className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/30 transition-colors"
+                >
                   <div className="p-1.5 rounded-lg bg-primary/5">
                     <History className="h-3.5 w-3.5 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium">{entry.action}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">{entry.actor}</p>
-                    <p className="text-[10px] text-muted-foreground mt-1">{new Date(entry.timestamp).toLocaleDateString('ar-SA')}</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      {new Date(entry.timestamp).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -339,45 +531,84 @@ export function WorkforceAllocationConsole() {
           )}
         </InspectorPanel>
       }
-      validationBar={
-        <RealtimeValidationBar messages={validationMessages} onDismiss={(id) => {}} />
-      }
+      validationBar={<RealtimeValidationBar messages={validationMessages} onDismiss={(id) => {}} />}
       aiPanel={
-        <AIAssistancePanel open={aiPanelOpen} onClose={() => setAiPanelOpen(false)} domain="payroll" insights={aiInsights} />
+        <AIAssistancePanel
+          open={aiPanelOpen}
+          onClose={() => setAiPanelOpen(false)}
+          domain="payroll"
+          insights={aiInsights}
+        />
       }
       sidebar={
         <div className="flex flex-col h-full" dir="rtl">
           <div className="p-4 border-b">
             <div className="relative">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="بحث عن موظف..." className="flex h-10 w-full rounded-lg border border-input bg-background pr-10 pl-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t('payroll.searchPlaceholder')}
+                className="flex h-10 w-full rounded-lg border border-input bg-background pr-10 pl-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              />
             </div>
           </div>
           <div className="flex-1 overflow-y-auto divide-y">
             {filteredEmployees.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center px-4">
                 <Users className="h-12 w-12 text-muted-foreground/30 mb-3" />
-                <p className="text-sm text-muted-foreground">لا يوجد موظفون</p>
+                <p className="text-sm text-muted-foreground">{t('payroll.noEmployees')}</p>
               </div>
             ) : (
               filteredEmployees.map((emp) => (
-                <button key={emp.id} type="button" onClick={() => { setSelectedEmpId(emp.id); setInspectorOpen(true) }} className={cn('w-full text-right p-3 hover:bg-muted/30 transition-colors', selectedEmpId === emp.id && 'bg-primary/5 border-r-2 border-primary')}>
+                <button
+                  key={emp.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedEmpId(emp.id)
+                    setInspectorOpen(true)
+                  }}
+                  className={cn(
+                    'w-full text-right p-3 hover:bg-muted/30 transition-colors',
+                    selectedEmpId === emp.id && 'bg-primary/5 border-r-2 border-primary',
+                  )}
+                >
                   <div className="flex items-center gap-2 mb-1">
-                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">{emp.name[0]}</div>
+                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">
+                      {emp.name[0]}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium">{emp.name}</p>
                       <p className="text-[10px] text-muted-foreground">{emp.role}</p>
                     </div>
-                    <span className={cn('px-1.5 py-0.5 rounded text-[10px] font-medium', allocationStatusColors[emp.availability])}>{allocationStatusLabels[emp.availability]}</span>
+                    <span
+                      className={cn(
+                        'px-1.5 py-0.5 rounded text-[10px] font-medium',
+                        allocationStatusColors[emp.availability],
+                      )}
+                    >
+                      {t(allocationStatusKeys[emp.availability])}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 text-[10px] text-muted-foreground pr-10">
-                    <span>{emp.department}</span>
+                    <span>{t(emp.department)}</span>
                     <span>|</span>
-                    <span>استغلال {emp.utilizationPercent}%</span>
+                    <span>{t('payroll.utilization', { pct: emp.utilizationPercent })}</span>
                   </div>
                   <div className="pr-10 mt-1.5">
                     <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                      <div className={cn('h-full rounded-full', emp.utilizationPercent > 80 ? 'bg-green-500' : emp.utilizationPercent > 40 ? 'bg-amber-500' : 'bg-red-500')} style={{ width: emp.utilizationPercent+'%' }} />
+                      <div
+                        className={cn(
+                          'h-full rounded-full',
+                          emp.utilizationPercent > 80
+                            ? 'bg-green-500'
+                            : emp.utilizationPercent > 40
+                              ? 'bg-amber-500'
+                              : 'bg-red-500',
+                        )}
+                        style={{ width: `${emp.utilizationPercent}%` }}
+                      />
                     </div>
                   </div>
                 </button>
@@ -390,33 +621,75 @@ export function WorkforceAllocationConsole() {
       <div className="p-6 h-full flex flex-col" dir="rtl">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-lg font-bold">توزيع القوى العاملة</h2>
-            <p className="text-sm text-muted-foreground mt-1">عرض توزيع الموظفين حسب الإدارات ونسب الاستغلال</p>
+            <h2 className="text-lg font-bold">{t('payroll.distribution.title')}</h2>
+            <p className="text-sm text-muted-foreground mt-1">{t('payroll.distribution.description')}</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="h-9 text-xs gap-1"><Download className="h-3.5 w-3.5" /> تصدير</Button>
-            <Button variant="default" size="sm" className="h-9 text-xs gap-1" onClick={() => setAiPanelOpen(!aiPanelOpen)}><Sparkles className="h-3.5 w-3.5" /> توصيات ذكية</Button>
+            <Button variant="outline" size="sm" className="h-9 text-xs gap-1">
+              <Download className="h-3.5 w-3.5" /> {t('common.export')}
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              className="h-9 text-xs gap-1"
+              onClick={() => setAiPanelOpen(!aiPanelOpen)}
+            >
+              <Sparkles className="h-3.5 w-3.5" /> {t('payroll.smartRecommendations')}
+            </Button>
           </div>
         </div>
         <div className="grid grid-cols-4 gap-4 mb-6">
           {departmentData.map((dept) => {
             const isSelected = selectedDeptId === dept.id
             return (
-              <button key={dept.id} type="button" onClick={() => setSelectedDeptId(isSelected ? null : dept.id)} className={cn('rounded-xl border bg-card p-4 text-right hover:shadow-md transition-all', isSelected && 'ring-2 ring-primary')}>
+              <button
+                key={dept.id}
+                type="button"
+                onClick={() => setSelectedDeptId(isSelected ? null : dept.id)}
+                className={cn(
+                  'rounded-xl border bg-card p-4 text-right hover:shadow-md transition-all',
+                  isSelected && 'ring-2 ring-primary',
+                )}
+              >
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-sm font-semibold">{dept.name}</h4>
-                  <span className={cn('text-xs font-medium px-1.5 py-0.5 rounded-full', dept.utilizationPercent > 80 ? 'bg-green-100 text-green-700' : dept.utilizationPercent > 50 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700')}>{dept.utilizationPercent}%</span>
+                  <h4 className="text-sm font-semibold">{t(dept.name)}</h4>
+                  <span
+                    className={cn(
+                      'text-xs font-medium px-1.5 py-0.5 rounded-full',
+                      dept.utilizationPercent > 80
+                        ? 'bg-green-100 text-green-700'
+                        : dept.utilizationPercent > 50
+                          ? 'bg-amber-100 text-amber-700'
+                          : 'bg-red-100 text-red-700',
+                    )}
+                  >
+                    {dept.utilizationPercent}%
+                  </span>
                 </div>
                 <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-                  <span className="flex items-center gap-1"><Users className="h-3 w-3" /> {dept.headcount}</span>
-                  <span>{dept.budgeted} ميزانية</span>
-                  <span className={dept.vacancies > 0 ? 'text-amber-600' : 'text-green-600'}>{dept.vacancies} شاغر</span>
+                  <span className="flex items-center gap-1">
+                    <Users className="h-3 w-3" /> {dept.headcount}
+                  </span>
+                  <span>{t('payroll.dept.budget', { count: dept.budgeted })}</span>
+                  <span className={dept.vacancies > 0 ? 'text-amber-600' : 'text-green-600'}>
+                    {t('payroll.dept.vacancy', { count: dept.vacancies })}
+                  </span>
                 </div>
                 <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div className={cn('h-full rounded-full transition-all', dept.utilizationPercent > 80 ? 'bg-green-500' : dept.utilizationPercent > 50 ? 'bg-amber-500' : 'bg-red-500')} style={{ width: dept.utilizationPercent+'%' }} />
+                  <div
+                    className={cn(
+                      'h-full rounded-full transition-all',
+                      dept.utilizationPercent > 80
+                        ? 'bg-green-500'
+                        : dept.utilizationPercent > 50
+                          ? 'bg-amber-500'
+                          : 'bg-red-500',
+                    )}
+                    style={{ width: `${dept.utilizationPercent}%` }}
+                  />
                 </div>
                 <div className="flex items-center justify-between mt-2 text-[10px] text-muted-foreground">
-                  <span>{dept.allocated} مخصص</span>
+                  <span>{t('payroll.dept.allocated', { count: dept.allocated })}</span>
                   <span>{dept.utilizationPercent}%</span>
                 </div>
               </button>
@@ -427,59 +700,115 @@ export function WorkforceAllocationConsole() {
           <div className="flex items-center justify-between p-4 border-b bg-muted/20">
             <div className="flex items-center gap-2">
               <Briefcase className="h-4 w-4 text-primary" />
-              <h3 className="font-semibold">الموظفون</h3>
-              <span className="text-xs text-muted-foreground">({filteredEmployees.length} موظف)</span>
+              <h3 className="font-semibold">{t('payroll.employees')}</h3>
+              <span className="text-xs text-muted-foreground">
+                {t('payroll.employeeCount', { count: filteredEmployees.length })}
+              </span>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" className="h-8 text-xs gap-1"><Filter className="h-3.5 w-3.5" /> تصفية</Button>
+              <Button variant="ghost" size="sm" className="h-8 text-xs gap-1">
+                <Filter className="h-3.5 w-3.5" /> {t('common.filter')}
+              </Button>
             </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/30">
-                  <th className="text-right py-3 px-4 font-medium text-xs text-muted-foreground">الموظف</th>
-                  <th className="text-right py-3 px-4 font-medium text-xs text-muted-foreground">القسم</th>
-                  <th className="text-right py-3 px-4 font-medium text-xs text-muted-foreground">المسمى الوظيفي</th>
-                  <th className="text-right py-3 px-4 font-medium text-xs text-muted-foreground">المشروع</th>
-                  <th className="text-right py-3 px-4 font-medium text-xs text-muted-foreground">الاستغلال</th>
-                  <th className="text-right py-3 px-4 font-medium text-xs text-muted-foreground">الحالة</th>
+                  <th className="text-right py-3 px-4 font-medium text-xs text-muted-foreground">
+                    {t('payroll.table.employee')}
+                  </th>
+                  <th className="text-right py-3 px-4 font-medium text-xs text-muted-foreground">
+                    {t('payroll.table.department')}
+                  </th>
+                  <th className="text-right py-3 px-4 font-medium text-xs text-muted-foreground">
+                    {t('payroll.table.jobTitle')}
+                  </th>
+                  <th className="text-right py-3 px-4 font-medium text-xs text-muted-foreground">
+                    {t('payroll.table.project')}
+                  </th>
+                  <th className="text-right py-3 px-4 font-medium text-xs text-muted-foreground">
+                    {t('payroll.table.utilization')}
+                  </th>
+                  <th className="text-right py-3 px-4 font-medium text-xs text-muted-foreground">
+                    {t('payroll.table.status')}
+                  </th>
                   <th className="py-3 px-4" />
                 </tr>
               </thead>
               <tbody>
                 {filteredEmployees.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-16 text-center text-sm text-muted-foreground">لا يوجد موظفون مخصصون</td>
+                    <td colSpan={7} className="py-16 text-center text-sm text-muted-foreground">
+                      {t('payroll.noAssignedEmployees')}
+                    </td>
                   </tr>
                 ) : (
                   filteredEmployees.map((emp, idx) => (
-                    <tr key={emp.id} className={cn('border-b last:border-b-0 hover:bg-muted/20 transition-colors', idx % 2 === 0 && 'bg-muted/5')}>
+                    <tr
+                      key={emp.id}
+                      className={cn(
+                        'border-b last:border-b-0 hover:bg-muted/20 transition-colors',
+                        idx % 2 === 0 && 'bg-muted/5',
+                      )}
+                    >
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
-                          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">{emp.name[0]}</div>
+                          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                            {emp.name[0]}
+                          </div>
                           <div>
                             <p className="text-sm font-medium">{emp.name}</p>
                             <p className="text-[10px] text-muted-foreground">{emp.employeeId}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-xs text-muted-foreground">{emp.department}</td>
+                      <td className="py-3 px-4 text-xs text-muted-foreground">{t(emp.department)}</td>
                       <td className="py-3 px-4 text-xs">{emp.role}</td>
                       <td className="py-3 px-4 text-xs text-muted-foreground">{emp.project}</td>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
                           <div className="h-1.5 w-16 bg-muted rounded-full overflow-hidden">
-                            <div className={cn('h-full rounded-full', emp.utilizationPercent > 80 ? 'bg-green-500' : emp.utilizationPercent > 40 ? 'bg-amber-500' : 'bg-red-500')} style={{ width: emp.utilizationPercent+'%' }} />
+                            <div
+                              className={cn(
+                                'h-full rounded-full',
+                                emp.utilizationPercent > 80
+                                  ? 'bg-green-500'
+                                  : emp.utilizationPercent > 40
+                                    ? 'bg-amber-500'
+                                    : 'bg-red-500',
+                              )}
+                              style={{ width: `${emp.utilizationPercent}%` }}
+                            />
                           </div>
-                          <span className={cn('text-xs font-medium', emp.utilizationPercent > 80 ? 'text-green-600' : emp.utilizationPercent > 40 ? 'text-amber-600' : 'text-red-600')}>{emp.utilizationPercent}%</span>
+                          <span
+                            className={cn(
+                              'text-xs font-medium',
+                              emp.utilizationPercent > 80
+                                ? 'text-green-600'
+                                : emp.utilizationPercent > 40
+                                  ? 'text-amber-600'
+                                  : 'text-red-600',
+                            )}
+                          >
+                            {emp.utilizationPercent}%
+                          </span>
                         </div>
                       </td>
                       <td className="py-3 px-4">
-                        <span className={cn('px-1.5 py-0.5 rounded text-[10px] font-medium', allocationStatusColors[emp.availability])}>{allocationStatusLabels[emp.availability]}</span>
+                        <span
+                          className={cn(
+                            'px-1.5 py-0.5 rounded text-[10px] font-medium',
+                            allocationStatusColors[emp.availability],
+                          )}
+                        >
+                          {t(allocationStatusKeys[emp.availability])}
+                        </span>
                       </td>
                       <td className="py-3 px-4">
-                        <Button variant="ghost" size="icon" className="h-7 w-7"><Eye className="h-3.5 w-3.5" /></Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7">
+                          <Eye className="h-3.5 w-3.5" />
+                        </Button>
                       </td>
                     </tr>
                   ))
@@ -488,15 +817,27 @@ export function WorkforceAllocationConsole() {
             </table>
           </div>
           <div className="flex items-center justify-between p-4 border-t">
-            <span className="text-xs text-muted-foreground">عرض 1-{filteredEmployees.length} من {employeeAllocations.length}</span>
+            <span className="text-xs text-muted-foreground">
+              {t('payroll.showing', { start: 1, end: filteredEmployees.length, total: employeeAllocations.length })}
+            </span>
             <div className="flex items-center gap-1">
-              <Button variant="outline" size="sm" className="h-8 text-xs" disabled>السابق</Button>
-              <Button variant="outline" size="sm" className="h-8 text-xs">التالي</Button>
+              <Button variant="outline" size="sm" className="h-8 text-xs" disabled>
+                {t('common.previous')}
+              </Button>
+              <Button variant="outline" size="sm" className="h-8 text-xs">
+                {t('common.next')}
+              </Button>
             </div>
           </div>
         </div>
       </div>
-      <AuditOverlay entries={auditEntries} open={auditOpen} onClose={() => setAuditOpen(false)} entityId={selectedDeptId ?? undefined} entityType="WorkforceAllocation" />
+      <AuditOverlay
+        entries={auditEntries}
+        open={auditOpen}
+        onClose={() => setAuditOpen(false)}
+        entityId={selectedDeptId ?? undefined}
+        entityType="WorkforceAllocation"
+      />
     </WorkbenchShell>
   )
 }

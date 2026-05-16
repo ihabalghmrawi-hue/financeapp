@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCompanyId } from '@/lib/tenant'
 
@@ -19,7 +20,9 @@ export async function POST(req: NextRequest) {
   try {
     const COMPANY_ID = await getCompanyId()
     const { cashier_name, opening_cash } = await req.json()
-    if (!cashier_name) return NextResponse.json({ error: 'اسم الكاشير مطلوب' }, { status: 400 })
+    if (!cashier_name) {
+      return NextResponse.json({ error: 'Cashier name is required' }, { status: 400 })
+    }
 
     const supabase = createClient()
 
@@ -31,7 +34,9 @@ export async function POST(req: NextRequest) {
       .eq('status', 'open')
       .single()
 
-    if (open) return NextResponse.json({ error: 'هناك وردية مفتوحة بالفعل' }, { status: 400 })
+    if (open) {
+      return NextResponse.json({ error: 'A shift is already open' }, { status: 400 })
+    }
 
     const { data: shift, error } = await supabase
       .from('shifts')
@@ -39,7 +44,9 @@ export async function POST(req: NextRequest) {
       .select()
       .single()
 
-    if (error) throw new Error(error.message)
+    if (error) {
+      throw new Error(error.message)
+    }
     return NextResponse.json({ success: true, shift })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
@@ -60,7 +67,9 @@ export async function PATCH(req: NextRequest) {
       .eq('company_id', COMPANY_ID)
       .single()
 
-    if (!shift) return NextResponse.json({ error: 'الوردية غير موجودة' }, { status: 404 })
+    if (!shift) {
+      return NextResponse.json({ error: 'Shift not found' }, { status: 404 })
+    }
 
     // Calculate sales in this shift period
     const { data: sales } = await supabase
@@ -74,16 +83,19 @@ export async function PATCH(req: NextRequest) {
     const expectedCash = shift.opening_cash + totalSales
     const difference = (closing_cash || 0) - expectedCash
 
-    await supabase.from('shifts').update({
-      closing_cash: closing_cash || 0,
-      expected_cash: expectedCash,
-      difference,
-      total_sales: totalSales,
-      sales_count: sales?.length || 0,
-      status: 'closed',
-      closed_at: new Date().toISOString(),
-      notes: notes || null,
-    }).eq('id', shift_id)
+    await supabase
+      .from('shifts')
+      .update({
+        closing_cash: closing_cash || 0,
+        expected_cash: expectedCash,
+        difference,
+        total_sales: totalSales,
+        sales_count: sales?.length || 0,
+        status: 'closed',
+        closed_at: new Date().toISOString(),
+        notes: notes || null,
+      })
+      .eq('id', shift_id)
 
     return NextResponse.json({ success: true, total_sales: totalSales, expected_cash: expectedCash, difference })
   } catch (e: any) {

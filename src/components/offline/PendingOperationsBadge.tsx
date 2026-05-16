@@ -3,6 +3,7 @@
 import { cn } from '@/lib/utils'
 import { useSyncStatus } from '@/lib/offline/react/use-sync-status'
 import { useOffline } from '@/lib/offline/react/offline-provider'
+import { useT } from '@/lib/i18n/language-provider'
 import { Upload, AlertTriangle, RefreshCw, X } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 
@@ -11,6 +12,7 @@ interface PendingOperationsBadgeProps {
 }
 
 export function PendingOperationsBadge({ className }: PendingOperationsBadgeProps) {
+  const { t } = useT()
   const { pendingCount, failedCount, retryFailed, startSync } = useOffline()
   const { isOnline, isSyncing } = useSyncStatus()
   const [expanded, setExpanded] = useState(false)
@@ -53,15 +55,15 @@ export function PendingOperationsBadge({ className }: PendingOperationsBadgeProp
 
       {expanded && (
         <div className="absolute left-0 top-full mt-2 w-64 bg-card border rounded-xl shadow-xl z-50 p-3 space-y-2 animate-fade-in">
-          <p className="text-xs font-medium text-muted-foreground">العمليات المعلقة</p>
+          <p className="text-xs font-medium text-muted-foreground">{t('offline.pending.title')}</p>
 
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-sm">
-              <span>بانتظار المزامنة</span>
+              <span>{t('offline.pending.waitingSync')}</span>
               <span className="font-medium">{pendingCount}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-warning">فاشلة</span>
+              <span className="text-warning">{t('offline.pending.failed')}</span>
               <span className="font-medium text-warning">{failedCount}</span>
             </div>
           </div>
@@ -72,7 +74,7 @@ export function PendingOperationsBadge({ className }: PendingOperationsBadgeProp
                 onClick={() => retryFailed()}
                 className="flex-1 px-3 py-1.5 text-xs bg-warning/10 text-warning rounded-lg hover:bg-warning/20 transition-colors"
               >
-                إعادة المحاولة
+                {t('offline.pending.retry')}
               </button>
             )}
             {pendingCount > 0 && isOnline && !isSyncing && (
@@ -80,7 +82,7 @@ export function PendingOperationsBadge({ className }: PendingOperationsBadgeProp
                 onClick={() => startSync()}
                 className="flex-1 px-3 py-1.5 text-xs bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors"
               >
-                مزامنة الآن
+                {t('offline.pending.syncNow')}
               </button>
             )}
           </div>

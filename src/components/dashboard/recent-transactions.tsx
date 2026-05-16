@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { ArrowUpRight, ArrowDownRight, ArrowLeftRight, ExternalLink } from 'lucide-react'
 import { formatCurrency, formatDate, cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/language-provider'
 import type { Transaction } from '@/types/database'
 
 interface RecentTransactionsProps {
@@ -49,6 +50,7 @@ export function RecentTransactions({ transactions, currency }: RecentTransaction
 }
 
 function TransactionRow({ transaction, currency }: { transaction: Transaction; currency: string }) {
+  const { t } = useT()
   const icons = {
     income: <ArrowUpRight className="w-4 h-4 text-emerald-600" />,
     expense: <ArrowDownRight className="w-4 h-4 text-red-600" />,
@@ -68,9 +70,9 @@ function TransactionRow({ transaction, currency }: { transaction: Transaction; c
   }
 
   const typeLabels = {
-    income: 'دخل',
-    expense: 'مصروف',
-    transfer: 'تحويل',
+    income: t('dashboard.recentTransactions.income'),
+    expense: t('dashboard.recentTransactions.expense'),
+    transfer: t('dashboard.recentTransactions.transfer'),
   }
 
   return (
@@ -98,7 +100,7 @@ function TransactionRow({ transaction, currency }: { transaction: Transaction; c
           {formatCurrency(transaction.amount, currency)}
         </p>
         <p className="text-xs text-muted-foreground mt-0.5">
-          {transaction.payment_method === 'cash' ? 'نقداً' : 'بنكي'}
+          {transaction.payment_method === 'cash' ? t('paymentMethods.cash') : t('paymentMethods.bank')}
         </p>
       </div>
     </div>

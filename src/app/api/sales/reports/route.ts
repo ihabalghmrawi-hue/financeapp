@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireCompany, isAuthError } from '@/lib/auth-guard'
 import { ok, Errors } from '@/lib/api-response'
@@ -6,7 +6,9 @@ import { SalesDomain } from '@/domains/sales'
 
 export async function GET(req: NextRequest) {
   const ctx = requireCompany(req)
-  if (isAuthError(ctx)) return ctx
+  if (isAuthError(ctx)) {
+    return ctx
+  }
   const supabase = createClient()
   const domain = new SalesDomain(supabase, ctx.companyId)
   const { searchParams } = req.nextUrl
@@ -18,17 +20,23 @@ export async function GET(req: NextRequest) {
 
   let result
   if (type === 'summary') {
-    if (!from_date || !to_date) return Errors.badRequest('from_date و to_date مطلوبان')
+    if (!from_date || !to_date) {
+      return Errors.badRequest('from_date and to_date are required')
+    }
     result = await domain.reports.generator.generateSalesSummary(from_date, to_date)
   } else if (type === 'aging') {
     result = await domain.reports.generator.generateCustomerAging(as_of_date || undefined)
   } else if (type === 'profitability') {
-    if (!from_date || !to_date) return Errors.badRequest('from_date و to_date مطلوبان')
+    if (!from_date || !to_date) {
+      return Errors.badRequest('from_date and to_date are required')
+    }
     result = await domain.reports.generator.generateProductProfitability(from_date, to_date)
   } else {
-    return Errors.badRequest('نوع تقرير غير صالح')
+    return Errors.badRequest('Invalid report type')
   }
 
-  if (!result.ok) return Errors.serverError(result.error)
+  if (!result.ok) {
+    return Errors.serverError(result.error)
+  }
   return ok(result.data)
 }

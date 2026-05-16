@@ -11,7 +11,8 @@
  * Scheduled daily via vercel.json cron.
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCompanyId } from '@/lib/tenant'
 
@@ -19,13 +20,13 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 export interface IntegrityIssue {
-  type:        string
-  severity:    'warning' | 'critical'
+  type: string
+  severity: 'warning' | 'critical'
   description: string
-  entity_id?:  string
-  expected?:   number
-  actual?:     number
-  diff?:       number
+  entity_id?: string
+  expected?: number
+  actual?: number
+  diff?: number
 }
 
 export async function GET(req: NextRequest) {
@@ -33,10 +34,10 @@ export async function GET(req: NextRequest) {
   const authHeader = req.headers.get('authorization')
   const cronSecret = process.env.CRON_SECRET
   if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'غير مصرح به' }, { status: 401 })
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const supabase   = createClient()
+  const supabase = createClient()
   const issues: IntegrityIssue[] = []
   const COMPANY_ID = await getCompanyId()
 
@@ -56,7 +57,9 @@ export async function GET(req: NextRequest) {
 
     // Only check wallets that have transaction records — wallets with no
     // transactions may have a manual opening balance which is intentional.
-    if (!txns || txns.length === 0) continue
+    if (!txns || txns.length === 0) {
+      continue
+    }
 
     const expectedBalance = txns.reduce((sum, t) => {
       return sum + (t.type === 'income' ? Number(t.amount) : -Number(t.amount))
@@ -67,12 +70,12 @@ export async function GET(req: NextRequest) {
 
     if (diff > 0.01) {
       issues.push({
-        type:        'wallet_balance_mismatch',
-        severity:    diff > 100 ? 'critical' : 'warning',
-        description: `رصيد الصندوق "${wallet.name}" غير متطابق`,
-        entity_id:   wallet.id,
-        expected:    expectedBalance,
-        actual:      actualBalance,
+        type: 'wallet_balance_mismatch',
+        severity: diff > 100 ? 'critical' : 'warning',
+        description: `Wallet "${wallet.name}" balance mismatch`,
+        entity_id: wallet.id,
+        expected: expectedBalance,
+        actual: actualBalance,
         diff,
       })
     }
@@ -97,11 +100,11 @@ export async function GET(req: NextRequest) {
 
     if (!journalEntry) {
       issues.push({
-        type:        'sale_missing_journal',
-        severity:    'warning',
-        description: `فاتورة بيع ${sale.invoice_number} بدون قيد محاسبي`,
-        entity_id:   sale.id,
-        expected:    sale.total,
+        type: 'sale_missing_journal',
+        severity: 'warning',
+        description: `Sale invoice ${sale.invoice_number} has no journal entry`,
+        entity_id: sale.id,
+        expected: sale.total,
       })
     }
   }
@@ -124,11 +127,11 @@ export async function GET(req: NextRequest) {
 
     if (!journalEntry) {
       issues.push({
-        type:        'purchase_missing_journal',
-        severity:    'warning',
-        description: `فاتورة شراء ${purchase.invoice_number} بدون قيد محاسبي`,
-        entity_id:   purchase.id,
-        expected:    purchase.total,
+        type: 'purchase_missing_journal',
+        severity: 'warning',
+        description: `Purchase invoice ${purchase.invoice_number} has no journal entry`,
+        entity_id: purchase.id,
+        expected: purchase.total,
       })
     }
   }
@@ -143,17 +146,17 @@ export async function GET(req: NextRequest) {
 
   for (const entry of entries || []) {
     const lines = (entry.journal_entry_lines as any[]) || []
-    const totalDebit  = lines.reduce((s: number, l: any) => s + Number(l.debit),  0)
+    const totalDebit = lines.reduce((s: number, l: any) => s + Number(l.debit), 0)
     const totalCredit = lines.reduce((s: number, l: any) => s + Number(l.credit), 0)
     const diff = Math.abs(totalDebit - totalCredit)
     if (diff > 0.001) {
       issues.push({
-        type:        'unbalanced_journal_entry',
-        severity:    'critical',
-        description: `قيد محاسبي غير متوازن: ${entry.reference}`,
-        entity_id:   entry.id,
-        expected:    totalDebit,
-        actual:      totalCredit,
+        type: 'unbalanced_journal_entry',
+        severity: 'critical',
+        description: `Unbalanced journal entry: ${entry.reference}`,
+        entity_id: entry.id,
+        expected: totalDebit,
+        actual: totalCredit,
         diff,
       })
     }
@@ -182,40 +185,44 @@ export async function GET(req: NextRequest) {
 
   if (revDiff > 1 && rawRevenue > 0) {
     issues.push({
-      type:        'revenue_mismatch',
-      severity:    revDiff > rawRevenue * 0.1 ? 'critical' : 'warning',
-      description: `إجمالي المبيعات لا يتطابق مع القيود المحاسبية`,
-      expected:    rawRevenue,
-      actual:      journalRevenue,
-      diff:        revDiff,
+      type: 'revenue_mismatch',
+      severity: revDiff > rawRevenue * 0.1 ? 'critical' : 'warning',
+      description: `Total sales do not match journal entries`,
+      expected: rawRevenue,
+      actual: journalRevenue,
+      diff: revDiff,
     })
   }
 
   // ── Log all issues ─────────────────────────────────────────────────────────
   for (const issue of issues) {
-    await supabase.from('audit_logs').insert({
-      company_id: COMPANY_ID,
-      action:     `integrity.${issue.type}`,
-      entity_type: 'system',
-      entity_id:   issue.entity_id || 'integrity_check',
-      new_value:   issue,
-      severity:    issue.severity,
-    }).then(() => {})
+    await supabase
+      .from('audit_logs')
+      .insert({
+        company_id: COMPANY_ID,
+        action: `integrity.${issue.type}`,
+        entity_type: 'system',
+        entity_id: issue.entity_id || 'integrity_check',
+        new_value: issue,
+        severity: issue.severity,
+      })
+      .then(() => {})
   }
 
-  const criticalCount = issues.filter(i => i.severity === 'critical').length
-  const warningCount  = issues.filter(i => i.severity === 'warning').length
+  const criticalCount = issues.filter((i) => i.severity === 'critical').length
+  const warningCount = issues.filter((i) => i.severity === 'warning').length
 
   return NextResponse.json({
-    ok:            issues.length === 0,
-    checked_at:    new Date().toISOString(),
-    total_issues:  issues.length,
-    critical:      criticalCount,
-    warnings:      warningCount,
+    ok: issues.length === 0,
+    checked_at: new Date().toISOString(),
+    total_issues: issues.length,
+    critical: criticalCount,
+    warnings: warningCount,
     issues,
-    summary:       issues.length === 0
-      ? 'النظام المالي سليم — لا توجد تناقضات'
-      : `${criticalCount} مشكلة حرجة، ${warningCount} تحذير`,
+    summary:
+      issues.length === 0
+        ? 'Financial system is healthy — no discrepancies'
+        : `${criticalCount} critical issue(s), ${warningCount} warning(s)`,
   })
 }
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/language-provider'
 import { X } from 'lucide-react'
 
 interface NativeBottomSheetProps {
@@ -23,6 +24,7 @@ export function NativeBottomSheet({
   snapPoints = ['50%', '75%', '90%'],
   showDragHandle = true,
 }: NativeBottomSheetProps) {
+  const { t } = useT()
   const sheetRef = useRef<HTMLDivElement>(null)
   const startY = useRef(0)
   const currentY = useRef(0)
@@ -103,7 +105,7 @@ export function NativeBottomSheet({
             <button
               onClick={onClose}
               className="p-2 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="إغلاق"
+              aria-label={t('common.close')}
             >
               <X className="h-5 w-5" />
             </button>

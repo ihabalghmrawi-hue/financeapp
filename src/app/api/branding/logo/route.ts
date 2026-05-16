@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getCompanyId } from '@/lib/tenant'
 import { logAudit } from '@/lib/audit'
@@ -10,24 +11,28 @@ export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData()
     const file = formData.get('logo') as File
-    if (!file) return NextResponse.json({ error: 'لا يوجد ملف' }, { status: 400 })
+    if (!file) {
+      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
+    }
 
     const ext = file.name.split('.').pop()?.toLowerCase()
     if (!['png', 'jpg', 'jpeg', 'webp', 'svg'].includes(ext || '')) {
-      return NextResponse.json({ error: 'نوع الملف غير مدعوم' }, { status: 400 })
+      return NextResponse.json({ error: 'File type not supported' }, { status: 400 })
     }
     if (file.size > 2 * 1024 * 1024) {
-      return NextResponse.json({ error: 'الحجم الأقصى 2MB' }, { status: 400 })
+      return NextResponse.json({ error: 'Maximum size is 2MB' }, { status: 400 })
     }
 
     const admin = createAdminClient()
 
     // Ensure bucket exists
     const { data: buckets } = await admin.storage.listBuckets()
-    const bucketExists = buckets?.some(b => b.name === BUCKET)
+    const bucketExists = buckets?.some((b) => b.name === BUCKET)
     if (!bucketExists) {
       const { error: bucketErr } = await admin.storage.createBucket(BUCKET, { public: true })
-      if (bucketErr) throw new Error(`فشل إنشاء مخزن الملفات: ${bucketErr.message}`)
+      if (bucketErr) {
+        throw new Error(`Failed to create storage bucket: ${bucketErr.message}`)
+      }
     }
 
     const path = `${COMPANY_ID}/logo.${ext}`
@@ -35,13 +40,17 @@ export async function POST(req: NextRequest) {
       .from(BUCKET)
       .upload(path, file, { upsert: true, contentType: file.type })
 
-    if (uploadError) throw new Error(uploadError.message)
+    if (uploadError) {
+      throw new Error(uploadError.message)
+    }
 
-    const { data: { publicUrl } } = admin.storage.from(BUCKET).getPublicUrl(path)
+    const {
+      data: { publicUrl },
+    } = admin.storage.from(BUCKET).getPublicUrl(path)
 
     await admin.from('branding').upsert({
       company_id: COMPANY_ID,
-      logo_url:   publicUrl,
+      logo_url: publicUrl,
       updated_at: new Date().toISOString(),
     })
 

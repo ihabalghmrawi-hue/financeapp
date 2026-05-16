@@ -37,7 +37,7 @@ interface SettingsClientProps {
 export function SettingsClient({ company, user, role, currentBusinessType, branding }: SettingsClientProps) {
   const router = useRouter()
   const { theme, setTheme } = useTheme()
-  const { setLang } = useT()
+  const { t, setLang, formatDate } = useT()
   const [activeSection, setActiveSection] = useState('general')
   const [selectedBizType, setSelectedBizType] = useState<BusinessType>(
     (currentBusinessType as BusinessType) || 'retail',
@@ -83,7 +83,7 @@ export function SettingsClient({ company, user, role, currentBusinessType, brand
     setSaving(false)
     if (!res.ok) {
       const d = await res.json().catch(() => ({}))
-      setSaveError(d.error || 'فشل الحفظ')
+      setSaveError(d.error || t('settings.saveFailed'))
       return
     }
     setSaved(true)
@@ -109,7 +109,7 @@ export function SettingsClient({ company, user, role, currentBusinessType, brand
     setSaving(false)
     if (!res.ok) {
       const d = await res.json().catch(() => ({}))
-      setSaveError(d.error || 'فشل الحفظ')
+      setSaveError(d.error || t('settings.saveFailed'))
       return
     }
     setSaved(true)
@@ -130,7 +130,7 @@ export function SettingsClient({ company, user, role, currentBusinessType, brand
   }
 
   const resetToTemplate = async () => {
-    if (!confirm('سيتم مسح جميع المنتجات والفئات الحالية وإعادة التهيئة. هل أنت متأكد؟')) {
+    if (!confirm(t('settings.confirmResetTemplate'))) {
       return
     }
     setResetting(true)
@@ -144,13 +144,13 @@ export function SettingsClient({ company, user, role, currentBusinessType, brand
   }
 
   const sections = [
-    { key: 'branding', label: 'الهوية البصرية', icon: Palette },
-    { key: 'business', label: 'نوع النشاط', icon: Store },
-    { key: 'general', label: 'إعدادات عامة', icon: Building2 },
-    { key: 'preferences', label: 'التفضيلات', icon: Globe },
-    { key: 'notifications', label: 'الإشعارات', icon: Bell },
-    { key: 'security', label: 'الأمان', icon: Shield },
-    { key: 'backup', label: 'النسخ الاحتياطي', icon: Database },
+    { key: 'branding', label: t('settings.sectionBranding'), icon: Palette },
+    { key: 'business', label: t('settings.sectionBusinessType'), icon: Store },
+    { key: 'general', label: t('settings.general'), icon: Building2 },
+    { key: 'preferences', label: t('settings.preferences'), icon: Globe },
+    { key: 'notifications', label: t('settings.notifications'), icon: Bell },
+    { key: 'security', label: t('settings.security'), icon: Shield },
+    { key: 'backup', label: t('settings.backup'), icon: Database },
   ]
 
   const canEdit = ['owner', 'admin'].includes(role)
@@ -158,8 +158,8 @@ export function SettingsClient({ company, user, role, currentBusinessType, brand
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-foreground">الإعدادات</h2>
-        <p className="text-sm text-muted-foreground">إدارة إعدادات الشركة والحساب</p>
+        <h2 className="text-xl font-bold text-foreground">{t('settings.title')}</h2>
+        <p className="text-sm text-muted-foreground">{t('settings.subtitle')}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -190,7 +190,7 @@ export function SettingsClient({ company, user, role, currentBusinessType, brand
           {saved && (
             <div className="mb-4 flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 text-sm p-3 rounded-lg border border-emerald-200">
               <CheckCircle className="w-4 h-4" />
-              تم حفظ الإعدادات بنجاح!
+              {t('settings.saved')}
             </div>
           )}
           {saveError && (
@@ -203,7 +203,7 @@ export function SettingsClient({ company, user, role, currentBusinessType, brand
           {/* Branding */}
           {activeSection === 'branding' && (
             <div className="space-y-1">
-              <h3 className="font-semibold text-foreground mb-4">الهوية البصرية</h3>
+              <h3 className="font-semibold text-foreground mb-4">{t('settings.sectionBranding')}</h3>
               <BrandingSettings initialData={branding} />
             </div>
           )}
@@ -211,10 +211,8 @@ export function SettingsClient({ company, user, role, currentBusinessType, brand
           {/* Business Type */}
           {activeSection === 'business' && (
             <div className="space-y-5">
-              <h3 className="font-semibold text-foreground">نوع النشاط التجاري</h3>
-              <p className="text-sm text-muted-foreground">
-                تغيير نوع نشاطك سيؤثر على الميزات والأدوات المتاحة في النظام
-              </p>
+              <h3 className="font-semibold text-foreground">{t('settings.businessTypeTitle')}</h3>
+              <p className="text-sm text-muted-foreground">{t('settings.businessTypeDesc')}</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {BUSINESS_TYPES.map((type) => {
                   const f = getFeatures(type)
@@ -241,7 +239,7 @@ export function SettingsClient({ company, user, role, currentBusinessType, brand
                   className="bg-primary text-primary-foreground px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-50 flex items-center gap-2"
                 >
                   {savingBizType ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                  حفظ نوع النشاط
+                  {t('settings.saveBusinessType')}
                 </button>
                 <button
                   onClick={resetToTemplate}
@@ -249,7 +247,7 @@ export function SettingsClient({ company, user, role, currentBusinessType, brand
                   className="px-4 py-2.5 border border-amber-300 text-amber-700 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400 rounded-lg text-sm font-medium hover:bg-amber-100 disabled:opacity-50 flex items-center gap-2"
                 >
                   {resetting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                  إعادة ضبط البيانات
+                  {t('settings.resetData')}
                 </button>
               </div>
             </div>
@@ -258,16 +256,16 @@ export function SettingsClient({ company, user, role, currentBusinessType, brand
           {/* General Settings */}
           {activeSection === 'general' && (
             <div className="space-y-5">
-              <h3 className="font-semibold text-foreground">معلومات الشركة</h3>
+              <h3 className="font-semibold text-foreground">{t('settings.companyInfo')}</h3>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="form-label">اسم الشركة (عربي)</label>
+                  <label className="form-label">{t('settings.companyNameAr')}</label>
                   <input
                     value={form.name_ar}
                     onChange={(e) => setForm({ ...form, name_ar: e.target.value })}
                     disabled={!canEdit}
-                    placeholder="اسم الشركة"
+                    placeholder={t('settings.companyNameAr')}
                     className="w-full border border-input bg-background rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-60 disabled:cursor-not-allowed"
                   />
                 </div>
@@ -286,7 +284,7 @@ export function SettingsClient({ company, user, role, currentBusinessType, brand
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="form-label">البريد الإلكتروني</label>
+                  <label className="form-label">{t('settings.email')}</label>
                   <input
                     type="email"
                     value={form.email}
@@ -298,7 +296,7 @@ export function SettingsClient({ company, user, role, currentBusinessType, brand
                   />
                 </div>
                 <div>
-                  <label className="form-label">رقم الهاتف</label>
+                  <label className="form-label">{t('settings.phone')}</label>
                   <input
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
@@ -311,19 +309,19 @@ export function SettingsClient({ company, user, role, currentBusinessType, brand
               </div>
 
               <div>
-                <label className="form-label">العنوان</label>
+                <label className="form-label">{t('settings.address')}</label>
                 <textarea
                   value={form.address}
                   onChange={(e) => setForm({ ...form, address: e.target.value })}
                   disabled={!canEdit}
                   rows={2}
-                  placeholder="عنوان الشركة"
+                  placeholder={t('settings.address')}
                   className="w-full border border-input bg-background rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-60 disabled:cursor-not-allowed resize-none"
                 />
               </div>
 
               <div>
-                <label className="form-label">الرقم الضريبي</label>
+                <label className="form-label">{t('settings.taxNumber')}</label>
                 <input
                   value={form.tax_number}
                   onChange={(e) => setForm({ ...form, tax_number: e.target.value })}
@@ -343,10 +341,10 @@ export function SettingsClient({ company, user, role, currentBusinessType, brand
                   {saving ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      جاري الحفظ...
+                      {t('settings.saving')}
                     </>
                   ) : (
-                    'حفظ التغييرات'
+                    t('settings.save')
                   )}
                 </button>
               )}
@@ -356,48 +354,47 @@ export function SettingsClient({ company, user, role, currentBusinessType, brand
           {/* Preferences */}
           {activeSection === 'preferences' && (
             <div className="space-y-5">
-              <h3 className="font-semibold text-foreground">التفضيلات</h3>
-
+              <h3 className="font-semibold text-foreground">{t('settings.preferences')}</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="form-label">العملة الافتراضية</label>
+                  <label className="form-label">{t('settings.defaultCurrency')}</label>
                   <select
                     value={form.currency}
                     onChange={(e) => setForm({ ...form, currency: e.target.value })}
                     disabled={!canEdit}
                     className="w-full border border-input bg-background rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-60"
                   >
-                    <option value="USD">دولار أمريكي (USD)</option>
-                    <option value="SAR">ريال سعودي (SAR)</option>
-                    <option value="AED">درهم إماراتي (AED)</option>
-                    <option value="EGP">جنيه مصري (EGP)</option>
-                    <option value="KWD">دينار كويتي (KWD)</option>
-                    <option value="EUR">يورو (EUR)</option>
-                    <option value="GBP">جنيه إسترليني (GBP)</option>
+                    <option value="USD">{t('settings.currencyUSD')}</option>
+                    <option value="SAR">{t('settings.currencySAR')}</option>
+                    <option value="AED">{t('settings.currencyAED')}</option>
+                    <option value="EGP">{t('settings.currencyEGP')}</option>
+                    <option value="KWD">{t('settings.currencyKWD')}</option>
+                    <option value="EUR">{t('settings.currencyEUR')}</option>
+                    <option value="GBP">{t('settings.currencyGBP')}</option>
                   </select>
                 </div>
                 <div>
-                  <label className="form-label">اللغة</label>
+                  <label className="form-label">{t('settings.language')}</label>
                   <select
                     value={form.language}
                     onChange={(e) => setForm({ ...form, language: e.target.value })}
                     disabled={!canEdit}
                     className="w-full border border-input bg-background rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-60"
                   >
-                    <option value="ar">العربية</option>
-                    <option value="en">English</option>
+                    <option value="ar">{t('settings.arabic')}</option>
+                    <option value="en">{t('settings.english')}</option>
                   </select>
                 </div>
               </div>
 
               {/* Theme */}
               <div>
-                <label className="form-label">المظهر</label>
+                <label className="form-label">{t('settings.theme')}</label>
                 <div className="flex gap-3">
                   {[
-                    { value: 'light', label: 'فاتح', icon: Sun },
-                    { value: 'dark', label: 'داكن', icon: Moon },
-                    { value: 'system', label: 'النظام', icon: Globe },
+                    { value: 'light', label: t('settings.light'), icon: Sun },
+                    { value: 'dark', label: t('settings.dark'), icon: Moon },
+                    { value: 'system', label: t('settings.system'), icon: Globe },
                   ].map(({ value, label, icon: Icon }) => (
                     <button
                       key={value}
@@ -426,10 +423,10 @@ export function SettingsClient({ company, user, role, currentBusinessType, brand
                   {saving ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      جاري الحفظ...
+                      {t('settings.saving')}
                     </>
                   ) : (
-                    'حفظ التغييرات'
+                    t('settings.save')
                   )}
                 </button>
               )}
@@ -439,7 +436,7 @@ export function SettingsClient({ company, user, role, currentBusinessType, brand
           {/* Notifications */}
           {activeSection === 'notifications' && (
             <div className="space-y-5">
-              <h3 className="font-semibold text-foreground">إعدادات الإشعارات</h3>
+              <h3 className="font-semibold text-foreground">{t('settings.notificationSettings')}</h3>
               <NotificationPreferences />
             </div>
           )}
@@ -447,15 +444,15 @@ export function SettingsClient({ company, user, role, currentBusinessType, brand
           {/* Security */}
           {activeSection === 'security' && (
             <div className="space-y-5">
-              <h3 className="font-semibold text-foreground">الأمان والخصوصية</h3>
+              <h3 className="font-semibold text-foreground">{t('settings.securityPrivacy')}</h3>
               <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
                 <div className="flex items-center gap-3">
                   <Shield className="w-5 h-5 text-blue-600 shrink-0" />
                   <div>
-                    <p className="text-sm font-medium text-foreground">حسابك محمي</p>
+                    <p className="text-sm font-medium text-foreground">{t('settings.accountProtected')}</p>
                     {user?.email && (
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        بريدك: <span dir="ltr">{user.email}</span>
+                        {t('settings.yourEmail')}: <span dir="ltr">{user.email}</span>
                       </p>
                     )}
                   </div>
@@ -464,10 +461,8 @@ export function SettingsClient({ company, user, role, currentBusinessType, brand
 
               <div className="space-y-3">
                 <div className="p-4 rounded-xl border bg-muted/20">
-                  <p className="text-sm font-medium text-foreground">تغيير كلمة المرور</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    سيتم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك
-                  </p>
+                  <p className="text-sm font-medium text-foreground">{t('settings.changePassword')}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t('settings.changePasswordDesc')}</p>
                   <button
                     onClick={async () => {
                       if (!user?.email) {
@@ -475,20 +470,18 @@ export function SettingsClient({ company, user, role, currentBusinessType, brand
                       }
                       const supabase = createClient()
                       await supabase.auth.resetPasswordForEmail(user.email)
-                      alert('تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني')
+                      alert(t('settings.resetLinkSent'))
                     }}
                     className="mt-3 text-sm text-primary hover:underline font-medium"
                   >
-                    إرسال رابط إعادة التعيين
+                    {t('settings.sendResetLink')}
                   </button>
                 </div>
               </div>
 
               <div className="p-4 rounded-xl border border-red-100 bg-red-50 dark:bg-red-900/20 dark:border-red-800">
-                <p className="text-sm font-medium text-red-700 dark:text-red-400">منطقة الخطر</p>
-                <p className="text-xs text-red-600/80 dark:text-red-400/80 mt-0.5">
-                  حذف الحساب سيؤدي إلى فقدان جميع البيانات بشكل دائم
-                </p>
+                <p className="text-sm font-medium text-red-700 dark:text-red-400">{t('settings.dangerZone')}</p>
+                <p className="text-xs text-red-600/80 dark:text-red-400/80 mt-0.5">{t('settings.dangerZoneDesc')}</p>
               </div>
             </div>
           )}
@@ -496,22 +489,22 @@ export function SettingsClient({ company, user, role, currentBusinessType, brand
           {/* Backup */}
           {activeSection === 'backup' && (
             <div className="space-y-5">
-              <h3 className="font-semibold text-foreground">النسخ الاحتياطي</h3>
+              <h3 className="font-semibold text-foreground">{t('settings.backup')}</h3>
               <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800">
                 <div className="flex items-center gap-3">
                   <Database className="w-5 h-5 text-emerald-600 shrink-0" />
                   <div>
-                    <p className="text-sm font-medium text-foreground">النسخ الاحتياطي نشط</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">بياناتك محفوظة بأمان على Supabase Cloud</p>
+                    <p className="text-sm font-medium text-foreground">{t('settings.backupActive')}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{t('settings.backupActiveDesc')}</p>
                   </div>
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-4 text-center">
                 {[
-                  { label: 'أمان عالي', desc: 'تشفير AES-256' },
-                  { label: 'نسخ تلقائي', desc: 'يومياً' },
-                  { label: 'استرداد سريع', desc: 'في أي وقت' },
+                  { label: t('settings.highSecurity'), desc: t('settings.highSecurityDesc') },
+                  { label: t('settings.autoBackup'), desc: t('settings.autoBackupDesc') },
+                  { label: t('settings.quickRecovery'), desc: t('settings.quickRecoveryDesc') },
                 ].map((item, i) => (
                   <div key={i} className="p-4 rounded-xl border bg-muted/20">
                     <p className="font-semibold text-foreground text-sm">{item.label}</p>
@@ -521,16 +514,18 @@ export function SettingsClient({ company, user, role, currentBusinessType, brand
               </div>
 
               <div className="p-4 rounded-xl border bg-muted/20">
-                <p className="text-sm font-medium text-foreground mb-1">معلومات الحساب</p>
+                <p className="text-sm font-medium text-foreground mb-1">{t('settings.accountInfo')}</p>
                 <div className="space-y-1 text-xs text-muted-foreground">
                   <p>
-                    معرف الشركة:{' '}
+                    {t('settings.companyId')}:{' '}
                     <span className="font-mono text-foreground" dir="ltr">
                       {company.id}
                     </span>
                   </p>
-                  <p>تاريخ الإنشاء: {new Date(company.created_at).toLocaleDateString('ar-SA')}</p>
-                  <p>الإصدار: v1.0.0</p>
+                  <p>
+                    {t('settings.createdDate')}: {formatDate(company.created_at)}
+                  </p>
+                  <p>{t('settings.version')}: v1.0.0</p>
                 </div>
               </div>
             </div>

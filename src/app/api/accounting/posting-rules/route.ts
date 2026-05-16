@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireCompany, isAuthError } from '@/lib/auth-guard'
 import { ok, Errors } from '@/lib/api-response'
@@ -6,7 +6,9 @@ import { logAudit } from '@/lib/audit'
 
 export async function GET(req: NextRequest) {
   const ctx = requireCompany(req)
-  if (isAuthError(ctx)) return ctx
+  if (isAuthError(ctx)) {
+    return ctx
+  }
 
   const supabase = createAdminClient()
   const { searchParams } = req.nextUrl
@@ -18,23 +20,29 @@ export async function GET(req: NextRequest) {
     .eq('company_id', ctx.companyId)
     .order('priority', { ascending: true })
 
-  if (eventType) query = query.eq('event_type', eventType)
+  if (eventType) {
+    query = query.eq('event_type', eventType)
+  }
 
   const { data, error } = await query
-  if (error) return Errors.serverError(error.message)
+  if (error) {
+    return Errors.serverError(error.message)
+  }
   return ok(data || [])
 }
 
 export async function POST(req: NextRequest) {
   const ctx = requireCompany(req)
-  if (isAuthError(ctx)) return ctx
+  if (isAuthError(ctx)) {
+    return ctx
+  }
 
   const supabase = createAdminClient()
   const body = await req.json()
   const { name, name_ar, event_type, description, priority, lines } = body
 
   if (!name || !event_type) {
-    return Errors.badRequest('الاسم ونوع الحدث مطلوبان')
+    return Errors.badRequest('Name and event type are required')
   }
 
   const { data, error } = await supabase
@@ -51,19 +59,21 @@ export async function POST(req: NextRequest) {
     .select('id')
     .single()
 
-  if (error) return Errors.serverError(error.message)
+  if (error) {
+    return Errors.serverError(error.message)
+  }
 
   if (lines && Array.isArray(lines)) {
-    const { error: linesError } = await supabase
-      .from('posting_rule_lines')
-      .insert(
-        lines.map((l: any, i: number) => ({
-          posting_rule_id: data.id,
-          sequence: i,
-          ...l,
-        }))
-      )
-    if (linesError) return Errors.serverError(linesError.message)
+    const { error: linesError } = await supabase.from('posting_rule_lines').insert(
+      lines.map((l: any, i: number) => ({
+        posting_rule_id: data.id,
+        sequence: i,
+        ...l,
+      })),
+    )
+    if (linesError) {
+      return Errors.serverError(linesError.message)
+    }
   }
 
   await logAudit({
@@ -79,13 +89,17 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   const ctx = requireCompany(req)
-  if (isAuthError(ctx)) return ctx
+  if (isAuthError(ctx)) {
+    return ctx
+  }
 
   const supabase = createAdminClient()
   const body = await req.json()
   const { id, ...updates } = body
 
-  if (!id) return Errors.badRequest('معرف القاعدة مطلوب')
+  if (!id) {
+    return Errors.badRequest('Rule ID is required')
+  }
 
   delete updates.company_id
 
@@ -97,24 +111,28 @@ export async function PATCH(req: NextRequest) {
     .select('*')
     .single()
 
-  if (error) return Errors.serverError(error.message)
+  if (error) {
+    return Errors.serverError(error.message)
+  }
   return ok(data)
 }
 
 export async function DELETE(req: NextRequest) {
   const ctx = requireCompany(req)
-  if (isAuthError(ctx)) return ctx
+  if (isAuthError(ctx)) {
+    return ctx
+  }
 
   const supabase = createAdminClient()
   const id = req.nextUrl.searchParams.get('id')
-  if (!id) return Errors.badRequest('معرف القاعدة مطلوب')
+  if (!id) {
+    return Errors.badRequest('Rule ID is required')
+  }
 
-  const { error } = await supabase
-    .from('posting_rules')
-    .delete()
-    .eq('id', id)
-    .eq('company_id', ctx.companyId)
+  const { error } = await supabase.from('posting_rules').delete().eq('id', id).eq('company_id', ctx.companyId)
 
-  if (error) return Errors.serverError(error.message)
+  if (error) {
+    return Errors.serverError(error.message)
+  }
   return ok({ deleted: true })
 }

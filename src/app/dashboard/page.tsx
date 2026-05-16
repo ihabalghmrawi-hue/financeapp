@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { formatCurrency } from '@/lib/utils'
+import { t } from '@/lib/i18n/server'
 import Link from 'next/link'
 import { headers } from 'next/headers'
 import { getFeatures } from '@/lib/features'
@@ -46,7 +47,12 @@ export default async function DashboardPage() {
   const today = new Date().toISOString().slice(0, 10)
   const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10)
   const hour = new Date().getHours()
-  const greeting = hour < 12 ? 'صباح الخير' : hour < 17 ? 'مساء الخير' : 'مساء النور'
+  const greeting =
+    hour < 12
+      ? t('dashboard.overview.morning')
+      : hour < 17
+        ? t('dashboard.overview.afternoon')
+        : t('dashboard.overview.evening')
 
   // ── Rental dashboard data ──
   if (features.hasRental) {
@@ -103,10 +109,10 @@ export default async function DashboardPage() {
         {isEmpty ? (
           <EmptyState
             icon={<Shirt className="w-full h-full" />}
-            title="لا يوجد فساتين بعد"
-            description="ابدأ بإضافة فساتينك حتى تتمكن من استقبال الحجوزات وإدارة التأجير"
-            action={{ label: 'أضف أول فستان', href: '/dashboard/rentals/dresses' }}
-            secondaryAction={{ label: 'استعرض التقويم', href: '/dashboard/rentals/calendar' }}
+            title={t('dashboard.overview.noDressesYet')}
+            description={t('dashboard.overview.noDressesDesc')}
+            action={{ label: t('dashboard.overview.addFirstDress'), href: '/dashboard/rentals/dresses' }}
+            secondaryAction={{ label: t('dashboard.overview.browseCalendar'), href: '/dashboard/rentals/calendar' }}
             variant="premium"
             size="lg"
           />
@@ -114,59 +120,59 @@ export default async function DashboardPage() {
           <>
             <div className="flex items-center justify-between mb-1">
               <p className="text-sm text-muted-foreground">
-                {available} فستان متاح · {rented} مؤجر · {lateOrders?.length || 0} متأخر
+                {t('dashboard.overview.dressesAvailable', { available, rented, late: lateOrders?.length || 0 })}
               </p>
               <Link
                 href="/dashboard/rentals/bookings/new"
                 data-tour="new-booking-btn"
                 className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
               >
-                <Plus className="w-4 h-4" /> حجز جديد
+                <Plus className="w-4 h-4" /> {t('dashboard.overview.newBooking')}
               </Link>
             </div>
 
             <div data-tour="dashboard-stats" className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <Link href="/dashboard/rentals/dresses">
                 <AnimatedKPICounter
-                  title="فساتين متاحة"
+                  title={t('dashboard.overview.availableDresses')}
                   value={available}
                   format="number"
                   icon={<Shirt className="w-5 h-5" />}
-                  subtitle={`من ${totalDresses}`}
+                  subtitle={t('dashboard.overview.outOfTotal', { total: totalDresses })}
                   variant="primary"
                 />
               </Link>
               <Link href="/dashboard/rentals/bookings">
                 <AnimatedKPICounter
-                  title="مؤجرة الآن"
+                  title={t('dashboard.overview.rentedNow')}
                   value={rented}
                   format="number"
                   icon={<Calendar className="w-5 h-5" />}
-                  subtitle="حجز نشط"
+                  subtitle={t('dashboard.overview.activeBooking')}
                   variant="success"
                   delay={0.1}
                 />
               </Link>
               <Link href="/dashboard/rentals/bookings">
                 <AnimatedKPICounter
-                  title="إجمالي الإيرادات"
+                  title={t('dashboard.overview.totalRevenue')}
                   value={revenue}
                   format="currency"
                   currency={CURRENCY}
                   icon={<TrendingUp className="w-5 h-5" />}
-                  subtitle="كل الوقت"
+                  subtitle={t('dashboard.overview.allTime')}
                   variant="default"
                   delay={0.15}
                 />
               </Link>
               <Link href="/dashboard/rentals/returns">
                 <AnimatedKPICounter
-                  title="مدفوعات معلقة"
+                  title={t('dashboard.overview.pendingPayments')}
                   value={pending}
                   format="currency"
                   currency={CURRENCY}
                   icon={<DollarSign className="w-5 h-5" />}
-                  subtitle="غير محصّلة"
+                  subtitle={t('dashboard.overview.uncollected')}
                   variant="warning"
                   delay={0.2}
                 />
@@ -180,16 +186,31 @@ export default async function DashboardPage() {
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { href: '/dashboard/rentals/dresses', label: 'الفساتين', icon: Shirt, count: `${totalDresses} فستان` },
-                { href: '/dashboard/rentals/bookings/new', label: 'حجز سريع', icon: Zap, count: 'فوري' },
+                {
+                  href: '/dashboard/rentals/dresses',
+                  label: t('dashboard.overview.dresses'),
+                  icon: Shirt,
+                  count: t('dashboard.overview.dressCount', { count: totalDresses }),
+                },
+                {
+                  href: '/dashboard/rentals/bookings/new',
+                  label: t('dashboard.overview.quickBooking'),
+                  icon: Zap,
+                  count: t('common.instant'),
+                },
                 {
                   href: '/dashboard/rentals/calendar',
-                  label: 'التقويم',
+                  label: t('dashboard.overview.calendar'),
                   icon: Calendar,
-                  count: 'رؤية كاملة',
+                  count: t('dashboard.overview.fullView'),
                   tour: 'calendar-link',
                 },
-                { href: '/dashboard/rentals/pricing', label: 'التسعير', icon: DollarSign, count: 'الباقات والأسعار' },
+                {
+                  href: '/dashboard/rentals/pricing',
+                  label: t('dashboard.overview.pricing'),
+                  icon: DollarSign,
+                  count: t('dashboard.overview.packagesAndPrices'),
+                },
               ].map((link: any) => (
                 <QuickLink key={link.href} {...link} />
               ))}
@@ -507,18 +528,20 @@ function LateReturnsCard({ lateOrders }: { lateOrders: any }) {
           className={`font-semibold text-sm flex items-center gap-2 ${hasLate ? 'text-destructive' : 'text-success'}`}
         >
           {hasLate ? <AlertTriangle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
-          متأخرات الإرجاع {hasLate ? `(${lateOrders.length})` : ''}
+          {hasLate
+            ? t('dashboard.overview.lateReturnsWithCount', { count: lateOrders.length })
+            : t('dashboard.overview.lateReturns')}
         </h3>
         <Link
           href="/dashboard/rentals/returns"
           className="text-xs text-primary hover:underline flex items-center gap-1"
         >
-          إدارة <ArrowUpRight className="w-3 h-3" />
+          {t('dashboard.overview.manage')} <ArrowUpRight className="w-3 h-3" />
         </Link>
       </div>
       {!hasLate ? (
         <div className="px-5 py-6 text-sm text-success flex items-center gap-2">
-          <CheckCircle className="w-4 h-4" /> لا توجد تأخيرات — عمل ممتاز!
+          <CheckCircle className="w-4 h-4" /> {t('dashboard.overview.noLateReturns')}
         </div>
       ) : (
         <div className="divide-y divide-border/30">
@@ -531,7 +554,7 @@ function LateReturnsCard({ lateOrders }: { lateOrders: any }) {
                   <p className="text-xs text-muted-foreground">{(o.dresses as any)?.name}</p>
                 </div>
                 <span className="text-xs bg-destructive/10 text-destructive px-2.5 py-1 rounded-full font-medium">
-                  {lateDays} يوم تأخير
+                  {t('dashboard.overview.lateDays', { days: lateDays })}
                 </span>
               </div>
             )
@@ -547,23 +570,23 @@ function TodayBookingsCard({ todayBookings }: { todayBookings: any }) {
     <div className="premium-card overflow-hidden">
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/50">
         <h3 className="font-semibold text-sm flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-primary" /> حجوزات اليوم
+          <Calendar className="w-4 h-4 text-primary" /> {t('dashboard.overview.todayBookings')}
         </h3>
         <Link
           href="/dashboard/rentals/bookings"
           className="text-xs text-primary hover:underline flex items-center gap-1"
         >
-          الكل <ArrowUpRight className="w-3 h-3" />
+          {t('common.all')} <ArrowUpRight className="w-3 h-3" />
         </Link>
       </div>
       {!todayBookings?.length ? (
         <div className="px-5 py-6 text-center">
-          <p className="text-sm text-muted-foreground mb-3">لا توجد حجوزات اليوم</p>
+          <p className="text-sm text-muted-foreground mb-3">{t('dashboard.overview.noBookingsToday')}</p>
           <Link
             href="/dashboard/rentals/bookings/new"
             className="inline-flex items-center gap-1.5 text-xs bg-primary/10 text-primary px-4 py-2 rounded-lg hover:bg-primary/20 transition-colors font-medium"
           >
-            <Plus className="w-3.5 h-3.5" /> أنشئ حجزاً الآن
+            <Plus className="w-3.5 h-3.5" /> {t('dashboard.overview.createBookingNow')}
           </Link>
         </div>
       ) : (

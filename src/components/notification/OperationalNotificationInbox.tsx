@@ -3,14 +3,30 @@
 import { useState, useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import {
-  Bell, BellRing, Filter, Search, CheckCheck, Archive,
-  Trash2, AlertTriangle, Clock, Inbox, ChevronDown,
-  Menu, X, Settings, List, Layers, Eye, User,
+  Bell,
+  BellRing,
+  Filter,
+  Search,
+  CheckCheck,
+  Archive,
+  Trash2,
+  AlertTriangle,
+  Clock,
+  Inbox,
+  ChevronDown,
+  Menu,
+  X,
+  Settings,
+  List,
+  Layers,
+  Eye,
+  User,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { useT } from '@/lib/i18n/language-provider'
 import { ActionableNotificationCard } from './ActionableNotificationCard'
 import { EscalationAlert } from './EscalationAlert'
 import { WorkflowReminderCard } from './WorkflowReminderCard'
@@ -18,42 +34,54 @@ import { generateMockNotifications, generateMockNotificationGroups } from '@/lib
 import type { OperationalNotification, NotificationCategory, NotificationGroup } from '@/lib/notification/types'
 
 const categoryLabels: Record<NotificationCategory | 'all', string> = {
-  all: 'الكل',
-  approval: 'الموافقات',
-  escalation: 'التصعيدات',
-  reminder: 'التذكيرات',
-  alert: 'التنبيهات',
-  system: 'النظام',
-  workflow: 'سير العمل',
+  all: 'notification.inbox.category.all',
+  approval: 'notification.inbox.category.approval',
+  escalation: 'notification.inbox.category.escalation',
+  reminder: 'notification.inbox.category.reminder',
+  alert: 'notification.inbox.category.alert',
+  system: 'notification.inbox.category.system',
+  workflow: 'notification.inbox.category.workflow',
 }
 
 const categoryColors: Record<NotificationCategory | 'all', string> = {
   all: 'bg-gray-100 text-gray-800 hover:bg-gray-200 data-[active=true]:bg-gray-800 data-[active=true]:text-white',
   approval: 'bg-blue-50 text-blue-700 hover:bg-blue-100 data-[active=true]:bg-blue-600 data-[active=true]:text-white',
   escalation: 'bg-red-50 text-red-700 hover:bg-red-100 data-[active=true]:bg-red-600 data-[active=true]:text-white',
-  reminder: 'bg-amber-50 text-amber-700 hover:bg-amber-100 data-[active=true]:bg-amber-600 data-[active=true]:text-white',
-  alert: 'bg-orange-50 text-orange-700 hover:bg-orange-100 data-[active=true]:bg-orange-600 data-[active=true]:text-white',
-  system: 'bg-purple-50 text-purple-700 hover:bg-purple-100 data-[active=true]:bg-purple-600 data-[active=true]:text-white',
+  reminder:
+    'bg-amber-50 text-amber-700 hover:bg-amber-100 data-[active=true]:bg-amber-600 data-[active=true]:text-white',
+  alert:
+    'bg-orange-50 text-orange-700 hover:bg-orange-100 data-[active=true]:bg-orange-600 data-[active=true]:text-white',
+  system:
+    'bg-purple-50 text-purple-700 hover:bg-purple-100 data-[active=true]:bg-purple-600 data-[active=true]:text-white',
   workflow: 'bg-teal-50 text-teal-700 hover:bg-teal-100 data-[active=true]:bg-teal-600 data-[active=true]:text-white',
 }
 
-function relativeDay(timestamp: number): string {
+function relativeDay(timestamp: number, t: (key: string, params?: Record<string, string | number>) => string): string {
   const now = new Date()
   const date = new Date(timestamp)
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
   const yesterday = today - 86400000
   const dayOf = date.getTime()
 
-  if (dayOf >= today) return 'اليوم'
-  if (dayOf >= yesterday) return 'أمس'
-  if (dayOf >= today - 6 * 86400000) return 'هذا الأسبوع'
-  return 'سابقاً'
+  if (dayOf >= today) {
+    return t('notification.time.today')
+  }
+  if (dayOf >= yesterday) {
+    return t('notification.time.yesterday')
+  }
+  if (dayOf >= today - 6 * 86400000) {
+    return t('notification.time.thisWeek')
+  }
+  return t('notification.time.earlier')
 }
 
-function groupByDate(items: OperationalNotification[]): Map<string, OperationalNotification[]> {
+function groupByDate(
+  items: OperationalNotification[],
+  t: (key: string, params?: Record<string, string | number>) => string,
+): Map<string, OperationalNotification[]> {
   const groups = new Map<string, OperationalNotification[]>()
   for (const item of items) {
-    const day = relativeDay(item.timestamp)
+    const day = relativeDay(item.timestamp, t)
     const existing = groups.get(day) ?? []
     existing.push(item)
     groups.set(day, existing)
@@ -62,6 +90,7 @@ function groupByDate(items: OperationalNotification[]): Map<string, OperationalN
 }
 
 export function OperationalNotificationInbox() {
+  const { t, lang } = useT()
   const [notifications, setNotifications] = useState(generateMockNotifications(30))
   const [filter, setFilter] = useState<NotificationCategory | 'all'>('all')
   const [searchQuery, setSearchQuery] = useState('')
@@ -74,39 +103,34 @@ export function OperationalNotificationInbox() {
     let result = notifications
 
     if (filter !== 'all') {
-      result = result.filter(n => n.category === filter)
+      result = result.filter((n) => n.category === filter)
     }
 
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase()
-      result = result.filter(n =>
-        n.title.toLowerCase().includes(q) ||
-        n.description.toLowerCase().includes(q) ||
-        n.source.toLowerCase().includes(q)
+      result = result.filter(
+        (n) =>
+          n.title.toLowerCase().includes(q) ||
+          n.description.toLowerCase().includes(q) ||
+          n.source.toLowerCase().includes(q),
       )
     }
 
     return result.sort((a, b) => b.timestamp - a.timestamp)
   }, [notifications, filter, searchQuery])
 
-  const unreadCount = useMemo(() =>
-    notifications.filter(n => n.status === 'unread').length,
-    [notifications]
+  const unreadCount = useMemo(() => notifications.filter((n) => n.status === 'unread').length, [notifications])
+
+  const criticalCount = useMemo(() => notifications.filter((n) => n.priority === 'critical').length, [notifications])
+
+  const escalationCount = useMemo(
+    () => notifications.filter((n) => n.category === 'escalation').length,
+    [notifications],
   )
 
-  const criticalCount = useMemo(() =>
-    notifications.filter(n => n.priority === 'critical').length,
-    [notifications]
-  )
-
-  const escalationCount = useMemo(() =>
-    notifications.filter(n => n.category === 'escalation').length,
-    [notifications]
-  )
-
-  const pendingApprovalCount = useMemo(() =>
-    notifications.filter(n => n.category === 'approval' && n.status === 'unread').length,
-    [notifications]
+  const pendingApprovalCount = useMemo(
+    () => notifications.filter((n) => n.category === 'approval' && n.status === 'unread').length,
+    [notifications],
   )
 
   const allSelected = filtered.length > 0 && selectedIds.size === filtered.length
@@ -125,40 +149,40 @@ export function OperationalNotificationInbox() {
     if (allSelected) {
       setSelectedIds(new Set())
     } else {
-      setSelectedIds(new Set(filtered.map(n => n.id)))
+      setSelectedIds(new Set(filtered.map((n) => n.id)))
     }
   }
 
   const markAsRead = (id: string) => {
-    setNotifications(prev =>
-      prev.map(n =>
-        n.id === id && n.status === 'unread'
-          ? { ...n, status: 'read' as const }
-          : n
-      )
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id && n.status === 'unread' ? { ...n, status: 'read' as const } : n)),
     )
-    setSelectedIds(prev => { const s = new Set(prev); s.delete(id); return s })
+    setSelectedIds((prev) => {
+      const s = new Set(prev)
+      s.delete(id)
+      return s
+    })
   }
 
   const markAllAsRead = () => {
-    setNotifications(prev =>
-      prev.map(n =>
-        n.status === 'unread' ? { ...n, status: 'read' as const } : n
-      )
-    )
+    setNotifications((prev) => prev.map((n) => (n.status === 'unread' ? { ...n, status: 'read' as const } : n)))
     setSelectedIds(new Set())
   }
 
   const archive = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id))
-    setSelectedIds(prev => { const s = new Set(prev); s.delete(id); return s })
+    setNotifications((prev) => prev.filter((n) => n.id !== id))
+    setSelectedIds((prev) => {
+      const s = new Set(prev)
+      s.delete(id)
+      return s
+    })
     if (selectedNotification?.id === id) {
       setSelectedNotification(null)
     }
   }
 
   const archiveSelected = () => {
-    setNotifications(prev => prev.filter(n => !selectedIds.has(n.id)))
+    setNotifications((prev) => prev.filter((n) => !selectedIds.has(n.id)))
     if (selectedNotification && selectedIds.has(selectedNotification.id)) {
       setSelectedNotification(null)
     }
@@ -178,7 +202,7 @@ export function OperationalNotificationInbox() {
   }
 
   const handleNotificationClick = (n: OperationalNotification) => {
-    setSelectedNotification(prev => prev?.id === n.id ? null : n)
+    setSelectedNotification((prev) => (prev?.id === n.id ? null : n))
     if (n.status === 'unread') {
       markAsRead(n.id)
     }
@@ -188,39 +212,39 @@ export function OperationalNotificationInbox() {
     <div dir="rtl" className="flex flex-col gap-4 p-4 max-w-7xl mx-auto">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">صندوق التنبيهات التشغيلية</h1>
-          <p className="text-sm text-gray-500 mt-0.5">متابعة وإدارة التنبيهات والإشعارات</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('notification.inbox.title')}</h1>
+          <p className="text-sm text-gray-500 mt-0.5">{t('notification.inbox.description')}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-5 gap-3">
         <Card className="bg-gradient-to-br from-blue-50 to-white border-blue-200">
           <CardContent className="p-4">
-            <p className="text-xs text-blue-600 font-medium mb-1">إجمالي التنبيهات</p>
+            <p className="text-xs text-blue-600 font-medium mb-1">{t('notification.inbox.stats.total')}</p>
             <p className="text-2xl font-bold text-blue-900">{notifications.length}</p>
           </CardContent>
         </Card>
         <Card className="bg-gradient-to-br from-gray-50 to-white border-gray-200">
           <CardContent className="p-4">
-            <p className="text-xs text-gray-600 font-medium mb-1">غير مقروء</p>
+            <p className="text-xs text-gray-600 font-medium mb-1">{t('notification.inbox.stats.unread')}</p>
             <p className="text-2xl font-bold text-gray-900">{unreadCount}</p>
           </CardContent>
         </Card>
         <Card className="bg-gradient-to-br from-red-50 to-white border-red-200">
           <CardContent className="p-4">
-            <p className="text-xs text-red-600 font-medium mb-1">تنبيهات حرجة</p>
+            <p className="text-xs text-red-600 font-medium mb-1">{t('notification.inbox.stats.critical')}</p>
             <p className="text-2xl font-bold text-red-900">{criticalCount}</p>
           </CardContent>
         </Card>
         <Card className="bg-gradient-to-br from-orange-50 to-white border-orange-200">
           <CardContent className="p-4">
-            <p className="text-xs text-orange-600 font-medium mb-1">تصعيدات</p>
+            <p className="text-xs text-orange-600 font-medium mb-1">{t('notification.inbox.stats.escalations')}</p>
             <p className="text-2xl font-bold text-orange-900">{escalationCount}</p>
           </CardContent>
         </Card>
         <Card className="bg-gradient-to-br from-blue-50 to-white border-blue-200">
           <CardContent className="p-4">
-            <p className="text-xs text-blue-600 font-medium mb-1">موافقات معلقة</p>
+            <p className="text-xs text-blue-600 font-medium mb-1">{t('notification.inbox.stats.pendingApprovals')}</p>
             <p className="text-2xl font-bold text-blue-900">{pendingApprovalCount}</p>
           </CardContent>
         </Card>
@@ -237,7 +261,7 @@ export function OperationalNotificationInbox() {
               categoryColors[cat],
             )}
           >
-            {categoryLabels[cat]}
+            {t(categoryLabels[cat])}
           </button>
         ))}
       </div>
@@ -246,7 +270,7 @@ export function OperationalNotificationInbox() {
         <div className="relative flex-1 max-w-md">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
-            placeholder="بحث في التنبيهات..."
+            placeholder={t('notification.inbox.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pr-9 h-9 text-sm"
@@ -269,7 +293,7 @@ export function OperationalNotificationInbox() {
             onClick={() => setView('list')}
           >
             <List className="h-4 w-4 ml-1" />
-            قائمة
+            {t('notification.inbox.viewList')}
           </Button>
           <Button
             variant="ghost"
@@ -278,7 +302,7 @@ export function OperationalNotificationInbox() {
             onClick={() => setView('groups')}
           >
             <Layers className="h-4 w-4 ml-1" />
-            مجموعات
+            {t('notification.inbox.viewGroups')}
           </Button>
         </div>
       </div>
@@ -291,7 +315,7 @@ export function OperationalNotificationInbox() {
             onChange={toggleSelectAll}
             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
           />
-          {allSelected ? 'إلغاء تحديد الكل' : 'تحديد الكل'}
+          {allSelected ? t('notification.inbox.deselectAll') : t('notification.inbox.selectAll')}
         </label>
         <div className="flex items-center gap-2">
           <Button
@@ -302,7 +326,7 @@ export function OperationalNotificationInbox() {
             className="text-xs h-8 px-3"
           >
             <CheckCheck className="h-4 w-4 ml-1" />
-            تحديد الكل كمقروء
+            {t('notification.inbox.markAllRead')}
           </Button>
           <Button
             variant="ghost"
@@ -312,31 +336,26 @@ export function OperationalNotificationInbox() {
             className="text-xs h-8 px-3 text-red-600 hover:text-red-700"
           >
             <Archive className="h-4 w-4 ml-1" />
-            أرشفة
+            {t('notification.inbox.archive')}
           </Button>
         </div>
       </div>
 
       <div className="flex gap-4">
-        <div className={cn(
-          'flex flex-col gap-2',
-          selectedNotification ? 'w-1/2' : 'w-full',
-        )}>
+        <div className={cn('flex flex-col gap-2', selectedNotification ? 'w-1/2' : 'w-full')}>
           {view === 'list' ? (
             <>
               {filtered.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-gray-400">
                   <Inbox className="h-12 w-12 mb-3" />
                   <p className="text-sm font-medium">
-                    {searchQuery ? 'لا توجد نتائج للبحث' : 'لا توجد تنبيهات'}
+                    {searchQuery ? t('notification.inbox.noSearchResults') : t('notification.inbox.noNotifications')}
                   </p>
                 </div>
               ) : (
-                Array.from(groupByDate(filtered).entries()).map(([day, items]) => (
+                Array.from(groupByDate(filtered, t).entries()).map(([day, items]) => (
                   <div key={day}>
-                    <h3 className="text-xs font-semibold text-gray-500 px-1 py-2 sticky top-0 bg-white z-10">
-                      {day}
-                    </h3>
+                    <h3 className="text-xs font-semibold text-gray-500 px-1 py-2 sticky top-0 bg-white z-10">{day}</h3>
                     <div className="flex flex-col gap-2">
                       {items.map((n) => {
                         const isSelected = selectedNotification?.id === n.id
@@ -403,7 +422,7 @@ export function OperationalNotificationInbox() {
               {notificationGroups.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-gray-400">
                   <Inbox className="h-12 w-12 mb-3" />
-                  <p className="text-sm font-medium">لا توجد مجموعات</p>
+                  <p className="text-sm font-medium">{t('notification.inbox.noGroups')}</p>
                 </div>
               ) : (
                 notificationGroups.map((group) => (
@@ -412,7 +431,7 @@ export function OperationalNotificationInbox() {
                       <h3 className="text-sm font-bold text-gray-900">{group.title}</h3>
                       {group.unread > 0 && (
                         <Badge variant="default" className="bg-blue-600 text-xs px-2">
-                          {group.unread} غير مقروء
+                          {t('notification.inbox.unreadCount', { count: group.unread })}
                         </Badge>
                       )}
                     </div>
@@ -484,13 +503,8 @@ export function OperationalNotificationInbox() {
           <div className="w-1/2 space-y-4">
             <Card>
               <CardHeader className="pb-3 flex flex-row items-center justify-between">
-                <CardTitle className="text-base">تفاصيل التنبيه</CardTitle>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                  onClick={() => setSelectedNotification(null)}
-                >
+                <CardTitle className="text-base">{t('notification.inbox.notificationDetails')}</CardTitle>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setSelectedNotification(null)}>
                   <X className="h-4 w-4" />
                 </Button>
               </CardHeader>
@@ -519,7 +533,9 @@ export function OperationalNotificationInbox() {
 
                 {selectedNotification.metadata && Object.keys(selectedNotification.metadata).length > 0 && (
                   <div className="mt-4">
-                    <h4 className="text-xs font-semibold text-gray-700 mb-2">بيانات إضافية</h4>
+                    <h4 className="text-xs font-semibold text-gray-700 mb-2">
+                      {t('notification.inbox.additionalData')}
+                    </h4>
                     <div className="space-y-1">
                       {Object.entries(selectedNotification.metadata).map(([key, val]) => (
                         <div key={key} className="flex items-center justify-between text-xs">
@@ -532,16 +548,16 @@ export function OperationalNotificationInbox() {
                 )}
 
                 <div className="mt-4 pt-4 border-t">
-                  <h4 className="text-xs font-semibold text-gray-700 mb-2">معلومات إضافية</h4>
+                  <h4 className="text-xs font-semibold text-gray-700 mb-2">{t('notification.inbox.additionalInfo')}</h4>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div className="flex items-center gap-1.5 text-gray-500">
                       <User className="h-3.5 w-3.5" />
-                      <span>المصدر: {selectedNotification.source}</span>
+                      <span>{t('notification.inbox.source', { name: selectedNotification.source })}</span>
                     </div>
                     {selectedNotification.relatedEntity && (
                       <div className="flex items-center gap-1.5 text-gray-500">
                         <Bell className="h-3.5 w-3.5" />
-                        <span>الجهة: {selectedNotification.relatedEntity.name}</span>
+                        <span>{t('notification.inbox.entity', { name: selectedNotification.relatedEntity.name })}</span>
                       </div>
                     )}
                     <div className="flex items-center gap-1.5 text-gray-500">
@@ -559,8 +575,11 @@ export function OperationalNotificationInbox() {
                     <div className="flex items-center gap-1.5 text-gray-500">
                       <Eye className="h-3.5 w-3.5" />
                       <span>
-                        {selectedNotification.status === 'unread' ? 'غير مقروء' :
-                         selectedNotification.status === 'read' ? 'مقروء' : 'مؤرشف'}
+                        {selectedNotification.status === 'unread'
+                          ? t('notification.inbox.statusUnread')
+                          : selectedNotification.status === 'read'
+                            ? t('notification.inbox.statusRead')
+                            : t('notification.inbox.statusArchived')}
                       </span>
                     </div>
                   </div>
@@ -568,14 +587,13 @@ export function OperationalNotificationInbox() {
 
                 {selectedNotification.status === 'unread' && selectedNotification.actions.length > 0 && (
                   <div className="mt-4 pt-4 border-t">
-                    <h4 className="text-xs font-semibold text-gray-700 mb-2">الإجراءات</h4>
+                    <h4 className="text-xs font-semibold text-gray-700 mb-2">{t('notification.inbox.actions')}</h4>
                     <div className="flex flex-wrap gap-2">
                       {selectedNotification.actions.map((action) => (
                         <Button
                           key={action.id}
                           variant={
-                            action.type === 'danger' ? 'destructive' :
-                            action.type === 'primary' ? 'default' : 'outline'
+                            action.type === 'danger' ? 'destructive' : action.type === 'primary' ? 'default' : 'outline'
                           }
                           size="sm"
                           className="text-xs"
@@ -592,12 +610,12 @@ export function OperationalNotificationInbox() {
 
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base">التنبيهات ذات الصلة</CardTitle>
+                <CardTitle className="text-base">{t('notification.inbox.relatedAlerts')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col gap-2">
                   {notifications
-                    .filter(n => n.id !== selectedNotification.id && n.groupKey === selectedNotification.groupKey)
+                    .filter((n) => n.id !== selectedNotification.id && n.groupKey === selectedNotification.groupKey)
                     .slice(0, 3)
                     .map((n) => (
                       <ActionableNotificationCard
@@ -607,8 +625,10 @@ export function OperationalNotificationInbox() {
                         onAction={(actionId) => handleAction(n.id, actionId)}
                       />
                     ))}
-                  {notifications.filter(n => n.id !== selectedNotification.id && n.groupKey === selectedNotification.groupKey).length === 0 && (
-                    <p className="text-xs text-gray-400 text-center py-4">لا توجد تنبيهات ذات صلة</p>
+                  {notifications.filter(
+                    (n) => n.id !== selectedNotification.id && n.groupKey === selectedNotification.groupKey,
+                  ).length === 0 && (
+                    <p className="text-xs text-gray-400 text-center py-4">{t('notification.inbox.noRelatedAlerts')}</p>
                   )}
                 </div>
               </CardContent>

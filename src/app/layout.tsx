@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next'
 import { Cairo } from 'next/font/google'
-import { cookies } from 'next/headers'
 import './globals.css'
 import { ThemeProvider } from '@/components/layout/theme-provider'
 import { Toaster } from '@/components/ui/toaster'
@@ -8,7 +7,8 @@ import { NetworkStatus } from '@/components/ui/network-status'
 import { AppProviders } from '@/lib/mobile'
 import { PerformanceProvider } from '@/hooks/usePerformanceMode'
 import { getBranding, buildThemeCss } from '@/lib/branding'
-import type { Lang } from '@/lib/i18n'
+import { getDirection } from '@/lib/i18n'
+import { getServerLang } from '@/lib/i18n/server'
 
 const cairo = Cairo({
   subsets: ['arabic', 'latin'],
@@ -43,9 +43,8 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const branding = await getBranding()
   const themeCss = buildThemeCss(branding)
-  const cookieStore = await cookies()
-  const lang = (cookieStore.get('lang')?.value as Lang) || 'ar'
-  const dir = lang === 'ar' ? 'rtl' : 'ltr'
+  const lang = await getServerLang()
+  const dir = getDirection(lang)
 
   return (
     <html lang={lang} dir={dir} suppressHydrationWarning>

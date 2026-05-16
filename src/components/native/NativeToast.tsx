@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/language-provider'
 import { CheckCircle2, XCircle, AlertTriangle, Info, X } from 'lucide-react'
 
 type ToastType = 'success' | 'error' | 'warning' | 'info'
@@ -48,6 +49,7 @@ const toastConfig: Record<ToastType, { bg: string; border: string; Icon: typeof 
 }
 
 export function NativeToast({ toast, onDismiss, className }: NativeToastProps) {
+  const { t } = useT()
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
@@ -91,7 +93,7 @@ export function NativeToast({ toast, onDismiss, className }: NativeToastProps) {
               setTimeout(() => onDismiss(toast.id), 300)
             }}
             className="shrink-0 p-1 rounded-lg hover:bg-black/5 transition-colors text-muted-foreground"
-            aria-label="إغلاق"
+            aria-label={t('common.close')}
           >
             <X className="h-4 w-4" />
           </button>

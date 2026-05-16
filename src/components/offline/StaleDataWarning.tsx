@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/language-provider'
 import { AlertTriangle, Clock } from 'lucide-react'
 
 interface StaleDataWarningProps {
@@ -11,6 +12,7 @@ interface StaleDataWarningProps {
 }
 
 export function StaleDataWarning({ isStale, lastUpdated, className, onRefresh }: StaleDataWarningProps) {
+  const { t } = useT()
   if (!isStale) {
     return null
   }
@@ -25,15 +27,15 @@ export function StaleDataWarning({ isStale, lastUpdated, className, onRefresh }:
     >
       <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
       <span className="flex-1">
-        هذه البيانات قد لا تكون محدثة
-        {lastUpdated && ` - آخر تحديث: ${lastUpdated}`}
+        {t('offline.staleData.message')}
+        {lastUpdated && ` - ${t('offline.staleData.lastUpdated')}: ${lastUpdated}`}
       </span>
       {onRefresh && (
         <button
           onClick={onRefresh}
           className="px-2 py-0.5 rounded bg-warning/20 hover:bg-warning/30 transition-colors text-[10px] font-medium"
         >
-          تحديث
+          {t('common.update')}
         </button>
       )}
     </div>
@@ -51,23 +53,25 @@ export function OfflineTimestamp({ syncedAt, className }: { syncedAt: string | n
     const diff = now - date
     const minutes = Math.floor(diff / 60000)
     if (minutes < 1) {
-      return 'الآن'
+      return t('offline.staleData.now')
     }
     if (minutes < 60) {
-      return `منذ ${minutes} دقيقة`
+      return `${t('offline.staleData.ago')} ${minutes} ${t('offline.staleData.minutes')}`
     }
     const hours = Math.floor(minutes / 60)
     if (hours < 24) {
-      return `منذ ${hours} ساعة`
+      return `${t('offline.staleData.ago')} ${hours} ${t('offline.staleData.hours')}`
     }
     const days = Math.floor(hours / 24)
-    return `منذ ${days} يوم`
+    return `${t('offline.staleData.ago')} ${days} ${t('offline.staleData.days')}`
   }
 
   return (
     <div className={cn('flex items-center gap-1 text-[10px] text-muted-foreground', className)}>
       <Clock className="h-3 w-3" />
-      <span>آخر مزامنة: {formatRelativeTime(syncedAt)}</span>
+      <span>
+        {t('offline.staleData.lastSync')}: {formatRelativeTime(syncedAt)}
+      </span>
     </div>
   )
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/language-provider'
 import type { LucideIcon } from 'lucide-react'
 
 interface ActionSheetAction {
@@ -31,6 +32,7 @@ export function MobileActionSheet({
   onSelect,
   className,
 }: MobileActionSheetProps) {
+  const { t } = useT()
   if (!open) {
     return null
   }
@@ -75,7 +77,7 @@ export function MobileActionSheet({
             onClick={onClose}
             className="w-full py-3.5 rounded-xl bg-muted text-sm font-medium text-foreground hover:bg-accent transition-colors"
           >
-            إلغاء
+            {t('common.cancel')}
           </button>
         </div>
       </div>

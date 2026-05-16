@@ -3,13 +3,42 @@
 import { useState, useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import {
-  Package, Box, Warehouse, Truck, BarChart3, Search,
-  Filter, ArrowUpDown, Plus, Download, CheckCircle2, XCircle,
-  AlertTriangle, Eye, Clock, User, FileText, ArrowLeftRight,
-  Sparkles, Shield, Activity, TrendingUp, TrendingDown, MapPin,
-  Hash, Scale, QrCode, ChevronLeft, ChevronRight,
-  Circle, CircleDot, Percent, DollarSign, PieChart,
-  LineChart, TrendingUp as TrendingUpIcon,
+  Package,
+  Box,
+  Warehouse,
+  Truck,
+  BarChart3,
+  Search,
+  Filter,
+  ArrowUpDown,
+  Plus,
+  Download,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  Eye,
+  Clock,
+  User,
+  FileText,
+  ArrowLeftRight,
+  Sparkles,
+  Shield,
+  Activity,
+  TrendingUp,
+  TrendingDown,
+  MapPin,
+  Hash,
+  Scale,
+  QrCode,
+  ChevronLeft,
+  ChevronRight,
+  Circle,
+  CircleDot,
+  Percent,
+  DollarSign,
+  PieChart,
+  LineChart,
+  TrendingUp as TrendingUpIcon,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EnterpriseBreadcrumbs } from '@/components/enterprise/Navigation/Breadcrumbs'
@@ -21,24 +50,47 @@ import { OperationalCommenting } from '@/components/workbench/OperationalComment
 import { CrossEntityInspector } from '@/components/workbench/CrossEntityInspector'
 import { WorkbenchMetricCard } from '@/components/workbench/WorkbenchMetricCard'
 import type { InventoryItem, ValidationMessage, AIInsight, WorkbenchMetric, InspectorTab } from '@/lib/workbench/types'
+import { useT } from '@/lib/i18n/language-provider'
 
-const employeeNames = [
-  'أحمد محمد', 'سارة خالد', 'فهد العتيبي', 'نورة عبدالله',
-  'ماجد الحربي', 'ريم الشهري',
-]
+const employeeNames = ['أحمد محمد', 'سارة خالد', 'فهد العتيبي', 'نورة عبدالله', 'ماجد الحربي', 'ريم الشهري']
 
 const itemNames = [
-  'مواد خام أ', 'مواد خام ب', 'عبوات كرتون', 'أكياس بلاستيك',
-  'قطع غيار م أ', 'زيوت تشحيم', 'مذيبات كيميائية', 'فلاتر تهوية',
-  'أحزمة نقل', 'صمامات تحكم', 'مواسير صلب', 'كوابل كهربائية',
-  'مفاتيح كهربائية', 'محولات طاقة', 'مراوح تهوية', 'أجهزة قياس',
-  'دهانات صناعية', 'مواد تنظيف', 'قفازات واقية', 'أحذية سلامة',
-  'خوذ أمان', 'نظارات واقية', 'معدات لحام', 'أدوات يدوية', 'معدات قياس',
+  'مواد خام أ',
+  'مواد خام ب',
+  'عبوات كرتون',
+  'أكياس بلاستيك',
+  'قطع غيار م أ',
+  'زيوت تشحيم',
+  'مذيبات كيميائية',
+  'فلاتر تهوية',
+  'أحزمة نقل',
+  'صمامات تحكم',
+  'مواسير صلب',
+  'كوابل كهربائية',
+  'مفاتيح كهربائية',
+  'محولات طاقة',
+  'مراوح تهوية',
+  'أجهزة قياس',
+  'دهانات صناعية',
+  'مواد تنظيف',
+  'قفازات واقية',
+  'أحذية سلامة',
+  'خوذ أمان',
+  'نظارات واقية',
+  'معدات لحام',
+  'أدوات يدوية',
+  'معدات قياس',
 ]
 
 const categories = [
-  'مواد خام', 'تعبئة وتغليف', 'قطع غيار', 'كيميائيات',
-  'كهربائيات', 'معدات سلامة', 'أدوات قياس', 'معدات صناعية',
+  'مواد خام',
+  'تعبئة وتغليف',
+  'قطع غيار',
+  'كيميائيات',
+  'كهربائيات',
+  'معدات سلامة',
+  'أدوات قياس',
+  'معدات صناعية',
 ]
 
 const valuationClasses = ['FIFO', 'المتوسط المرجح', 'التكلفة المعيارية'] as const
@@ -122,10 +174,15 @@ function generateValuationItems(count: number): ValuationItem[] {
     }))
 
     let status: ValuationItem['status']
-    if (quantity === 0) status = 'out_of_stock'
-    else if (quantity <= 20) status = 'low_stock'
-    else if (quantity > 300) status = 'overstock'
-    else status = 'in_stock'
+    if (quantity === 0) {
+      status = 'out_of_stock'
+    } else if (quantity <= 20) {
+      status = 'low_stock'
+    } else if (quantity > 300) {
+      status = 'overstock'
+    } else {
+      status = 'in_stock'
+    }
 
     return {
       id: generateId('val'),
@@ -143,7 +200,13 @@ function generateValuationItems(count: number): ValuationItem[] {
       pendingRevaluation: Math.random() > 0.8,
       marginPercentage: parseFloat(marginDiff.toFixed(1)),
       status,
-      warehouse: randomChoice(['المستودع الرئيسي', 'مستودع المواد الخام', 'مستودع المواد الكيميائية', 'مستودع التعبئة', 'مستودع الصيانة']),
+      warehouse: randomChoice([
+        'المستودع الرئيسي',
+        'مستودع المواد الخام',
+        'مستودع المواد الكيميائية',
+        'مستودع التعبئة',
+        'مستودع الصيانة',
+      ]),
     }
   })
 }
@@ -155,13 +218,6 @@ const statusColors: Record<string, string> = {
   overstock: 'text-blue-600 bg-blue-50',
 }
 
-const statusLabels: Record<string, string> = {
-  in_stock: 'متوفر',
-  low_stock: 'منخفض',
-  out_of_stock: 'نفذ',
-  overstock: 'فائض',
-}
-
 const classColors: Record<string, string> = {
   FIFO: 'text-blue-600 bg-blue-50 border-blue-200',
   'المتوسط المرجح': 'text-purple-600 bg-purple-50 border-purple-200',
@@ -170,15 +226,14 @@ const classColors: Record<string, string> = {
 
 function formatDate(date: number): string {
   return new Date(date).toLocaleDateString('ar-SA', {
-    year: 'numeric', month: 'short', day: 'numeric',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
   })
 }
 
-function formatCurrency(value: number): string {
-  return value.toLocaleString('ar-SA') + ' ريال'
-}
-
 export function ValuationAnalysisWorkbench() {
+  const { t } = useT()
   const [items] = useState<ValuationItem[]>(() => generateValuationItems(25))
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [classFilter, setClassFilter] = useState<string>('الكل')
@@ -188,16 +243,28 @@ export function ValuationAnalysisWorkbench() {
   const [inspectorOpen, setInspectorOpen] = useState(true)
   const [inspectorTab, setInspectorTab] = useState('info')
 
-  const selected = useMemo(
-    () => items.find((i) => i.id === selectedId) ?? null,
-    [items, selectedId],
-  )
+  const statusLabels: Record<string, string> = {
+    in_stock: t('inventoryWorkbench.valuation.statusInStock'),
+    low_stock: t('inventoryWorkbench.valuation.statusLowStock'),
+    out_of_stock: t('inventoryWorkbench.valuation.statusOutOfStock'),
+    overstock: t('inventoryWorkbench.valuation.statusOverstock'),
+  }
+
+  const classLabels: Record<string, string> = {
+    FIFO: t('inventoryWorkbench.valuation.classFifo'),
+    'المتوسط المرجح': t('inventoryWorkbench.valuation.classWeightedAverage'),
+    'التكلفة المعيارية': t('inventoryWorkbench.valuation.classStandardCost'),
+  }
+
+  const selected = useMemo(() => items.find((i) => i.id === selectedId) ?? null, [items, selectedId])
 
   const groupedByClass = useMemo(() => {
     const groups: Record<string, ValuationItem[]> = {}
     for (const item of items) {
       const cls = item.valuationClass
-      if (!groups[cls]) groups[cls] = []
+      if (!groups[cls]) {
+        groups[cls] = []
+      }
       groups[cls].push(item)
     }
     return groups
@@ -212,9 +279,7 @@ export function ValuationAnalysisWorkbench() {
       const q = searchQuery.toLowerCase()
       result = result.filter(
         (i) =>
-          i.name.toLowerCase().includes(q) ||
-          i.sku.toLowerCase().includes(q) ||
-          i.category.toLowerCase().includes(q),
+          i.name.toLowerCase().includes(q) || i.sku.toLowerCase().includes(q) || i.category.toLowerCase().includes(q),
       )
     }
     return result
@@ -222,42 +287,77 @@ export function ValuationAnalysisWorkbench() {
 
   const metrics: WorkbenchMetric[] = useMemo(() => {
     const totalValue = items.reduce((s, i) => s + i.totalValue, 0)
-    const avgCost = items.length > 0
-      ? items.reduce((s, i) => s + i.currentCost, 0) / items.length
-      : 0
+    const avgCost = items.length > 0 ? items.reduce((s, i) => s + i.currentCost, 0) / items.length : 0
     const varianceCount = items.filter((i) => Math.abs(i.marginPercentage) > 10).length
     return [
-      { id: 'total', label: 'إجمالي قيمة المخزون', value: formatCurrency(totalValue), icon: 'Package', severity: 'info', change: 8, trend: 'up' },
-      { id: 'avg', label: 'متوسط التكلفة', value: avgCost.toLocaleString('ar-SA') + ' ريال', icon: 'Package', severity: 'info' },
-      { id: 'count', label: 'عدد الأصناف', value: items.length, icon: 'Package', severity: 'info' },
-      { id: 'variance', label: 'قيمة الفروقات', value: varianceCount, icon: 'Package', severity: varianceCount > 5 ? 'warning' : 'info' },
+      {
+        id: 'total',
+        label: t('inventoryWorkbench.valuation.totalInventoryValue'),
+        value: `${totalValue.toLocaleString('ar-SA')} ${t('inventoryWorkbench.valuation.riyal')}`,
+        icon: 'Package',
+        severity: 'info',
+        change: 8,
+        trend: 'up',
+      },
+      {
+        id: 'avg',
+        label: t('inventoryWorkbench.valuation.averageCost'),
+        value: `${avgCost.toLocaleString('ar-SA')} ${t('inventoryWorkbench.valuation.riyal')}`,
+        icon: 'Package',
+        severity: 'info',
+      },
+      {
+        id: 'count',
+        label: t('inventoryWorkbench.valuation.itemCount'),
+        value: items.length,
+        icon: 'Package',
+        severity: 'info',
+      },
+      {
+        id: 'variance',
+        label: t('inventoryWorkbench.valuation.varianceValue'),
+        value: varianceCount,
+        icon: 'Package',
+        severity: varianceCount > 5 ? 'warning' : 'info',
+      },
     ]
-  }, [items])
+  }, [items, t])
 
   const allValidationMessages: ValidationMessage[] = useMemo(() => {
     const msgs: ValidationMessage[] = []
     for (const item of items) {
       if (item.currentCost <= 0) {
-        msgs.push({ id: generateId('msg'), type: 'error', message: `${item.name}: التكلفة الحالية صفر أو سالبة`, field: 'currentCost' })
+        msgs.push({
+          id: generateId('msg'),
+          type: 'error',
+          message: `${item.name}: ${t('inventoryWorkbench.valuation.currentCost')} صفر أو سالبة`,
+          field: 'currentCost',
+        })
       }
       if (Math.abs(item.marginPercentage) > 20) {
         msgs.push({
-          id: generateId('msg'), type: 'warning',
+          id: generateId('msg'),
+          type: 'warning',
           message: `${item.name}: فرق كبير بين التكلفة الحالية والمعيارية (${item.marginPercentage}%)`,
           field: 'margin',
         })
       }
       if (item.totalValue < 0) {
-        msgs.push({ id: generateId('msg'), type: 'error', message: `${item.name}: قيمة مخزون سالبة`, field: 'totalValue' })
+        msgs.push({
+          id: generateId('msg'),
+          type: 'error',
+          message: `${item.name}: قيمة مخزون سالبة`,
+          field: 'totalValue',
+        })
       }
     }
     return msgs.slice(0, 10)
-  }, [items])
+  }, [items, t])
 
   const inspectorTabs: InspectorTab[] = [
-    { id: 'info', label: 'تحليل التكلفة', icon: 'info' },
-    { id: 'margin', label: 'تحليل الهامش', icon: 'activity' },
-    { id: 'documents', label: 'المستندات', icon: 'file' },
+    { id: 'info', label: t('inventoryWorkbench.valuation.tabCostAnalysis'), icon: 'info' },
+    { id: 'margin', label: t('inventoryWorkbench.valuation.tabMarginAnalysis'), icon: 'activity' },
+    { id: 'documents', label: t('inventoryWorkbench.valuation.tabDocuments'), icon: 'file' },
   ]
 
   const handleSelect = (id: string) => {
@@ -265,16 +365,18 @@ export function ValuationAnalysisWorkbench() {
   }
 
   const maxCost = useMemo(() => {
-    if (!selected) return 1
+    if (!selected) {
+      return 1
+    }
     return Math.max(...selected.costHistory.map((c) => c.cost), selected.currentCost, selected.standardCost)
   }, [selected])
 
   return (
     <WorkbenchShell
-      title="منصة تحليل تقييم المخزون"
+      title={t('inventoryWorkbench.valuation.title')}
       breadcrumbs={[
-        { label: 'المخزون' },
-        { label: 'تحليل تقييم المخزون' },
+        { label: t('inventoryWorkbench.valuation.breadcrumbInventory') },
+        { label: t('inventoryWorkbench.valuation.breadcrumbValuation') },
       ]}
       metrics={metrics}
       sidebarWidth={420}
@@ -294,11 +396,9 @@ export function ValuationAnalysisWorkbench() {
                       : 'bg-muted text-muted-foreground hover:bg-muted/80',
                   )}
                 >
-                  {cls}
+                  {cls === 'الكل' ? t('inventoryWorkbench.valuation.all') : classLabels[cls]}
                   {cls !== 'الكل' && (
-                    <span className="mr-1 text-[10px] opacity-70">
-                      ({groupedByClass[cls]?.length ?? 0})
-                    </span>
+                    <span className="mr-1 text-[10px] opacity-70">({groupedByClass[cls]?.length ?? 0})</span>
                   )}
                 </button>
               ))}
@@ -310,7 +410,7 @@ export function ValuationAnalysisWorkbench() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="بحث بالصنف أو الكود..."
+                placeholder={t('inventoryWorkbench.valuation.searchPlaceholder')}
                 className="flex h-9 w-full rounded-lg border border-input bg-background pr-10 pl-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
             </div>
@@ -320,7 +420,7 @@ export function ValuationAnalysisWorkbench() {
             {filteredItems.length === 0 && (
               <div className="flex flex-col items-center justify-center py-16 text-center px-4">
                 <BarChart3 className="h-12 w-12 text-muted-foreground/30 mb-3" />
-                <p className="text-sm text-muted-foreground">لا توجد عناصر مطابقة</p>
+                <p className="text-sm text-muted-foreground">{t('inventoryWorkbench.valuation.noMatchingItems')}</p>
               </div>
             )}
             {filteredItems.map((item) => {
@@ -341,7 +441,12 @@ export function ValuationAnalysisWorkbench() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
-                        <span className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded', classColors[item.valuationClass])}>
+                        <span
+                          className={cn(
+                            'text-[10px] font-bold px-1.5 py-0.5 rounded',
+                            classColors[item.valuationClass],
+                          )}
+                        >
                           {item.valuationClass}
                         </span>
                         <span className={cn('text-[10px] px-1.5 py-0.5 rounded', statusColors[item.status])}>
@@ -349,22 +454,38 @@ export function ValuationAnalysisWorkbench() {
                         </span>
                       </div>
                       <p className="text-sm font-semibold truncate">{item.name}</p>
-                      <p className="text-xs text-muted-foreground">{item.sku} - {item.category}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {item.sku} - {item.category}
+                      </p>
                       <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                        <span dir="ltr">{item.quantity.toLocaleString('ar-SA')} وحدة</span>
+                        <span dir="ltr">
+                          {item.quantity.toLocaleString('ar-SA')} {t('inventoryWorkbench.valuation.unit')}
+                        </span>
                         <span>|</span>
-                        <span>{item.currentCost.toLocaleString('ar-SA')} ريال/وحدة</span>
+                        <span>
+                          {item.currentCost.toLocaleString('ar-SA')} {t('inventoryWorkbench.valuation.riyal')}/
+                          {t('inventoryWorkbench.valuation.unit')}
+                        </span>
                       </div>
                       <div className="flex items-center gap-1 mt-1 text-xs">
-                        <span className="text-muted-foreground">القيمة:</span>
-                        <span className="font-medium">{item.totalValue.toLocaleString('ar-SA')} ريال</span>
+                        <span className="text-muted-foreground">{t('inventoryWorkbench.valuation.value')}</span>
+                        <span className="font-medium">
+                          {item.totalValue.toLocaleString('ar-SA')} {t('inventoryWorkbench.valuation.riyal')}
+                        </span>
                         {Math.abs(item.marginPercentage) > 5 && (
-                          <span className={cn(
-                            'flex items-center gap-0.5 text-[10px]',
-                            item.marginPercentage > 0 ? 'text-green-600' : 'text-red-600',
-                          )}>
-                            {item.marginPercentage > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                            {item.marginPercentage > 0 ? '+' : ''}{item.marginPercentage}%
+                          <span
+                            className={cn(
+                              'flex items-center gap-0.5 text-[10px]',
+                              item.marginPercentage > 0 ? 'text-green-600' : 'text-red-600',
+                            )}
+                          >
+                            {item.marginPercentage > 0 ? (
+                              <TrendingUp className="h-3 w-3" />
+                            ) : (
+                              <TrendingDown className="h-3 w-3" />
+                            )}
+                            {item.marginPercentage > 0 ? '+' : ''}
+                            {item.marginPercentage}%
                           </span>
                         )}
                       </div>
@@ -377,20 +498,31 @@ export function ValuationAnalysisWorkbench() {
 
           <div className="p-3 border-t flex items-center justify-between">
             <span className="text-xs text-muted-foreground">
-              {filteredItems.length} من {items.length} صنف
+              {filteredItems.length} {t('inventoryWorkbench.valuation.of')} {items.length}{' '}
+              {t('inventoryWorkbench.valuation.items')}
             </span>
             <Button variant="outline" size="sm" className="h-8 text-xs gap-1">
               <Download className="h-3.5 w-3.5" />
-              تصدير
+              {t('inventoryWorkbench.valuation.export')}
             </Button>
           </div>
         </div>
       }
       actions={[
-        { id: 'reevaluate', label: 'إعادة تقييم', type: 'primary', handler: () => {} },
-        { id: 'export', label: 'تصدير تقرير', type: 'secondary', handler: () => {} },
-        { id: 'audit', label: 'سجل التدقيق', type: 'ghost', handler: () => setAuditOpen(!auditOpen) },
-        { id: 'ai', label: 'تحليل ذكي', type: 'ghost', handler: () => setAiOpen(!aiOpen) },
+        { id: 'reevaluate', label: t('inventoryWorkbench.valuation.reevaluate'), type: 'primary', handler: () => {} },
+        { id: 'export', label: t('inventoryWorkbench.valuation.exportReport'), type: 'secondary', handler: () => {} },
+        {
+          id: 'audit',
+          label: t('inventoryWorkbench.valuation.auditLog'),
+          type: 'ghost',
+          handler: () => setAuditOpen(!auditOpen),
+        },
+        {
+          id: 'ai',
+          label: t('inventoryWorkbench.valuation.smartAnalysis'),
+          type: 'ghost',
+          handler: () => setAiOpen(!aiOpen),
+        },
       ]}
       inspectorTabs={inspectorTabs}
       inspectorOpen={inspectorOpen}
@@ -404,48 +536,77 @@ export function ValuationAnalysisWorkbench() {
               {inspectorTab === 'info' && (
                 <div className="space-y-4">
                   <div className="rounded-xl border bg-card p-4">
-                    <h4 className="text-sm font-semibold mb-3">تحليل التكلفة</h4>
+                    <h4 className="text-sm font-semibold mb-3">{t('inventoryWorkbench.valuation.tabCostAnalysis')}</h4>
                     <div className="space-y-3">
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">التكلفة الحالية</span>
-                        <span className="text-sm font-bold">{selected.currentCost.toLocaleString('ar-SA')} ريال</span>
+                        <span className="text-sm text-muted-foreground">
+                          {t('inventoryWorkbench.valuation.currentCost')}
+                        </span>
+                        <span className="text-sm font-bold">
+                          {selected.currentCost.toLocaleString('ar-SA')} {t('inventoryWorkbench.valuation.riyal')}
+                        </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">التكلفة المعيارية</span>
-                        <span className="text-sm font-bold">{selected.standardCost.toLocaleString('ar-SA')} ريال</span>
+                        <span className="text-sm text-muted-foreground">
+                          {t('inventoryWorkbench.valuation.standardCost')}
+                        </span>
+                        <span className="text-sm font-bold">
+                          {selected.standardCost.toLocaleString('ar-SA')} {t('inventoryWorkbench.valuation.riyal')}
+                        </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">الفرق</span>
-                        <span className={cn(
-                          'text-sm font-bold',
-                          (selected.currentCost - selected.standardCost) > 0 ? 'text-green-600' : 'text-red-600',
-                        )}>
-                          {(selected.currentCost - selected.standardCost) > 0 ? '+' : ''}
-                          {(selected.currentCost - selected.standardCost).toLocaleString('ar-SA')} ريال
+                        <span className="text-sm text-muted-foreground">
+                          {t('inventoryWorkbench.valuation.difference')}
+                        </span>
+                        <span
+                          className={cn(
+                            'text-sm font-bold',
+                            selected.currentCost - selected.standardCost > 0 ? 'text-green-600' : 'text-red-600',
+                          )}
+                        >
+                          {selected.currentCost - selected.standardCost > 0 ? '+' : ''}
+                          {(selected.currentCost - selected.standardCost).toLocaleString('ar-SA')}{' '}
+                          {t('inventoryWorkbench.valuation.riyal')}
                         </span>
                       </div>
                     </div>
                   </div>
 
                   <div className="rounded-xl border bg-card p-4">
-                    <h4 className="text-sm font-semibold mb-3">الكمية × التكلفة</h4>
+                    <h4 className="text-sm font-semibold mb-3">
+                      {t('inventoryWorkbench.valuation.quantityTimesCost')}
+                    </h4>
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">الكمية</span>
-                        <span className="font-medium" dir="ltr">{selected.quantity.toLocaleString('ar-SA')}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">القيمة الدفترية</span>
-                        <span className="font-medium">{selected.totalValue.toLocaleString('ar-SA')} ريال</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">طريقة التقييم</span>
-                        <span className={cn('text-xs font-bold px-2 py-0.5 rounded', classColors[selected.valuationClass])}>
-                          {selected.valuationClass}
+                        <span className="text-sm text-muted-foreground">
+                          {t('inventoryWorkbench.valuation.quantity')}
+                        </span>
+                        <span className="font-medium" dir="ltr">
+                          {selected.quantity.toLocaleString('ar-SA')}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">المستودع</span>
+                        <span className="text-sm text-muted-foreground">
+                          {t('inventoryWorkbench.valuation.bookValue')}
+                        </span>
+                        <span className="font-medium">
+                          {selected.totalValue.toLocaleString('ar-SA')} {t('inventoryWorkbench.valuation.riyal')}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">
+                          {t('inventoryWorkbench.valuation.valuationMethod')}
+                        </span>
+                        <span
+                          className={cn('text-xs font-bold px-2 py-0.5 rounded', classColors[selected.valuationClass])}
+                        >
+                          {classLabels[selected.valuationClass]}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">
+                          {t('inventoryWorkbench.valuation.warehouse')}
+                        </span>
                         <span className="text-sm font-medium">{selected.warehouse}</span>
                       </div>
                     </div>
@@ -456,25 +617,47 @@ export function ValuationAnalysisWorkbench() {
               {inspectorTab === 'margin' && (
                 <div className="space-y-4">
                   <div className="rounded-xl border bg-card p-4">
-                    <h4 className="text-sm font-semibold mb-3">تحليل الهامش</h4>
+                    <h4 className="text-sm font-semibold mb-3">
+                      {t('inventoryWorkbench.valuation.tabMarginAnalysis')}
+                    </h4>
                     <div className="space-y-3">
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">هامش الفرق</span>
-                        <span className={cn(
-                          'text-sm font-bold',
-                          selected.marginPercentage > 0 ? 'text-green-600' : 'text-red-600',
-                        )}>
-                          {selected.marginPercentage > 0 ? '+' : ''}{selected.marginPercentage}%
+                        <span className="text-sm text-muted-foreground">
+                          {t('inventoryWorkbench.valuation.marginDifference')}
+                        </span>
+                        <span
+                          className={cn(
+                            'text-sm font-bold',
+                            selected.marginPercentage > 0 ? 'text-green-600' : 'text-red-600',
+                          )}
+                        >
+                          {selected.marginPercentage > 0 ? '+' : ''}
+                          {selected.marginPercentage}%
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">أصناف بطيئة الحركة</span>
-                        <span className="text-sm font-medium">{selected.quantity > 200 ? 'نعم' : 'لا'}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {t('inventoryWorkbench.valuation.slowMovingItems')}
+                        </span>
+                        <span className="text-sm font-medium">
+                          {selected.quantity > 200
+                            ? t('inventoryWorkbench.valuation.yes')
+                            : t('inventoryWorkbench.valuation.no')}
+                        </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">إعادة تقييم معلقة</span>
-                        <span className={cn('text-sm font-medium', selected.pendingRevaluation ? 'text-amber-600' : 'text-green-600')}>
-                          {selected.pendingRevaluation ? 'نعم' : 'لا'}
+                        <span className="text-sm text-muted-foreground">
+                          {t('inventoryWorkbench.valuation.pendingRevaluation')}
+                        </span>
+                        <span
+                          className={cn(
+                            'text-sm font-medium',
+                            selected.pendingRevaluation ? 'text-amber-600' : 'text-green-600',
+                          )}
+                        >
+                          {selected.pendingRevaluation
+                            ? t('inventoryWorkbench.valuation.yes')
+                            : t('inventoryWorkbench.valuation.no')}
                         </span>
                       </div>
                     </div>
@@ -482,7 +665,9 @@ export function ValuationAnalysisWorkbench() {
 
                   {selected.revaluationHistory.length > 0 && (
                     <div className="rounded-xl border bg-card p-4">
-                      <h4 className="text-sm font-semibold mb-3">سجل إعادة التقييم</h4>
+                      <h4 className="text-sm font-semibold mb-3">
+                        {t('inventoryWorkbench.valuation.revaluationHistory')}
+                      </h4>
                       <div className="space-y-3">
                         {selected.revaluationHistory.map((rev) => (
                           <div key={rev.id} className="flex items-start gap-3 p-2 rounded-lg bg-muted/30">
@@ -492,7 +677,8 @@ export function ValuationAnalysisWorkbench() {
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium">{rev.reason}</p>
                               <p className="text-xs text-muted-foreground">
-                                {rev.oldCost.toLocaleString('ar-SA')} ريال ← {rev.newCost.toLocaleString('ar-SA')} ريال
+                                {rev.oldCost.toLocaleString('ar-SA')} {t('inventoryWorkbench.valuation.riyal')} ←{' '}
+                                {rev.newCost.toLocaleString('ar-SA')} {t('inventoryWorkbench.valuation.riyal')}
                               </p>
                               <p className="text-[10px] text-muted-foreground">
                                 {rev.initiatedBy} - {formatDate(rev.date)}
@@ -508,39 +694,31 @@ export function ValuationAnalysisWorkbench() {
                     <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
                       <div className="flex items-center gap-2">
                         <AlertTriangle className="h-4 w-4 text-amber-600" />
-                        <span className="text-sm font-medium text-amber-800">إعادة تقييم معلقة</span>
+                        <span className="text-sm font-medium text-amber-800">
+                          {t('inventoryWorkbench.valuation.pendingRevaluationAlertTitle')}
+                        </span>
                       </div>
                       <p className="text-xs text-amber-700 mt-1">
-                        هذا الصنف لديه إعادة تقييم معلقة. يرجى مراجعة التكلفة الحالية.
+                        {t('inventoryWorkbench.valuation.pendingRevaluationAlertDesc')}
                       </p>
                       <Button variant="outline" size="sm" className="mt-2 h-8 text-xs">
-                        عرض تفاصيل إعادة التقييم
+                        {t('inventoryWorkbench.valuation.viewRevaluationDetails')}
                       </Button>
                     </div>
                   )}
                 </div>
               )}
 
-              {inspectorTab === 'documents' && (
-                <CrossEntityInspector
-                  entityType="inventory"
-                  entityId={selected.sku}
-                />
-              )}
+              {inspectorTab === 'documents' && <CrossEntityInspector entityType="inventory" entityId={selected.sku} />}
             </>
           ) : (
             <div className="flex items-center justify-center h-full">
-              <p className="text-sm text-muted-foreground">اختر صنفاً من القائمة</p>
+              <p className="text-sm text-muted-foreground">{t('inventoryWorkbench.valuation.selectItemHint')}</p>
             </div>
           )}
         </>
       }
-      validationBar={
-        <RealtimeValidationBar
-          messages={allValidationMessages}
-          onDismiss={(id) => {}}
-        />
-      }
+      validationBar={<RealtimeValidationBar messages={allValidationMessages} onDismiss={(id) => {}} />}
       aiPanel={
         <AIAssistancePanel
           open={aiOpen}
@@ -557,8 +735,8 @@ export function ValuationAnalysisWorkbench() {
               <div className="p-4 rounded-2xl bg-muted inline-flex mb-4">
                 <BarChart3 className="h-12 w-12 text-muted-foreground/40" />
               </div>
-              <h3 className="text-lg font-semibold mb-1">اختر صنفاً للتحليل</h3>
-              <p className="text-sm text-muted-foreground">اختر صنفاً من القائمة لعرض تحليل التقييم الكامل</p>
+              <h3 className="text-lg font-semibold mb-1">{t('inventoryWorkbench.valuation.selectItemTitle')}</h3>
+              <p className="text-sm text-muted-foreground">{t('inventoryWorkbench.valuation.selectItemDesc')}</p>
             </div>
           </div>
         ) : (
@@ -567,7 +745,7 @@ export function ValuationAnalysisWorkbench() {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <span className={cn('text-xs font-bold px-2 py-0.5 rounded', classColors[selected.valuationClass])}>
-                    {selected.valuationClass}
+                    {classLabels[selected.valuationClass]}
                   </span>
                   <span className={cn('text-xs px-2 py-0.5 rounded', statusColors[selected.status])}>
                     {statusLabels[selected.status]}
@@ -580,43 +758,53 @@ export function ValuationAnalysisWorkbench() {
               <div className="flex items-center gap-2">
                 <Button variant="default" size="sm" className="h-8 text-xs gap-1">
                   <TrendingUpIcon className="h-3.5 w-3.5" />
-                  إعادة تقييم
+                  {t('inventoryWorkbench.valuation.reevaluate')}
                 </Button>
                 <Button variant="outline" size="sm" className="h-8 text-xs gap-1">
                   <Download className="h-3.5 w-3.5" />
-                  تصدير
+                  {t('inventoryWorkbench.valuation.export')}
                 </Button>
               </div>
             </div>
 
             <div className="grid grid-cols-4 gap-4">
               <div className="rounded-xl border bg-card p-4">
-                <p className="text-xs text-muted-foreground mb-1">التكلفة الحالية</p>
-                <p className="text-2xl font-bold">{selected.currentCost.toLocaleString('ar-SA')} ريال</p>
+                <p className="text-xs text-muted-foreground mb-1">{t('inventoryWorkbench.valuation.currentCost')}</p>
+                <p className="text-2xl font-bold">
+                  {selected.currentCost.toLocaleString('ar-SA')} {t('inventoryWorkbench.valuation.riyal')}
+                </p>
               </div>
               <div className="rounded-xl border bg-card p-4">
-                <p className="text-xs text-muted-foreground mb-1">التكلفة المعيارية</p>
-                <p className="text-2xl font-bold">{selected.standardCost.toLocaleString('ar-SA')} ريال</p>
+                <p className="text-xs text-muted-foreground mb-1">{t('inventoryWorkbench.valuation.standardCost')}</p>
+                <p className="text-2xl font-bold">
+                  {selected.standardCost.toLocaleString('ar-SA')} {t('inventoryWorkbench.valuation.riyal')}
+                </p>
               </div>
               <div className="rounded-xl border bg-card p-4">
-                <p className="text-xs text-muted-foreground mb-1">الكمية</p>
-                <p className="text-2xl font-bold" dir="ltr">{selected.quantity.toLocaleString('ar-SA')}</p>
+                <p className="text-xs text-muted-foreground mb-1">{t('inventoryWorkbench.valuation.quantity')}</p>
+                <p className="text-2xl font-bold" dir="ltr">
+                  {selected.quantity.toLocaleString('ar-SA')}
+                </p>
               </div>
               <div className="rounded-xl border bg-card p-4">
-                <p className="text-xs text-muted-foreground mb-1">القيمة الإجمالية</p>
-                <p className="text-2xl font-bold">{selected.totalValue.toLocaleString('ar-SA')} ريال</p>
+                <p className="text-xs text-muted-foreground mb-1">{t('inventoryWorkbench.valuation.totalValue')}</p>
+                <p className="text-2xl font-bold">
+                  {selected.totalValue.toLocaleString('ar-SA')} {t('inventoryWorkbench.valuation.riyal')}
+                </p>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div className="rounded-xl border bg-card p-4">
-                  <h3 className="text-sm font-semibold mb-3">مقارنة التكلفة</h3>
+                  <h3 className="text-sm font-semibold mb-3">{t('inventoryWorkbench.valuation.costComparison')}</h3>
                   <div className="space-y-3">
                     <div>
                       <div className="flex justify-between text-sm mb-1">
-                        <span className="text-muted-foreground">التكلفة الحالية</span>
-                        <span className="font-bold">{selected.currentCost.toLocaleString('ar-SA')} ريال</span>
+                        <span className="text-muted-foreground">{t('inventoryWorkbench.valuation.currentCost')}</span>
+                        <span className="font-bold">
+                          {selected.currentCost.toLocaleString('ar-SA')} {t('inventoryWorkbench.valuation.riyal')}
+                        </span>
                       </div>
                       <div className="h-3 bg-muted rounded-full overflow-hidden">
                         <div
@@ -627,8 +815,10 @@ export function ValuationAnalysisWorkbench() {
                     </div>
                     <div>
                       <div className="flex justify-between text-sm mb-1">
-                        <span className="text-muted-foreground">التكلفة المعيارية</span>
-                        <span className="font-bold">{selected.standardCost.toLocaleString('ar-SA')} ريال</span>
+                        <span className="text-muted-foreground">{t('inventoryWorkbench.valuation.standardCost')}</span>
+                        <span className="font-bold">
+                          {selected.standardCost.toLocaleString('ar-SA')} {t('inventoryWorkbench.valuation.riyal')}
+                        </span>
                       </div>
                       <div className="h-3 bg-muted rounded-full overflow-hidden">
                         <div
@@ -641,35 +831,54 @@ export function ValuationAnalysisWorkbench() {
 
                   <div className="mt-4 pt-4 border-t">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">الفارق</span>
-                      <span className={cn(
-                        'text-lg font-bold',
-                        selected.marginPercentage > 0 ? 'text-green-600' : 'text-red-600',
-                      )}>
-                        {selected.marginPercentage > 0 ? '+' : ''}{selected.marginPercentage}%
+                      <span className="text-sm text-muted-foreground">{t('inventoryWorkbench.valuation.gap')}</span>
+                      <span
+                        className={cn(
+                          'text-lg font-bold',
+                          selected.marginPercentage > 0 ? 'text-green-600' : 'text-red-600',
+                        )}
+                      >
+                        {selected.marginPercentage > 0 ? '+' : ''}
+                        {selected.marginPercentage}%
                       </span>
                     </div>
                   </div>
                 </div>
 
                 <div className="rounded-xl border bg-card p-4">
-                  <h3 className="text-sm font-semibold mb-3">الكمية × التكلفة</h3>
+                  <h3 className="text-sm font-semibold mb-3">{t('inventoryWorkbench.valuation.quantityTimesCost')}</h3>
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">الكمية × التكلفة الحالية</span>
-                      <span className="text-sm font-bold">{selected.totalValue.toLocaleString('ar-SA')} ريال</span>
+                      <span className="text-sm text-muted-foreground">
+                        {t('inventoryWorkbench.valuation.qtyTimesCurrentCost')}
+                      </span>
+                      <span className="text-sm font-bold">
+                        {selected.totalValue.toLocaleString('ar-SA')} {t('inventoryWorkbench.valuation.riyal')}
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">الكمية × التكلفة المعيارية</span>
-                      <span className="text-sm font-bold">{(selected.quantity * selected.standardCost).toLocaleString('ar-SA')} ريال</span>
+                      <span className="text-sm text-muted-foreground">
+                        {t('inventoryWorkbench.valuation.qtyTimesStandardCost')}
+                      </span>
+                      <span className="text-sm font-bold">
+                        {(selected.quantity * selected.standardCost).toLocaleString('ar-SA')}{' '}
+                        {t('inventoryWorkbench.valuation.riyal')}
+                      </span>
                     </div>
                     <div className="flex justify-between pt-2 border-t">
-                      <span className="text-sm text-muted-foreground">فرق القيمة</span>
-                      <span className={cn(
-                        'text-sm font-bold',
-                        (selected.totalValue - selected.quantity * selected.standardCost) > 0 ? 'text-green-600' : 'text-red-600',
-                      )}>
-                        {(selected.totalValue - selected.quantity * selected.standardCost).toLocaleString('ar-SA')} ريال
+                      <span className="text-sm text-muted-foreground">
+                        {t('inventoryWorkbench.valuation.valueDiff')}
+                      </span>
+                      <span
+                        className={cn(
+                          'text-sm font-bold',
+                          selected.totalValue - selected.quantity * selected.standardCost > 0
+                            ? 'text-green-600'
+                            : 'text-red-600',
+                        )}
+                      >
+                        {(selected.totalValue - selected.quantity * selected.standardCost).toLocaleString('ar-SA')}{' '}
+                        {t('inventoryWorkbench.valuation.riyal')}
                       </span>
                     </div>
                   </div>
@@ -678,7 +887,7 @@ export function ValuationAnalysisWorkbench() {
 
               <div className="space-y-4">
                 <div className="rounded-xl border bg-card p-4">
-                  <h3 className="text-sm font-semibold mb-3">تاريخ التكلفة (آخر 12 شهر)</h3>
+                  <h3 className="text-sm font-semibold mb-3">{t('inventoryWorkbench.valuation.costHistory')}</h3>
                   <div className="space-y-1">
                     {selected.costHistory.map((point, idx) => (
                       <div key={idx} className="flex items-center gap-2">
@@ -698,14 +907,16 @@ export function ValuationAnalysisWorkbench() {
                     ))}
                   </div>
                   <div className="flex items-center justify-between mt-3 pt-2 border-t text-[10px] text-muted-foreground">
-                    <span>الأقدم</span>
-                    <span>الأحدث</span>
+                    <span>{t('inventoryWorkbench.valuation.oldest')}</span>
+                    <span>{t('inventoryWorkbench.valuation.newest')}</span>
                   </div>
                 </div>
 
                 {selected.revaluationHistory.length > 0 && (
                   <div className="rounded-xl border bg-card p-4">
-                    <h3 className="text-sm font-semibold mb-3">سجل إعادة التقييم</h3>
+                    <h3 className="text-sm font-semibold mb-3">
+                      {t('inventoryWorkbench.valuation.revaluationHistory')}
+                    </h3>
                     <div className="space-y-3">
                       {selected.revaluationHistory.slice(-3).map((rev) => (
                         <div key={rev.id} className="flex items-start gap-3 p-2 rounded-lg bg-muted/30">
@@ -715,7 +926,8 @@ export function ValuationAnalysisWorkbench() {
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium">{rev.reason}</p>
                             <p className="text-xs text-muted-foreground">
-                              {rev.oldCost.toLocaleString('ar-SA')} ← {rev.newCost.toLocaleString('ar-SA')} ريال
+                              {rev.oldCost.toLocaleString('ar-SA')} ← {rev.newCost.toLocaleString('ar-SA')}{' '}
+                              {t('inventoryWorkbench.valuation.riyal')}
                             </p>
                             <p className="text-[10px] text-muted-foreground">{formatDate(rev.date)}</p>
                           </div>
@@ -729,35 +941,47 @@ export function ValuationAnalysisWorkbench() {
                   <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <AlertTriangle className="h-4 w-4 text-amber-600" />
-                      <h3 className="text-sm font-semibold text-amber-800">إعادة تقييم معلقة</h3>
+                      <h3 className="text-sm font-semibold text-amber-800">
+                        {t('inventoryWorkbench.valuation.pendingRevaluationAlertTitle')}
+                      </h3>
                     </div>
                     <p className="text-xs text-amber-700">
-                      هذا الصنف لديه إعادة تقييم معلقة في سير العمل. يرجى مراجعة التفاصيل واعتماد إعادة التقييم.
+                      {t('inventoryWorkbench.valuation.pendingRevaluationWorkflowDesc')}
                     </p>
                     <div className="flex gap-2 mt-3">
                       <Button variant="default" size="sm" className="h-8 text-xs">
-                        عرض التفاصيل
+                        {t('inventoryWorkbench.valuation.viewDetails')}
                       </Button>
                       <Button variant="outline" size="sm" className="h-8 text-xs">
-                        تجاهل
+                        {t('inventoryWorkbench.valuation.dismiss')}
                       </Button>
                     </div>
                   </div>
                 )}
 
                 <div className="rounded-xl border bg-card p-4">
-                  <h3 className="text-sm font-semibold mb-3">تحليل الحركة</h3>
+                  <h3 className="text-sm font-semibold mb-3">{t('inventoryWorkbench.valuation.movementAnalysis')}</h3>
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">نقطة إعادة الطلب</span>
-                      <span className="text-sm font-medium" dir="ltr">{selected.reorderPoint}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {t('inventoryWorkbench.valuation.reorderPoint')}
+                      </span>
+                      <span className="text-sm font-medium" dir="ltr">
+                        {selected.reorderPoint}
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">المخزون الحالي</span>
-                      <span className="text-sm font-medium" dir="ltr">{selected.quantity}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {t('inventoryWorkbench.valuation.currentStock')}
+                      </span>
+                      <span className="text-sm font-medium" dir="ltr">
+                        {selected.quantity}
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">حالة الصنف</span>
+                      <span className="text-sm text-muted-foreground">
+                        {t('inventoryWorkbench.valuation.itemStatus')}
+                      </span>
                       <span className={cn('text-xs font-bold px-2 py-0.5 rounded', statusColors[selected.status])}>
                         {statusLabels[selected.status]}
                       </span>
@@ -768,19 +992,19 @@ export function ValuationAnalysisWorkbench() {
                     {selected.quantity <= selected.reorderPoint && selected.quantity > 0 && (
                       <div className="flex items-start gap-2 p-2 rounded-lg bg-amber-50 text-amber-700">
                         <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
-                        <span className="text-xs">المخزون أقل من نقطة إعادة الطلب، يوصى بإعادة التموين</span>
+                        <span className="text-xs">{t('inventoryWorkbench.valuation.stockBelowReorder')}</span>
                       </div>
                     )}
                     {selected.quantity === 0 && (
                       <div className="flex items-start gap-2 p-2 rounded-lg bg-red-50 text-red-700">
                         <XCircle className="h-4 w-4 mt-0.5 shrink-0" />
-                        <span className="text-xs">المخزون صفر - نفذ بالكامل</span>
+                        <span className="text-xs">{t('inventoryWorkbench.valuation.stockOutMessage')}</span>
                       </div>
                     )}
                     {selected.quantity > selected.reorderPoint * 5 && (
                       <div className="flex items-start gap-2 p-2 rounded-lg bg-blue-50 text-blue-700">
                         <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
-                        <span className="text-xs">المخزون فائض - قد يكون هناك مخزون راكد</span>
+                        <span className="text-xs">{t('inventoryWorkbench.valuation.overstockMessage')}</span>
                       </div>
                     )}
                   </div>
@@ -788,9 +1012,7 @@ export function ValuationAnalysisWorkbench() {
               </div>
             </div>
 
-            <OperationalCommenting
-              comments={[]}
-            />
+            <OperationalCommenting comments={[]} />
           </div>
         )}
       </div>
@@ -800,7 +1022,7 @@ export function ValuationAnalysisWorkbench() {
         open={auditOpen}
         onClose={() => setAuditOpen(false)}
         entityId={selected?.id}
-        entityType="تحليل تقييم"
+        entityType={t('inventoryWorkbench.valuation.entityType')}
       />
     </WorkbenchShell>
   )

@@ -6,6 +6,7 @@ import { PriorityIndicator } from './PriorityIndicator'
 import { useNotificationActions } from '@/lib/push/react/use-notification-actions'
 import { formatDistanceToNow } from 'date-fns'
 import { ar } from 'date-fns/locale'
+import { useT } from '@/lib/i18n/language-provider'
 import { Check, X, RotateCcw, ArrowUpRight, Eye, UserPlus, Target } from 'lucide-react'
 
 interface ActionableNotificationCardProps {
@@ -77,6 +78,8 @@ export function ActionableNotificationCard({
     }
   })()
 
+  const { t } = useT()
+
   return (
     <div
       className={cn(
@@ -106,7 +109,7 @@ export function ActionableNotificationCard({
               <button
                 onClick={() => onDismiss(notification.id)}
                 className="shrink-0 p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
-                aria-label="تجاهل"
+                aria-label={t('notification.push.ariaDismiss')}
               >
                 <X className="h-3.5 w-3.5" />
               </button>

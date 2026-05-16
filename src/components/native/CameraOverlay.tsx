@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/language-provider'
 import { Camera, X, RotateCcw, Check, Zap, ZapOff } from 'lucide-react'
 
 interface CameraOverlayProps {
@@ -13,6 +14,7 @@ interface CameraOverlayProps {
 }
 
 export function CameraOverlay({ open, onClose, onCapture, mode = 'photo', className }: CameraOverlayProps) {
+  const { t } = useT()
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -120,7 +122,7 @@ export function CameraOverlay({ open, onClose, onCapture, mode = 'photo', classN
           <button
             onClick={toggleCamera}
             className="p-3 rounded-full bg-white/20 hover:bg-white/30 transition-colors text-white"
-            aria-label="قلب الكاميرا"
+            aria-label={t('camera.flip')}
           >
             <RotateCcw className="h-6 w-6" />
           </button>
@@ -139,7 +141,7 @@ export function CameraOverlay({ open, onClose, onCapture, mode = 'photo', classN
           <button
             onClick={() => setFlash(!flash)}
             className="p-3 rounded-full bg-white/20 hover:bg-white/30 transition-colors text-white"
-            aria-label="فلاش"
+            aria-label={t('camera.flash')}
           >
             {flash ? <Zap className="h-6 w-6" /> : <ZapOff className="h-6 w-6" />}
           </button>
@@ -149,7 +151,7 @@ export function CameraOverlay({ open, onClose, onCapture, mode = 'photo', classN
       <button
         onClick={onClose}
         className="absolute top-4 left-4 p-2 rounded-full bg-black/50 hover:bg-black/70 transition-colors text-white z-10"
-        aria-label="إغلاق"
+        aria-label={t('common.close')}
       >
         <X className="h-6 w-6" />
       </button>

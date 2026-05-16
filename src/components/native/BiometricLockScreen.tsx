@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { biometricLockService } from '@/lib/native/security/biometric-lock'
+import { useT } from '@/lib/i18n/language-provider'
 import { Fingerprint, Lock, ShieldAlert } from 'lucide-react'
 
 interface BiometricLockScreenProps {
@@ -11,17 +12,19 @@ interface BiometricLockScreenProps {
 }
 
 export function BiometricLockScreen({ onUnlock, className }: BiometricLockScreenProps) {
+  const { t } = useT()
   const [unlocking, setUnlocking] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const handleUnlock = async () => {
     setUnlocking(true)
     setError(null)
-    const result = await biometricLockService.unlock('فتح التطبيق')
+    const reason = t('biometric.unlockReason')
+    const result = await biometricLockService.unlock(reason)
     if (result) {
       onUnlock?.()
     } else {
-      setError('فشل التحقق. حاول مرة أخرى')
+      setError(t('biometric.verifyFailed'))
     }
     setUnlocking(false)
   }
@@ -37,8 +40,8 @@ export function BiometricLockScreen({ onUnlock, className }: BiometricLockScreen
         </div>
 
         <div>
-          <h2 className="text-xl font-bold">التطبيق مقفل</h2>
-          <p className="text-sm text-muted-foreground mt-2">استخدم المصادقة البيومترية لفتح التطبيق</p>
+          <h2 className="text-xl font-bold">{t('biometric.appLocked')}</h2>
+          <p className="text-sm text-muted-foreground mt-2">{t('biometric.useBiometric')}</p>
         </div>
 
         <button
@@ -49,7 +52,7 @@ export function BiometricLockScreen({ onUnlock, className }: BiometricLockScreen
             'active:scale-95',
             unlocking && 'opacity-50',
           )}
-          aria-label="فتح بالتطبيق البيومتري"
+          aria-label={t('biometric.unlockBiometric')}
         >
           <Fingerprint className={cn('h-12 w-12 text-primary', unlocking && 'animate-pulse')} />
         </button>
@@ -61,7 +64,7 @@ export function BiometricLockScreen({ onUnlock, className }: BiometricLockScreen
           </div>
         )}
 
-        {!error && <p className="text-xs text-muted-foreground">المس مستشعر البصمة أو استخدم التعرف على الوجه</p>}
+        {!error && <p className="text-xs text-muted-foreground">{t('biometric.touchSensor')}</p>}
       </div>
     </div>
   )

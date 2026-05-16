@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Bell, AlertTriangle, Info, Package, Receipt, Users, BarChart3, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/language-provider'
 
 interface Notification {
   id: string
@@ -29,6 +30,7 @@ const SEVERITY_STYLES = {
 }
 
 export function NotificationsPanel() {
+  const { t } = useT()
   const [open, setOpen] = useState(false)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unread, setUnread] = useState(0)
@@ -99,7 +101,7 @@ export function NotificationsPanel() {
           }
         }}
         className="relative p-2 rounded-xl hover:bg-secondary text-muted-foreground hover:text-foreground transition-all duration-200"
-        title="الإشعارات"
+        title={t('layout.notifications.title')}
       >
         <Bell className={cn('w-4 h-4', loading && 'animate-pulse-soft')} />
         {unread > 0 && (
@@ -117,7 +119,7 @@ export function NotificationsPanel() {
           <div className="flex items-center justify-between px-4 py-3 border-b border-border/50 bg-secondary/30">
             <div className="flex items-center gap-2">
               <Bell className="w-4 h-4 text-primary" />
-              <span className="font-semibold text-sm">الإشعارات</span>
+              <span className="font-semibold text-sm">{t('layout.notifications.title')}</span>
               {unread > 0 && (
                 <span className="bg-destructive text-white text-[10px] font-bold rounded-full px-1.5 py-0.5">
                   {unread}
@@ -127,7 +129,7 @@ export function NotificationsPanel() {
             <div className="flex items-center gap-1">
               {unread > 0 && (
                 <button onClick={markAllRead} className="text-[11px] text-primary hover:underline px-2">
-                  قراءة الكل
+                  {t('layout.notifications.markAllRead')}
                 </button>
               )}
               <button onClick={() => setOpen(false)} className="p-1 hover:bg-secondary rounded-lg">
@@ -140,7 +142,7 @@ export function NotificationsPanel() {
             {notifications.length === 0 ? (
               <div className="py-10 text-center text-muted-foreground">
                 <Bell className="w-8 h-8 mx-auto mb-2 opacity-20" />
-                <p className="text-sm">لا توجد إشعارات</p>
+                <p className="text-sm">{t('layout.notifications.noNotifications')}</p>
               </div>
             ) : (
               notifications.map((n) => {
@@ -186,7 +188,7 @@ export function NotificationsPanel() {
 
           <div className="px-4 py-2.5 border-t border-border/50 bg-secondary/20 text-center">
             <button onClick={fetchNotifications} className="text-xs text-primary hover:underline">
-              تحديث الإشعارات
+              {t('layout.notifications.refresh')}
             </button>
           </div>
         </div>

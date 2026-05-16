@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { X, LogOut, type LucideIcon } from 'lucide-react'
 import { cn, getInitials } from '@/lib/utils'
 import { useMobileLayout } from './MobileLayoutProvider'
+import { useT } from '@/lib/i18n/language-provider'
 import { useSwipeGesture } from '@/hooks'
 
 interface NavItem {
@@ -42,6 +43,7 @@ export function MobileSidebar({
   userName,
   userEmail,
 }: MobileSidebarProps) {
+  const { t } = useT()
   const pathname = usePathname()
   const router = useRouter()
   const { sidebarState, closeSidebar } = useMobileLayout()
@@ -66,9 +68,9 @@ export function MobileSidebar({
   }
 
   const ROLE_LABELS: Record<string, string> = {
-    admin: 'مدير النظام',
-    manager: 'مدير',
-    cashier: 'كاشير',
+    admin: t('roles.admin'),
+    manager: t('roles.manager'),
+    cashier: t('roles.cashier'),
   }
 
   if (!isMobileSidebarOpen) {
@@ -164,12 +166,14 @@ export function MobileSidebar({
                 {(staffName || userName || 'م')[0]}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-foreground truncate">{staffName || userName || 'المدير'}</p>
+                <p className="text-xs font-medium text-foreground truncate">
+                  {staffName || userName || t('roles.manager')}
+                </p>
                 <p className="text-[10px] text-muted-foreground">{ROLE_LABELS[staffRole || 'admin'] || staffRole}</p>
               </div>
               <button
                 onClick={handleLogout}
-                title="تسجيل خروج"
+                title={t('common.logout')}
                 className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
               >
                 <LogOut className="w-3.5 h-3.5" />

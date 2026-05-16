@@ -13,6 +13,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts'
+import { useT } from '@/lib/i18n/language-provider'
 import { formatCurrency } from '@/lib/utils'
 import type { MonthlyData } from '@/types/database'
 
@@ -40,14 +41,15 @@ const CustomTooltip = ({ active, payload, label, currency }: any) => {
 }
 
 export function FinancialChart({ data, currency }: FinancialChartProps) {
+  const { t } = useT()
   const [chartType, setChartType] = useState<'bar' | 'line'>('bar')
 
   return (
     <div className="bg-card rounded-xl border p-5 shadow-sm">
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h3 className="font-semibold text-foreground">الأداء المالي</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">آخر 6 أشهر</p>
+          <h3 className="font-semibold text-foreground">{t('dashboard.financialChart.title')}</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">{t('dashboard.financialChart.last6Months')}</p>
         </div>
         <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
           <button
@@ -58,7 +60,7 @@ export function FinancialChart({ data, currency }: FinancialChartProps) {
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            أعمدة
+            {t('dashboard.financialChart.bar')}
           </button>
           <button
             onClick={() => setChartType('line')}
@@ -68,7 +70,7 @@ export function FinancialChart({ data, currency }: FinancialChartProps) {
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            خطي
+            {t('dashboard.financialChart.line')}
           </button>
         </div>
       </div>
@@ -93,7 +95,13 @@ export function FinancialChart({ data, currency }: FinancialChartProps) {
             <Tooltip content={<CustomTooltip currency={currency} />} />
             <Legend
               wrapperStyle={{ fontSize: '12px', paddingTop: '12px' }}
-              formatter={(value) => value === 'income' ? 'الإيرادات' : value === 'expenses' ? 'المصروفات' : 'الربح'}
+              formatter={(value) =>
+                value === 'income'
+                  ? t('dashboard.financialChart.income')
+                  : value === 'expenses'
+                    ? t('dashboard.financialChart.expenses')
+                    : t('dashboard.financialChart.profit')
+              }
             />
             <Bar dataKey="income" name="income" fill="#10B981" radius={[4, 4, 0, 0]} />
             <Bar dataKey="expenses" name="expenses" fill="#EF4444" radius={[4, 4, 0, 0]} />
@@ -117,11 +125,30 @@ export function FinancialChart({ data, currency }: FinancialChartProps) {
             <Tooltip content={<CustomTooltip currency={currency} />} />
             <Legend
               wrapperStyle={{ fontSize: '12px', paddingTop: '12px' }}
-              formatter={(value) => value === 'income' ? 'الإيرادات' : value === 'expenses' ? 'المصروفات' : 'الربح'}
+              formatter={(value) =>
+                value === 'income'
+                  ? t('dashboard.financialChart.income')
+                  : value === 'expenses'
+                    ? t('dashboard.financialChart.expenses')
+                    : t('dashboard.financialChart.profit')
+              }
             />
             <Line dataKey="income" name="income" stroke="#10B981" strokeWidth={2.5} dot={{ r: 4, fill: '#10B981' }} />
-            <Line dataKey="expenses" name="expenses" stroke="#EF4444" strokeWidth={2.5} dot={{ r: 4, fill: '#EF4444' }} />
-            <Line dataKey="profit" name="profit" stroke="#3B82F6" strokeWidth={2.5} dot={{ r: 4, fill: '#3B82F6' }} strokeDasharray="5 5" />
+            <Line
+              dataKey="expenses"
+              name="expenses"
+              stroke="#EF4444"
+              strokeWidth={2.5}
+              dot={{ r: 4, fill: '#EF4444' }}
+            />
+            <Line
+              dataKey="profit"
+              name="profit"
+              stroke="#3B82F6"
+              strokeWidth={2.5}
+              dot={{ r: 4, fill: '#3B82F6' }}
+              strokeDasharray="5 5"
+            />
           </LineChart>
         )}
       </ResponsiveContainer>

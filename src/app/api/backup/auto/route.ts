@@ -1,14 +1,13 @@
 // Called daily by Vercel Cron (see vercel.json).
 // Protected by a shared secret to prevent unauthorized triggers.
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import {
-  collectBackupData, uploadBackup, buildStoragePath,
-} from '@/lib/backup-engine'
+import { collectBackupData, uploadBackup, buildStoragePath } from '@/lib/backup-engine'
 import { getCompanyId } from '@/lib/tenant'
 
 const BUSINESS_TYPE = process.env.NEXT_PUBLIC_BUSINESS_TYPE || 'retail'
-const CRON_SECRET   = process.env.CRON_SECRET               || ''
+const CRON_SECRET = process.env.CRON_SECRET || ''
 
 const MIN_INTERVAL_HOURS = 22 // don't run more than once per ~day
 
@@ -36,15 +35,15 @@ export async function POST(req: NextRequest) {
   if (last) {
     const hoursSinceLast = (Date.now() - new Date(last.created_at).getTime()) / 3_600_000
     if (hoursSinceLast < MIN_INTERVAL_HOURS) {
-      return NextResponse.json({ skipped: true, reason: `آخر نسخة منذ ${hoursSinceLast.toFixed(1)} ساعة` })
+      return NextResponse.json({ skipped: true, reason: `Last backup ${hoursSinceLast.toFixed(1)} hours ago` })
     }
   }
 
-  const now      = new Date()
-  const dateStr  = now.toISOString().slice(0, 10)
-  const timeStr  = now.toTimeString().slice(0, 5).replace(':', '-')
-  const label    = `تلقائي - ${dateStr}`
-  const path     = buildStoragePath(COMPANY_ID, `${dateStr}_${timeStr}_auto`, 'json')
+  const now = new Date()
+  const dateStr = now.toISOString().slice(0, 10)
+  const timeStr = now.toTimeString().slice(0, 5).replace(':', '-')
+  const label = `Auto - ${dateStr}`
+  const path = buildStoragePath(COMPANY_ID, `${dateStr}_${timeStr}_auto`, 'json')
 
   const { data: snap, error: insertErr } = await supabase
     .from('backup_snapshots')
@@ -52,11 +51,13 @@ export async function POST(req: NextRequest) {
     .select('id')
     .single()
 
-  if (insertErr || !snap) return NextResponse.json({ error: 'فشل إنشاء السجل' }, { status: 500 })
+  if (insertErr || !snap) {
+    return NextResponse.json({ error: 'Failed to create record' }, { status: 500 })
+  }
 
   try {
-    const payload   = await collectBackupData(COMPANY_ID, BUSINESS_TYPE)
-    const json      = JSON.stringify(payload, null, 2)
+    const payload = await collectBackupData(COMPANY_ID, BUSINESS_TYPE)
+    const json = JSON.stringify(payload, null, 2)
     const sizeBytes = new TextEncoder().encode(json).length
 
     const { error: uploadErr } = await uploadBackup(path, json, 'application/json')
@@ -65,9 +66,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: uploadErr }, { status: 500 })
     }
 
-    await supabase.from('backup_snapshots').update({
-      status: 'ready', file_size: sizeBytes, table_counts: payload.table_counts,
-    }).eq('id', snap.id)
+    await supabase
+      .from('backup_snapshots')
+      .update({
+        status: 'ready',
+        file_size: sizeBytes,
+        table_counts: payload.table_counts,
+      })
+      .eq('id', snap.id)
 
     // Prune old auto backups — keep last 30
     const { data: old } = await supabase
@@ -86,9 +92,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, id: snap.id, size: sizeBytes })
   } catch (err: any) {
-    await supabase.from('backup_snapshots')
-      .update({ status: 'failed', error_message: err?.message })
-      .eq('id', snap.id)
+    await supabase.from('backup_snapshots').update({ status: 'failed', error_message: err?.message }).eq('id', snap.id)
     return NextResponse.json({ error: err?.message }, { status: 500 })
   }
 }

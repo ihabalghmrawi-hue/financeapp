@@ -1,13 +1,11 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import {
-  AlertTriangle, ArrowUp, Clock, User, Shield, CheckCircle2,
-  ChevronUp, AlertCircle,
-} from 'lucide-react'
+import { AlertTriangle, ArrowUp, Clock, User, Shield, CheckCircle2, ChevronUp, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { calculateSLADisplay } from '@/lib/workflow/engine'
+import { useT } from '@/lib/i18n/language-provider'
 import type { OperationalNotification } from '@/lib/notification/types'
 
 interface EscalationAlertProps {
@@ -17,33 +15,47 @@ interface EscalationAlertProps {
   onAssign?: () => void
 }
 
-function relativeTime(ts: number): string {
+function relativeTime(
+  ts: number,
+  t: (key: string, params?: Record<string, string | number>) => string,
+  lang: string,
+): string {
   const diff = Date.now() - ts
   const mins = Math.floor(diff / 60000)
   const hours = Math.floor(diff / 3600000)
   const days = Math.floor(diff / 86400000)
-  if (mins < 1) return 'الآن'
-  if (mins < 60) return `منذ ${mins} دقيقة`
-  if (hours < 24) return `منذ ${hours} ساعة`
-  if (days < 7) return `منذ ${days} أيام`
-  return new Date(ts).toLocaleDateString('ar-SA')
+  if (mins < 1) {
+    return t('notification.time.justNow')
+  }
+  if (mins < 60) {
+    return t('notification.time.minutesAgo', { count: mins })
+  }
+  if (hours < 24) {
+    return t('notification.time.hoursAgo', { count: hours })
+  }
+  if (days < 7) {
+    return t('notification.time.daysAgo', { count: days })
+  }
+  return new Date(ts).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')
 }
 
 const escalationLevels = [
-  { level: 1, label: 'المشرف المباشر', color: 'bg-amber-100 text-amber-800 border-amber-300' },
-  { level: 2, label: 'مدير الإدارة', color: 'bg-orange-100 text-orange-800 border-orange-300' },
-  { level: 3, label: 'الإدارة العليا', color: 'bg-red-100 text-red-800 border-red-300' },
+  {
+    level: 1,
+    labelKey: 'notification.escalationLevel.directSupervisor',
+    color: 'bg-amber-100 text-amber-800 border-amber-300',
+  },
+  {
+    level: 2,
+    labelKey: 'notification.escalationLevel.departmentManager',
+    color: 'bg-orange-100 text-orange-800 border-orange-300',
+  },
+  { level: 3, labelKey: 'notification.escalationLevel.topManagement', color: 'bg-red-100 text-red-800 border-red-300' },
 ]
 
-export function EscalationAlert({
-  notification,
-  onAcknowledge,
-  onEscalate,
-  onAssign,
-}: EscalationAlertProps) {
-  const slaInfo = notification.slaMinutes
-    ? calculateSLADisplay(notification.slaMinutes, notification.timestamp)
-    : null
+export function EscalationAlert({ notification, onAcknowledge, onEscalate, onAssign }: EscalationAlertProps) {
+  const { t, lang } = useT()
+  const slaInfo = notification.slaMinutes ? calculateSLADisplay(notification.slaMinutes, notification.timestamp) : null
 
   const escCount = notification.escalationCount ?? 1
   const currentLevel = escalationLevels[Math.min(escCount - 1, escalationLevels.length - 1)]
@@ -65,124 +77,116 @@ export function EscalationAlert({
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <h3 className="text-base font-bold text-red-900">
-              {notification.title}
-            </h3>
+            <h3 className="text-base font-bold text-red-900">{notification.title}</h3>
             <Badge className="bg-red-600 text-white border-red-600 text-[10px] px-2">
-              التصعيد رقم {escCount}
+              {t('notification.escalationNumber', { count: escCount })}
             </Badge>
           </div>
-          <p className="text-sm text-red-700 mb-1">
-            {notification.description}
-          </p>
+          <p className="text-sm text-red-700 mb-1">{notification.description}</p>
         </div>
       </div>
 
       <div className="mb-4">
         <h4 className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1.5">
           <ArrowUp className="h-3.5 w-3.5 text-red-500" />
-          مسار التصعيد
+          {t('notification.escalationPath')}
         </h4>
         <div className="flex items-center gap-1">
           {previousLevels.map((level, idx) => (
             <div key={level.level} className="flex items-center gap-1">
-              <div className={cn(
-                'rounded-lg border px-3 py-1.5 text-xs font-medium',
-                level.color,
-                idx === previousLevels.length - 1 && 'ring-2 ring-red-400 ring-offset-1',
-              )}>
-                {level.label}
+              <div
+                className={cn(
+                  'rounded-lg border px-3 py-1.5 text-xs font-medium',
+                  level.color,
+                  idx === previousLevels.length - 1 && 'ring-2 ring-red-400 ring-offset-1',
+                )}
+              >
+                {t(level.labelKey)}
               </div>
-              {idx < previousLevels.length - 1 && (
-                <ChevronUp className="h-4 w-4 text-gray-400" />
-              )}
+              {idx < previousLevels.length - 1 && <ChevronUp className="h-4 w-4 text-gray-400" />}
             </div>
           ))}
         </div>
       </div>
 
       {slaInfo && (
-        <div className={cn(
-          'rounded-lg border p-3 mb-4',
-          slaInfo.isBreached ? 'bg-red-50 border-red-200' :
-          slaInfo.status === 'critical' ? 'bg-red-50 border-red-200' :
-          slaInfo.status === 'warning' ? 'bg-amber-50 border-amber-200' :
-          'bg-green-50 border-green-200',
-        )}>
+        <div
+          className={cn(
+            'rounded-lg border p-3 mb-4',
+            slaInfo.isBreached
+              ? 'bg-red-50 border-red-200'
+              : slaInfo.status === 'critical'
+                ? 'bg-red-50 border-red-200'
+                : slaInfo.status === 'warning'
+                  ? 'bg-amber-50 border-amber-200'
+                  : 'bg-green-50 border-green-200',
+          )}
+        >
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-xs font-medium text-gray-700 flex items-center gap-1">
               <Clock className="h-3.5 w-3.5" />
               SLA
             </span>
-            <span className={cn(
-              'text-xs font-bold',
-              slaInfo.isBreached ? 'text-red-700' :
-              slaInfo.status === 'critical' ? 'text-red-600' :
-              slaInfo.status === 'warning' ? 'text-amber-700' :
-              'text-green-700',
-            )}>
-              {slaInfo.isBreached ? 'تم تجاوز المهلة' : slaInfo.remainingDisplay}
+            <span
+              className={cn(
+                'text-xs font-bold',
+                slaInfo.isBreached
+                  ? 'text-red-700'
+                  : slaInfo.status === 'critical'
+                    ? 'text-red-600'
+                    : slaInfo.status === 'warning'
+                      ? 'text-amber-700'
+                      : 'text-green-700',
+              )}
+            >
+              {slaInfo.isBreached ? t('notification.sla.breached') : slaInfo.remainingDisplay}
             </span>
           </div>
           <div className="h-2 w-full rounded-full bg-gray-200 overflow-hidden">
             <div
               className={cn(
                 'h-full rounded-full transition-all',
-                slaInfo.isBreached ? 'bg-red-500' :
-                slaInfo.status === 'critical' ? 'bg-red-500' :
-                slaInfo.status === 'warning' ? 'bg-amber-500' :
-                'bg-green-500',
+                slaInfo.isBreached
+                  ? 'bg-red-500'
+                  : slaInfo.status === 'critical'
+                    ? 'bg-red-500'
+                    : slaInfo.status === 'warning'
+                      ? 'bg-amber-500'
+                      : 'bg-green-500',
               )}
               style={{ width: `${Math.min(slaInfo.pctElapsed, 100)}%` }}
             />
           </div>
           <p className="text-[10px] text-gray-500 mt-1">
             {slaInfo.isBreached
-              ? 'تم تجاوز المهلة الزمنية المحددة للاستجابة'
-              : `تم استهلاك ${slaInfo.pctElapsed}% من المهلة المحددة`
-            }
+              ? t('notification.sla.breachedDescription')
+              : t('notification.sla.consumed', { pct: slaInfo.pctElapsed })}
           </p>
         </div>
       )}
 
       <div className="flex items-center gap-2 text-xs text-gray-500 mb-4">
-        <span className="inline-flex items-center gap-1 rounded-md bg-gray-100 px-2 py-1">
-          {notification.source}
-        </span>
+        <span className="inline-flex items-center gap-1 rounded-md bg-gray-100 px-2 py-1">{notification.source}</span>
         {notification.relatedEntity && (
           <span className="inline-flex items-center gap-1 rounded-md bg-gray-100 px-2 py-1">
             {notification.relatedEntity.name}
           </span>
         )}
-        <span>{relativeTime(notification.timestamp)}</span>
+        <span>{relativeTime(notification.timestamp, t, lang)}</span>
       </div>
 
       <div className="flex items-center gap-2">
-        <Button
-          size="sm"
-          className="bg-red-600 hover:bg-red-700 text-white text-xs h-9 px-4"
-          onClick={onAcknowledge}
-        >
+        <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white text-xs h-9 px-4" onClick={onAcknowledge}>
           <CheckCircle2 className="h-4 w-4 ml-1" />
-          استلام
+          {t('notification.acknowledge')}
         </Button>
-        <Button
-          size="sm"
-          variant="destructive"
-          className="text-xs h-9 px-4"
-          onClick={onEscalate}
-        >
+        <Button size="sm" variant="destructive" className="text-xs h-9 px-4" onClick={onEscalate}>
           <ArrowUp className="h-4 w-4 ml-1" />
-          تصعيد
+          {t('notification.escalate')}
         </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          className="text-xs h-9 px-4"
-          onClick={onAssign}
-        >
+        <Button size="sm" variant="outline" className="text-xs h-9 px-4" onClick={onAssign}>
           <User className="h-4 w-4 ml-1" />
-          إعادة توجيه
+          {t('notification.reassign')}
         </Button>
       </div>
     </div>
