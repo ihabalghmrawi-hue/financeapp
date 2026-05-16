@@ -46,7 +46,7 @@ export function ConstructionReportsClient({ currency }: { currency: string }) {
   }))
 
   const projectChartData = (projectSummary as any[]).slice(0, 8).map((p: any) => ({
-    name: p.name.slice(0, 12),
+    name: (p.name || 'مشروع بدون اسم').slice(0, 12),
     income: p.income,
     costs:  p.costs,
     profit: p.profit,
@@ -158,9 +158,9 @@ export function ConstructionReportsClient({ currency }: { currency: string }) {
             {(workers as any[]).map((w: any) => (
               <div key={w.id} className="border rounded-xl p-3 text-center">
                 <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold mx-auto mb-2">
-                  {w.name[0]}
+                  {(w.name || 'عامل')[0]}
                 </div>
-                <p className="text-sm font-medium">{w.name}</p>
+                <p className="text-sm font-medium">{w.name || 'عامل'}</p>
                 <p className="text-xs text-muted-foreground">{w.job_type}</p>
                 <span className={`text-xs px-2 py-0.5 rounded-full mt-1 inline-block ${w.status === 'available' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                   {w.status === 'available' ? 'متاح' : w.status === 'busy' ? 'مشغول' : 'غير نشط'}
