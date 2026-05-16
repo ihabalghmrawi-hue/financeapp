@@ -5,11 +5,43 @@ import { isSuperAdmin, loadRolePermissions } from '@/lib/rbac'
 import { computeLifecycle } from '@/lib/subscription'
 import { checkRateLimit, getClientIp, rateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit'
 import { trackSessionInMiddleware } from '@/lib/auth-tracking'
+import { DEFAULT_LANG, LANG_COOKIE, LANG_COOKIE_MAX_AGE, SUPPORTED_LANGS, isLang, type Lang } from '@/lib/i18n'
 
 const PUBLIC_PATHS = ['/auth', '/onboarding', '/pricing', '/blocked', '/api/auth', '/api/onboarding']
 
 // Session-only cookie set on explicit login — disappears when browser closes.
 const APP_SESSION_COOKIE = 'app-session-active'
+
+function detectLocaleFromHeader(header: string | null): Lang | null {
+  if (!header) {
+    return null
+  }
+  for (const part of header.split(',')) {
+    const code = part.trim().split(';')[0].toLowerCase().split('-')[0]
+    if (isLang(code)) {
+      return code
+    }
+    if (SUPPORTED_LANGS.includes(code as Lang)) {
+      return code as Lang
+    }
+  }
+  return null
+}
+
+function ensureLocaleCookie(request: NextRequest, response: NextResponse): void {
+  if (isLang(request.cookies.get(LANG_COOKIE)?.value)) {
+    return
+  }
+  const detected = detectLocaleFromHeader(request.headers.get('accept-language')) ?? DEFAULT_LANG
+  response.cookies.set({
+    name: LANG_COOKIE,
+    value: detected,
+    path: '/',
+    maxAge: LANG_COOKIE_MAX_AGE,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+  })
+}
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -27,14 +59,18 @@ export async function proxy(request: NextRequest) {
   }
 
   if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
-    return NextResponse.next()
+    const res = NextResponse.next()
+    ensureLocaleCookie(request, res)
+    return res
   }
 
   const isDashboard = pathname.startsWith('/dashboard')
   const isAPI = pathname.startsWith('/api')
 
   if (!isDashboard && !isAPI) {
-    return NextResponse.next()
+    const res = NextResponse.next()
+    ensureLocaleCookie(request, res)
+    return res
   }
 
   // ── General API rate limit ────────────────────────────────────────────────
@@ -94,6 +130,7 @@ export async function proxy(request: NextRequest) {
       })
       const res = NextResponse.next({ request: { headers: reqHeaders } })
       cookiesToSet.forEach(({ name, value, options }) => res.cookies.set(name, value, options ?? {}))
+      ensureLocaleCookie(request, res)
       return res
     }
 
@@ -106,10 +143,14 @@ export async function proxy(request: NextRequest) {
 
     if (!membership?.company_id) {
       if (isDashboard) {
-        return NextResponse.redirect(new URL('/onboarding?new=1', request.url))
+        const res = NextResponse.redirect(new URL('/onboarding?new=1', request.url))
+        ensureLocaleCookie(request, res)
+        return res
       }
       if (isAPI) {
-        return NextResponse.next()
+        const res = NextResponse.next()
+        ensureLocaleCookie(request, res)
+        return res
       }
     }
 
@@ -163,6 +204,7 @@ export async function proxy(request: NextRequest) {
 
       const res = NextResponse.next({ request: { headers: reqHeaders } })
       cookiesToSet.forEach(({ name, value, options }) => res.cookies.set(name, value, options ?? {}))
+      ensureLocaleCookie(request, res)
       return res
     }
   }
@@ -173,7 +215,9 @@ export async function proxy(request: NextRequest) {
   }
   const url = new URL('/auth/login', request.url)
   url.searchParams.set('redirectTo', pathname)
-  return NextResponse.redirect(url)
+  const res = NextResponse.redirect(url)
+  ensureLocaleCookie(request, res)
+  return res
 }
 
 function buildHeaders(base: Headers, map: Record<string, string>): Headers {
