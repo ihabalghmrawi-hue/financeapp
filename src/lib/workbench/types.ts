@@ -2,7 +2,8 @@ export type WorkbenchView = 'list' | 'detail' | 'split' | 'graph'
 
 export interface WorkbenchAction {
   id: string
-  label: string
+  label?: string
+  labelKey?: string
   icon?: string
   type: 'primary' | 'secondary' | 'danger' | 'ghost'
   shortcut?: string
@@ -11,7 +12,8 @@ export interface WorkbenchAction {
 
 export interface WorkbenchMetric {
   id: string
-  label: string
+  label?: string
+  labelKey?: string
   value: string | number
   change?: number
   trend?: 'up' | 'down'
@@ -21,7 +23,8 @@ export interface WorkbenchMetric {
 
 export interface InspectorTab {
   id: string
-  label: string
+  label?: string
+  labelKey?: string
   icon: string
   badge?: number
 }

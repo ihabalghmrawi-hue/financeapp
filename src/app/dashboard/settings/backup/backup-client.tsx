@@ -281,9 +281,9 @@ export function BackupClient({ initialSnapshots, availableTables }: Props) {
             onChange={(e) => setCsvTable(e.target.value)}
             className="w-full text-xs border rounded-lg px-2 py-1.5 bg-background"
           >
-            {availableTables.map((t) => (
-              <option key={t} value={t}>
-                {t(`backup.tables.${t}`)}
+            {availableTables.map((tableName) => (
+              <option key={tableName} value={tableName}>
+                {t(`backup.tables.${tableName}`)}
               </option>
             ))}
           </select>

@@ -18,7 +18,13 @@ export const LANG_META: Record<
   ar: { label: 'Arabic', nativeLabel: 'العربية', dir: 'rtl', locale: 'ar-SA', flag: 'AR' },
 }
 
-export const resources: Record<Lang, Translations> = { en, ar }
+// AR may diverge structurally from EN during the in-progress migration; treat both
+// as deep dictionaries. EN remains the source-of-truth shape via `Translations`.
+export type TranslationDict = { [key: string]: string | TranslationDict }
+export const resources: Record<Lang, TranslationDict> = {
+  en: en as unknown as TranslationDict,
+  ar: ar as unknown as TranslationDict,
+}
 
 export function isLang(value: unknown): value is Lang {
   return typeof value === 'string' && (SUPPORTED_LANGS as readonly string[]).includes(value)

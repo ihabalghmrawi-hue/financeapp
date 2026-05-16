@@ -26,7 +26,7 @@ import {
 } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 import { cn } from '@/lib/utils'
-import { useT } from '@/lib/i18n/useT'
+import { useT } from '@/lib/i18n/language-provider'
 
 interface CartItem {
   product: any
@@ -98,7 +98,7 @@ export function POSClient({
   currency,
   company,
 }: POSClientProps) {
-  const t = useT()
+  const { t } = useT()
   const [cart, setCart] = useState<CartItem[]>([])
   const [search, setSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)

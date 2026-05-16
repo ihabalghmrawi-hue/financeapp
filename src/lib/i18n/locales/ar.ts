@@ -737,7 +737,7 @@ const ar = {
       checkOutLabel: 'خروج:',
       hoursLabel: 'ساعات:',
       recordTitle: 'سجل الحضور - {{date}}',
-      description: 'عرض وتدقيق سجلات الحضور والانصراف للموظفين',
+      recordDescription: 'عرض وتدقيق سجلات الحضور والانصراف للموظفين',
       print: 'طباعة',
       exportLabel: 'تصدير',
       aiAnalysis: 'تحليل ذكي',

@@ -37,7 +37,11 @@
       "Bash(gh repo *)",
       "PowerShell($token = \"your-github-token\"; $body = '{\"name\":\"finance-saas-admin\",\"private\":true,\"description\":\"SaaS Admin Panel - standalone Next.js app on port 3001\"}'; $response = Invoke-RestMethod -Uri \"https://api.github.com/user/repos\" -Method Post -Headers @{Authorization=\"token $token\"; \"Content-Type\"=\"application/json\"} -Body $body; $response.html_url)",
       "Bash(git checkout *)",
-      "Bash(npx eslint *)"
+      "Bash(npx eslint *)",
+      "Bash(awk 'NR>=700 && NR<=745' src/lib/i18n/locales/en.ts)",
+      "Bash(awk '/^  [a-zA-Z]+: \\\\{$/{section=NR\" \"$0} /description:/{print section \" | line \"NR\": \"$0}' src/lib/i18n/locales/en.ts)",
+      "Bash(awk 'NR<=741 && /^    [a-zA-Z]+: \\\\{$/{print NR\": \"$0}' src/lib/i18n/locales/en.ts)",
+      "Bash(npm test *)"
     ],
     "additionalDirectories": ["d:\\"]
   }

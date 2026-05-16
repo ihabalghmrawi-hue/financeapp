@@ -168,9 +168,16 @@ function randomDate(daysAgo: number): number {
   return Date.now() - randomInt(0, daysAgo * 86400000)
 }
 
+const defaultCarriers: { name: string; code: string }[] = [
+  { name: 'Saudi Post', code: 'SaudiPost' },
+  { name: 'DHL', code: 'DHL' },
+  { name: 'FedEx', code: 'FedEx' },
+  { name: 'Aramex', code: 'Aramex' },
+]
+
 function generateMockShipments(count: number): Shipment[] {
   return Array.from({ length: count }, (_, idx) => {
-    const carrier = randomChoice(carriers)
+    const carrier = randomChoice(defaultCarriers)
     const created = randomDate(14)
     const estDelivery = created + randomInt(2, 7) * 86400000
     const statuses: Shipment['status'][] = [

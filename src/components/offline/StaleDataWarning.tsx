@@ -43,6 +43,7 @@ export function StaleDataWarning({ isStale, lastUpdated, className, onRefresh }:
 }
 
 export function OfflineTimestamp({ syncedAt, className }: { syncedAt: string | null; className?: string }) {
+  const { t } = useT()
   if (!syncedAt) {
     return null
   }

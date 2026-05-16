@@ -14,7 +14,9 @@ interface Action {
   primary?: boolean
 }
 
-function getActions(features: Features): Action[] {
+type Translator = (key: string, params?: Record<string, string | number>) => string
+
+function getActions(features: Features, t: Translator): Action[] {
   if (features.hasRental) {
     return [
       {
@@ -55,7 +57,7 @@ export function QuickActionBar({ features }: { features: Features }) {
     return null
   }
 
-  const actions = getActions(features)
+  const actions = getActions(features, t)
 
   return (
     <div
