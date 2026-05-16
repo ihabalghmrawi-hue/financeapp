@@ -15,12 +15,10 @@ import {
   Sun,
   Globe,
   DollarSign,
-  Store,
   Palette,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
-import { BUSINESS_TYPES, getFeatures, type BusinessType } from '@/lib/features'
 import { BrandingSettings } from '@/components/branding-settings'
 import { NotificationPreferences } from '@/components/push/NotificationPreferences'
 import type { Company } from '@/types/database'
@@ -39,10 +37,6 @@ export function SettingsClient({ company, user, role, currentBusinessType, brand
   const { theme, setTheme } = useTheme()
   const { t, setLang, formatDate } = useT()
   const [activeSection, setActiveSection] = useState('general')
-  const [selectedBizType, setSelectedBizType] = useState<BusinessType>(
-    (currentBusinessType as BusinessType) || 'retail',
-  )
-  const [savingBizType, setSavingBizType] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -116,36 +110,8 @@ export function SettingsClient({ company, user, role, currentBusinessType, brand
     setTimeout(() => setSaved(false), 3000)
   }
 
-  const [resetting, setResetting] = useState(false)
-
-  const saveBizType = async () => {
-    setSavingBizType(true)
-    await fetch('/api/onboarding', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ business_type: selectedBizType }),
-    })
-    setSavingBizType(false)
-    router.refresh()
-  }
-
-  const resetToTemplate = async () => {
-    if (!confirm(t('settings.confirmResetTemplate'))) {
-      return
-    }
-    setResetting(true)
-    await fetch('/api/onboarding/seed', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ business_type: selectedBizType, reset: true }),
-    })
-    setResetting(false)
-    router.refresh()
-  }
-
   const sections = [
     { key: 'branding', label: t('settings.sectionBranding'), icon: Palette },
-    { key: 'business', label: t('settings.sectionBusinessType'), icon: Store },
     { key: 'general', label: t('settings.general'), icon: Building2 },
     { key: 'preferences', label: t('settings.preferences'), icon: Globe },
     { key: 'notifications', label: t('settings.notifications'), icon: Bell },
@@ -205,51 +171,6 @@ export function SettingsClient({ company, user, role, currentBusinessType, brand
             <div className="space-y-1">
               <h3 className="font-semibold text-foreground mb-4">{t('settings.sectionBranding')}</h3>
               <BrandingSettings initialData={branding} />
-            </div>
-          )}
-
-          {/* Business Type */}
-          {activeSection === 'business' && (
-            <div className="space-y-5">
-              <h3 className="font-semibold text-foreground">{t('settings.businessTypeTitle')}</h3>
-              <p className="text-sm text-muted-foreground">{t('settings.businessTypeDesc')}</p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {BUSINESS_TYPES.map((type) => {
-                  const f = getFeatures(type)
-                  const isSelected = selectedBizType === type
-                  return (
-                    <button
-                      key={type}
-                      onClick={() => setSelectedBizType(type)}
-                      className={cn(
-                        'flex flex-col items-center gap-1.5 p-4 rounded-xl border-2 text-center transition-all',
-                        isSelected ? 'border-primary bg-primary/10' : 'border-border hover:border-primary/40',
-                      )}
-                    >
-                      <span className="text-2xl">{f.icon}</span>
-                      <span className="text-xs font-medium">{f.label}</span>
-                    </button>
-                  )
-                })}
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={saveBizType}
-                  disabled={savingBizType}
-                  className="bg-primary text-primary-foreground px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-50 flex items-center gap-2"
-                >
-                  {savingBizType ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                  {t('settings.saveBusinessType')}
-                </button>
-                <button
-                  onClick={resetToTemplate}
-                  disabled={resetting}
-                  className="px-4 py-2.5 border border-amber-300 text-amber-700 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400 rounded-lg text-sm font-medium hover:bg-amber-100 disabled:opacity-50 flex items-center gap-2"
-                >
-                  {resetting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                  {t('settings.resetData')}
-                </button>
-              </div>
             </div>
           )}
 
