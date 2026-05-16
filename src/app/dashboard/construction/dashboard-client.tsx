@@ -208,7 +208,7 @@ export function ConstructionDashboardClient({ projects, workers, tasks, payments
               <div key={w.id} className="flex items-center justify-between p-2.5 rounded-lg bg-accent/30">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold text-sm">
-                    {w.name[0]}
+                    {w.name?.charAt(0) || 'W'}
                   </div>
                   <div>
                     <p className="text-sm font-medium">{w.name}</p>

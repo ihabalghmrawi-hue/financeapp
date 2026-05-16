@@ -110,7 +110,7 @@ export function WorkersClient({ workers: init, currency }: { workers: Worker[]; 
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold">
-                  {w.name[0]}
+                  {w.name?.charAt(0) || 'W'}
                 </div>
                 <div>
                   <h3 className="font-semibold text-sm">{w.name}</h3>

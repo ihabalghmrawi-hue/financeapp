@@ -373,7 +373,7 @@ export function StaffManagementClient({ staff: initialStaff, companyId }: Props)
                     <td className="px-4 py-3 font-medium">
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-xs font-bold text-primary shrink-0">
-                          {s.name[0]}
+                          {s.name?.charAt(0) || 'S'}
                         </div>
                         {s.name}
                       </div>

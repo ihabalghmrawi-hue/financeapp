@@ -158,7 +158,7 @@ export function ConstructionReportsClient({ currency }: { currency: string }) {
             {(workers as any[]).map((w: any) => (
               <div key={w.id} className="border rounded-xl p-3 text-center">
                 <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold mx-auto mb-2">
-                  {w.name[0]}
+                  {w.name?.charAt(0) || 'W'}
                 </div>
                 <p className="text-sm font-medium">{w.name}</p>
                 <p className="text-xs text-muted-foreground">{w.job_type}</p>
