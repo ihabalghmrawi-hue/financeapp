@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import {
   ArrowRight,
@@ -13,7 +13,12 @@ import {
   CreditCard,
   Flag,
   Clock,
+  Users,
+  FileText,
+  Printer,
+  BarChart3,
 } from 'lucide-react'
+import { RadialProgress } from '@/components/charts/radial-progress'
 import { formatCurrency } from '@/lib/utils'
 
 interface Project {
@@ -26,6 +31,8 @@ interface Project {
   location: string | null
   expected_cost: number
   actual_cost: number
+  contract_value: number
+  stage: string
   start_date: string
   end_date: string | null
   notes: string | null
@@ -35,9 +42,10 @@ interface Task {
   title: string
   status: string
   priority: string
+  progress: number
   due_date: string | null
   assigned_worker_id: string | null
-  con_workers?: { name: string } | null
+  con_workers?: { name: string; job_type?: string } | null
 }
 interface Expense {
   id: string
@@ -64,6 +72,7 @@ interface Payment {
   description: string
   payment_method: string
   payment_date: string
+  reference: string | null
 }
 interface Worker {
   id: string
@@ -85,10 +94,22 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: 'bg-red-100 text-red-500',
 }
 const TASK_STATUS_AR: Record<string, string> = {
-  pending: 'انتظار',
-  in_progress: 'جارٍ',
+  pending: 'قيد الانتظار',
+  todo: 'للتنفيذ',
+  in_progress: 'قيد التنفيذ',
+  review: 'مراجعة',
   done: 'مكتمل',
+  blocked: 'موقوف',
   cancelled: 'ملغي',
+}
+const TASK_STATUS_COLORS: Record<string, string> = {
+  pending: 'bg-gray-100 text-gray-600',
+  todo: 'bg-blue-100 text-blue-700',
+  in_progress: 'bg-amber-100 text-amber-700',
+  review: 'bg-purple-100 text-purple-700',
+  done: 'bg-green-100 text-green-700',
+  blocked: 'bg-red-100 text-red-500',
+  cancelled: 'bg-gray-100 text-gray-400',
 }
 const PRIORITY_COLORS: Record<string, string> = {
   low: 'text-gray-400',
@@ -102,8 +123,58 @@ const METHOD_AR: Record<string, string> = {
   check: 'شيك',
   online: 'إلكتروني',
 }
+const STAGE_AR: Record<string, string> = {
+  foundation: 'الأساسات',
+  structure: 'الهيكل',
+  rough_plumbing: 'السباكة الأولية',
+  rough_electrical: 'الكهرباء الأولية',
+  plastering: 'المحارة واللياسة',
+  tiling: 'البلاط والسيراميك',
+  carpentry: 'النجارة',
+  painting: 'الدهان',
+  finishing: 'التشطيب النهائي',
+  handover: 'التسليم',
+}
+const STAGE_ORDER = [
+  'foundation',
+  'structure',
+  'rough_plumbing',
+  'rough_electrical',
+  'plastering',
+  'tiling',
+  'carpentry',
+  'painting',
+  'finishing',
+  'handover',
+]
+const STAGE_INDEX: Record<string, number> = Object.fromEntries(STAGE_ORDER.map((s, i) => [s, i]))
+const CATEGORY_AR: Record<string, string> = {
+  excavation: 'حفر',
+  foundation: 'أساسات',
+  structure: 'هيكل خرساني',
+  plumbing: 'سباكة',
+  electrical: 'كهرباء',
+  plastering: 'محارة',
+  tiling: 'بلاط',
+  carpentry: 'نجارة',
+  painting: 'دهان',
+  finishing: 'تشطيب',
+  roofing: 'تسقيف',
+  glass: 'زجاج',
+  aluminum: 'ألمنيوم',
+  flooring: 'أرضيات',
+  demolition: 'هدم',
+  materials: 'مواد بناء',
+  labor: 'عمالة',
+  equipment: 'معدات',
+  transport: 'نقل',
+  subcontract: 'مقاول باطن',
+  other: 'أخرى',
+}
 
-type Tab = 'overview' | 'tasks' | 'expenses' | 'materials' | 'payments'
+const PROGRESS_MILESTONES = [0, 25, 50, 75, 100]
+
+type Tab = 'overview' | 'tasks' | 'expenses' | 'materials' | 'payments' | 'contract'
 
 export function ProjectDetailClient({
   project,
@@ -136,7 +207,8 @@ export function ProjectDetailClient({
   const [taskForm, setTaskForm] = useState({
     title: '',
     priority: 'medium',
-    status: 'todo',
+    status: 'pending',
+    progress: 0,
     worker_id: '',
     due_date: '',
   })
@@ -181,6 +253,63 @@ export function ProjectDetailClient({
       ? Math.min(100, Math.round((Number(project.actual_cost) / Number(project.expected_cost)) * 100))
       : 0
 
+  const contractValue = Number(project.contract_value) || 0
+  const totalReceived = payments.filter((p) => p.type === 'incoming').reduce((s, p) => s + Number(p.amount), 0)
+  const totalSpent =
+    expenses.reduce((s, e) => s + Number(e.amount), 0) +
+    materials.reduce((s, m) => s + Number(m.total_price || Number(m.quantity) * Number(m.unit_price)), 0)
+  const refundedAmount = Number((project as any).refunded_amount) || 0
+  const remainingBalance = contractValue - totalReceived + refundedAmount
+
+  const currentStageIndex = STAGE_INDEX[(project as any).stage] ?? 0
+  const stageProgress = ((currentStageIndex + 1) / STAGE_ORDER.length) * 100
+
+  const expensesByCategory = useMemo(() => {
+    const map: Record<string, number> = {}
+    for (const e of expenses) {
+      const cat = e.category || 'other'
+      map[cat] = (map[cat] || 0) + Number(e.amount)
+    }
+    const sorted = Object.entries(map).sort((a, b) => b[1] - a[1])
+    return sorted
+  }, [expenses])
+
+  const activeWorkers = useMemo(() => {
+    const assigned = new Set<string>()
+    for (const t of tasks) {
+      if (t.con_workers?.name && (t.status === 'in_progress' || t.status === 'pending' || t.status === 'todo')) {
+        assigned.add(t.con_workers.name)
+      }
+    }
+    return Array.from(assigned)
+  }, [tasks])
+
+  const taskProgressAvg = useMemo(() => {
+    if (tasks.length === 0) {
+      return 0
+    }
+    return Math.round(tasks.reduce((s, t) => s + (Number(t.progress) || 0), 0) / tasks.length)
+  }, [tasks])
+
+  const quickProgress = async (taskId: string, progress: number, status?: string) => {
+    const body: Record<string, unknown> = { progress }
+    if (status) {
+      body.status = status
+    }
+    if (progress >= 100) {
+      body.status = 'done'
+    }
+    const res = await fetch(`/api/construction/tasks/${taskId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    const data = await res.json()
+    if (res.ok) {
+      setTasks((prev) => prev.map((x) => (x.id === taskId ? { ...x, ...data } : x)))
+    }
+  }
+
   const saveTask = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -194,6 +323,7 @@ export function ProjectDetailClient({
           project_id: project.id,
           worker_id: taskForm.worker_id || null,
           due_date: taskForm.due_date || null,
+          progress: Number(taskForm.progress) || 0,
         }),
       })
       const data = await res.json()
@@ -202,7 +332,7 @@ export function ProjectDetailClient({
       }
       setTasks((prev) => [data, ...prev])
       setShowTaskForm(false)
-      setTaskForm({ title: '', priority: 'medium', status: 'todo', worker_id: '', due_date: '' })
+      setTaskForm({ title: '', priority: 'medium', status: 'pending', progress: 0, worker_id: '', due_date: '' })
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -341,6 +471,7 @@ export function ProjectDetailClient({
     { key: 'expenses', label: 'المصروفات', count: expenses.length },
     { key: 'materials', label: 'المواد', count: materials.length },
     { key: 'payments', label: 'المدفوعات', count: payments.length },
+    { key: 'contract', label: 'العقد والماليات' },
   ]
 
   return (
@@ -431,27 +562,142 @@ export function ProjectDetailClient({
 
       {/* Overview Tab */}
       {tab === 'overview' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <div className="space-y-4">
+          {/* Info + Stage Progress Row */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-card border rounded-xl p-4 space-y-3">
+              {[
+                ['تاريخ البداية', project.start_date],
+                ['تاريخ النهاية', project.end_date || '—'],
+                ['العميل', project.client_name || '—'],
+                ['الهاتف', project.client_phone || '—'],
+                ['الموقع', project.location || '—'],
+              ].map(([k, v]) => (
+                <div key={k} className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">{k}</span>
+                  <span className="font-medium">{v}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Stage Progress */}
+            <div className="bg-card border rounded-xl p-4">
+              <p className="text-xs text-muted-foreground mb-3">مرحلة المشروع</p>
+              <div className="flex items-center gap-4">
+                <RadialProgress
+                  value={currentStageIndex + 1}
+                  max={STAGE_ORDER.length}
+                  size={90}
+                  strokeWidth={6}
+                  label={STAGE_AR[(project as any).stage] || '—'}
+                  subtitle={`المرحلة ${currentStageIndex + 1} من ${STAGE_ORDER.length}`}
+                />
+              </div>
+              <div className="mt-3 space-y-1">
+                {STAGE_ORDER.slice(0, 5).map((s, i) => (
+                  <div key={s} className="flex items-center gap-2 text-xs">
+                    <div className={`w-2 h-2 rounded-full ${i <= currentStageIndex ? 'bg-primary' : 'bg-muted'}`} />
+                    <span className={i <= currentStageIndex ? 'text-foreground font-medium' : 'text-muted-foreground'}>
+                      {STAGE_AR[s]}
+                    </span>
+                  </div>
+                ))}
+                {STAGE_ORDER.length > 5 && (
+                  <details className="text-xs">
+                    <summary className="text-primary cursor-pointer mt-1">عرض الكل</summary>
+                    {STAGE_ORDER.slice(5).map((s, i) => (
+                      <div key={s} className="flex items-center gap-2 text-xs mt-1">
+                        <div
+                          className={`w-2 h-2 rounded-full ${i + 5 <= currentStageIndex ? 'bg-primary' : 'bg-muted'}`}
+                        />
+                        <span
+                          className={
+                            i + 5 <= currentStageIndex ? 'text-foreground font-medium' : 'text-muted-foreground'
+                          }
+                        >
+                          {STAGE_AR[s]}
+                        </span>
+                      </div>
+                    ))}
+                  </details>
+                )}
+              </div>
+            </div>
+
+            {/* Active Workers */}
+            <div className="bg-card border rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Users className="w-4 h-4 text-muted-foreground" />
+                <p className="text-xs text-muted-foreground">العمال المسند إليهم مهام</p>
+              </div>
+              {activeWorkers.length > 0 ? (
+                <div className="space-y-2">
+                  {activeWorkers.map((name) => (
+                    <div key={name} className="flex items-center gap-2 bg-accent/50 rounded-lg px-3 py-2">
+                      <div className="w-7 h-7 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold text-xs">
+                        {name[0]}
+                      </div>
+                      <span className="text-sm font-medium">{name}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">لا يوجد عمال نشطون</p>
+              )}
+            </div>
+          </div>
+
           {project.description && (
-            <div className="col-span-full bg-card border rounded-xl p-4">
+            <div className="bg-card border rounded-xl p-4">
               <p className="text-muted-foreground text-xs mb-1">الوصف</p>
-              <p>{project.description}</p>
+              <p className="text-sm">{project.description}</p>
             </div>
           )}
-          <div className="bg-card border rounded-xl p-4 space-y-3">
-            {[
-              ['تاريخ البداية', project.start_date],
-              ['تاريخ النهاية', project.end_date || '—'],
-              ['العميل', project.client_name || '—'],
-              ['الهاتف', project.client_phone || '—'],
-              ['الموقع', project.location || '—'],
-            ].map(([k, v]) => (
-              <div key={k} className="flex justify-between">
-                <span className="text-muted-foreground">{k}</span>
-                <span className="font-medium">{v}</span>
-              </div>
-            ))}
+
+          {/* Task Progress */}
+          <div className="bg-card border rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs text-muted-foreground">تقدم المهام</p>
+              <p className="text-sm font-bold">{taskProgressAvg}%</p>
+            </div>
+            <div className="h-2 bg-muted rounded-full overflow-hidden">
+              <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${taskProgressAvg}%` }} />
+            </div>
+            <div className="flex justify-between text-xs text-muted-foreground mt-1">
+              <span>{tasks.filter((t) => t.status === 'done').length} مكتملة</span>
+              <span>{tasks.length} مهمة</span>
+            </div>
           </div>
+
+          {/* Expenses by Category */}
+          {expensesByCategory.length > 0 && (
+            <div className="bg-card border rounded-xl p-4">
+              <p className="text-xs text-muted-foreground mb-3">المصروفات حسب النوع</p>
+              <div className="space-y-2">
+                {expensesByCategory.slice(0, 8).map(([cat, amount]) => {
+                  const total = expenses.reduce((s, e) => s + Number(e.amount), 0)
+                  const pct = total > 0 ? Math.round((amount / total) * 100) : 0
+                  return (
+                    <div key={cat}>
+                      <div className="flex justify-between text-sm mb-0.5">
+                        <span>{CATEGORY_AR[cat] || cat}</span>
+                        <span className="font-medium">
+                          {fmt(amount)} ({pct}%)
+                        </span>
+                      </div>
+                      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                        <div className="h-full bg-primary rounded-full" style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+              <div className="text-left text-sm font-bold mt-2 pt-2 border-t">
+                الإجمالي: {fmt(expenses.reduce((s, e) => s + Number(e.amount), 0))}
+              </div>
+            </div>
+          )}
+
           {project.notes && (
             <div className="bg-card border rounded-xl p-4">
               <p className="text-muted-foreground text-xs mb-1">ملاحظات</p>
@@ -474,27 +720,61 @@ export function ProjectDetailClient({
           </div>
           <div className="space-y-2">
             {tasks.map((t) => (
-              <div key={t.id} className="bg-card border rounded-xl p-3 flex items-center gap-3">
-                <Flag className={`w-4 h-4 shrink-0 ${PRIORITY_COLORS[t.priority]}`} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">{t.title}</p>
-                  <div className="flex items-center gap-3 mt-0.5">
-                    <span className="text-xs text-muted-foreground">{TASK_STATUS_AR[t.status] || t.status}</span>
-                    {t.con_workers && <span className="text-xs text-muted-foreground">{t.con_workers.name}</span>}
-                    {t.due_date && (
-                      <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {t.due_date}
+              <div key={t.id} className="bg-card border rounded-xl p-3 space-y-2">
+                <div className="flex items-center gap-3">
+                  <Flag className={`w-4 h-4 shrink-0 ${PRIORITY_COLORS[t.priority]}`} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium">{t.title}</p>
+                    <div className="flex items-center gap-3 mt-0.5 flex-wrap">
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-full ${TASK_STATUS_COLORS[t.status] || 'bg-gray-100 text-gray-600'}`}
+                      >
+                        {TASK_STATUS_AR[t.status] || t.status}
                       </span>
-                    )}
+                      {t.con_workers && <span className="text-xs text-muted-foreground">👤 {t.con_workers.name}</span>}
+                      {t.due_date && (
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {t.due_date}
+                        </span>
+                      )}
+                    </div>
                   </div>
+                  <button
+                    onClick={() => deleteTask(t.id)}
+                    className="p-1.5 hover:bg-red-50 rounded text-muted-foreground hover:text-red-500"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
                 </div>
-                <button
-                  onClick={() => deleteTask(t.id)}
-                  className="p-1.5 hover:bg-red-50 rounded text-muted-foreground hover:text-red-500"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                {/* Progress Bar */}
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${(t.progress || 0) >= 100 ? 'bg-green-500' : 'bg-primary'}`}
+                      style={{ width: `${t.progress || 0}%` }}
+                    />
+                  </div>
+                  <span className="text-xs font-medium tabular-nums w-8 text-left">{t.progress || 0}%</span>
+                </div>
+                {/* Quick Progress Buttons */}
+                <div className="flex gap-1">
+                  {PROGRESS_MILESTONES.filter(
+                    (m) => m > (t.progress || 0) || (m === 0 && t.progress === undefined),
+                  ).map((m) => (
+                    <button
+                      key={m}
+                      onClick={() => quickProgress(t.id, m, m >= 100 ? 'done' : m > 0 ? 'in_progress' : 'pending')}
+                      className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
+                        (t.progress || 0) >= m
+                          ? 'bg-primary/20 text-primary'
+                          : 'bg-muted text-muted-foreground hover:bg-accent'
+                      }`}
+                    >
+                      {m === 0 ? 'بدء' : m === 100 ? 'إتمام' : `${m}%`}
+                    </button>
+                  ))}
+                </div>
               </div>
             ))}
             {tasks.length === 0 && <p className="text-center text-muted-foreground py-8">لا توجد مهام</p>}
@@ -720,6 +1000,30 @@ export function ProjectDetailClient({
                   ))}
                 </select>
               </div>
+              <div className="grid grid-cols-2 gap-2">
+                <select
+                  value={taskForm.status}
+                  onChange={(e) => setTaskForm((f) => ({ ...f, status: e.target.value }))}
+                  className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                >
+                  {Object.entries(TASK_STATUS_AR).map(([v, l]) => (
+                    <option key={v} value={v}>
+                      {l}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={taskForm.progress}
+                  onChange={(e) => setTaskForm((f) => ({ ...f, progress: Number(e.target.value) }))}
+                  className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                >
+                  {PROGRESS_MILESTONES.map((m) => (
+                    <option key={m} value={m}>
+                      {m === 0 ? '0% - لم يبدأ' : m === 100 ? '100% - مكتمل' : `${m}%`}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <input
                 type="date"
                 value={taskForm.due_date}
@@ -905,6 +1209,128 @@ export function ProjectDetailClient({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Contract Tab */}
+      {tab === 'contract' && (
+        <div className="space-y-4">
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+              <p className="text-xs text-blue-600 dark:text-blue-400 mb-1">قيمة العقد</p>
+              <p className="text-2xl font-bold text-blue-800 dark:text-blue-300">{fmt(contractValue)}</p>
+            </div>
+            <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-xl p-4">
+              <p className="text-xs text-green-600 dark:text-green-400 mb-1">المبلغ المستلم</p>
+              <p className="text-2xl font-bold text-green-800 dark:text-green-300">{fmt(totalReceived)}</p>
+            </div>
+            <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
+              <p className="text-xs text-red-600 dark:text-red-400 mb-1">المبلغ المنصرف</p>
+              <p className="text-2xl font-bold text-red-800 dark:text-red-300">{fmt(totalSpent)}</p>
+            </div>
+            <div
+              className={`border rounded-xl p-4 ${remainingBalance >= 0 ? 'bg-purple-50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-800' : 'bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800'}`}
+            >
+              <p
+                className={`text-xs mb-1 ${remainingBalance >= 0 ? 'text-purple-600 dark:text-purple-400' : 'text-orange-600 dark:text-orange-400'}`}
+              >
+                الرصيد المتبقي
+              </p>
+              <p
+                className={`text-2xl font-bold ${remainingBalance >= 0 ? 'text-purple-800 dark:text-purple-300' : 'text-orange-800 dark:text-orange-300'}`}
+              >
+                {fmt(remainingBalance)}
+              </p>
+            </div>
+          </div>
+
+          {/* Contract Progress Bar */}
+          {contractValue > 0 && (
+            <div className="bg-card border rounded-xl p-4">
+              <p className="text-xs text-muted-foreground mb-2">نسبة التحصيل</p>
+              <div className="h-3 bg-muted rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-green-500 rounded-full transition-all"
+                  style={{ width: `${Math.min(100, Math.round((totalReceived / contractValue) * 100))}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                <span>{Math.min(100, Math.round((totalReceived / contractValue) * 100))}% محصل</span>
+                <span>
+                  {fmt(totalReceived)} / {fmt(contractValue)}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Detailed Breakdown */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="bg-card border rounded-xl p-4">
+              <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                <DollarSign className="w-4 h-4 text-green-500" />
+                المدفوعات المستلمة
+              </h3>
+              <div className="space-y-2">
+                {payments
+                  .filter((p) => p.type === 'incoming')
+                  .map((p) => (
+                    <div key={p.id} className="flex justify-between text-sm py-2 border-b last:border-0">
+                      <div>
+                        <p className="font-medium">{p.description}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {p.payment_date} - {p.reference || ''}
+                        </p>
+                      </div>
+                      <span className="font-bold text-green-600">{fmt(Number(p.amount))}</span>
+                    </div>
+                  ))}
+                {payments.filter((p) => p.type === 'incoming').length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">لا توجد مدفوعات مستلمة</p>
+                )}
+                <div className="flex justify-between text-sm font-bold pt-2 border-t">
+                  <span>الإجمالي</span>
+                  <span className="text-green-600">{fmt(totalReceived)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-card border rounded-xl p-4">
+              <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-red-500" />
+                المصروفات
+              </h3>
+              <div className="space-y-2">
+                {expensesByCategory.map(([cat, amount]) => (
+                  <div key={cat} className="flex justify-between text-sm py-1.5">
+                    <span className="text-muted-foreground">{CATEGORY_AR[cat] || cat}</span>
+                    <span className="font-medium">{fmt(amount)}</span>
+                  </div>
+                ))}
+                {expensesByCategory.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">لا توجد مصروفات</p>
+                )}
+                <div className="flex justify-between text-sm font-bold pt-2 border-t">
+                  <span>إجمالي المصروفات</span>
+                  <span className="text-red-500">{fmt(totalSpent)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Refund tracking */}
+          <div className="bg-card border rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground">المبلغ المسترد للعميل</p>
+                <p className="text-xl font-bold text-orange-500">{fmt(refundedAmount)}</p>
+              </div>
+              <div className="text-left">
+                <p className="text-xs text-muted-foreground">صافي العقد</p>
+                <p className="text-xl font-bold">{fmt(contractValue - refundedAmount)}</p>
+              </div>
+            </div>
           </div>
         </div>
       )}

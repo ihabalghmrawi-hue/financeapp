@@ -12,13 +12,13 @@ export default async function ConstructionPage() {
   const [projects, workers, tasks, payments, expenses, materials] = await Promise.all([
     admin
       .from('con_projects')
-      .select('id, name, status, expected_cost, actual_cost, start_date, end_date')
+      .select('id, name, status, expected_cost, actual_cost, contract_value, stage, start_date, end_date')
       .eq('company_id', COMPANY)
       .order('created_at', { ascending: false }),
     admin.from('con_workers').select('id, name, job_type, status, daily_rate').eq('company_id', COMPANY),
     admin
       .from('con_tasks')
-      .select('id, title, status, project_id, due_date, priority')
+      .select('id, title, status, progress, project_id, due_date, priority')
       .eq('company_id', COMPANY)
       .order('due_date', { ascending: true })
       .limit(20),

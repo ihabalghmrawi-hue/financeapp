@@ -15,10 +15,25 @@ interface Project {
   location: string | null
   expected_cost: number
   actual_cost: number
+  contract_value: number
+  stage: string
   start_date: string
   end_date: string | null
   notes: string | null
   created_at: string
+}
+
+const STAGE_AR: Record<string, string> = {
+  foundation: 'الأساسات',
+  structure: 'الهيكل',
+  rough_plumbing: 'السباكة الأولية',
+  rough_electrical: 'الكهرباء الأولية',
+  plastering: 'المحارة واللياسة',
+  tiling: 'البلاط والسيراميك',
+  carpentry: 'النجارة',
+  painting: 'الدهان',
+  finishing: 'التشطيب النهائي',
+  handover: 'التسليم',
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -44,6 +59,8 @@ const emptyForm = {
   client_phone: '',
   location: '',
   expected_cost: '',
+  contract_value: '',
+  stage: 'foundation',
   start_date: '',
   end_date: '',
   notes: '',
@@ -88,6 +105,8 @@ export function ProjectsClient({ projects: init, currency }: { projects: Project
       client_phone: p.client_phone || '',
       location: p.location || '',
       expected_cost: String(p.expected_cost),
+      contract_value: String(p.contract_value || ''),
+      stage: p.stage || 'foundation',
       start_date: p.start_date,
       end_date: p.end_date || '',
       notes: p.notes || '',
@@ -102,7 +121,11 @@ export function ProjectsClient({ projects: init, currency }: { projects: Project
     setLoading(true)
     setError('')
     try {
-      const payload = { ...form, expected_cost: Number(form.expected_cost) || 0 }
+      const payload = {
+        ...form,
+        expected_cost: Number(form.expected_cost) || 0,
+        contract_value: Number(form.contract_value) || 0,
+      }
       const url = editing ? `/api/construction/projects/${editing.id}` : '/api/construction/projects'
       const method = editing ? 'PATCH' : 'POST'
       const res = await fetch(url, {
@@ -189,6 +212,7 @@ export function ProjectsClient({ projects: init, currency }: { projects: Project
                   <h3 className="font-semibold text-sm truncate">{p.name}</h3>
                   {p.client_name && <p className="text-xs text-muted-foreground truncate">{p.client_name}</p>}
                   {p.location && <p className="text-xs text-muted-foreground truncate">{p.location}</p>}
+                  {p.stage && <p className="text-xs text-primary truncate">{STAGE_AR[p.stage] || p.stage}</p>}
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
                   {overrun && <AlertTriangle className="w-4 h-4 text-red-500" />}
@@ -216,7 +240,7 @@ export function ProjectsClient({ projects: init, currency }: { projects: Project
                     الفعلي: <span className="font-medium text-foreground">{fmt(Number(p.actual_cost))}</span>
                   </span>
                   <span className="text-muted-foreground">
-                    المتوقع: <span className="font-medium text-foreground">{fmt(Number(p.expected_cost))}</span>
+                    العقد: <span className="font-medium text-foreground">{fmt(Number(p.contract_value))}</span>
                   </span>
                 </div>
               </div>
@@ -314,6 +338,17 @@ export function ProjectsClient({ projects: init, currency }: { projects: Project
                   />
                 </div>
                 <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">قيمة العقد</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.contract_value}
+                    onChange={(e) => setForm((f: any) => ({ ...f, contract_value: e.target.value }))}
+                    className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                </div>
+                <div>
                   <label className="text-xs text-muted-foreground mb-1 block">الحالة</label>
                   <select
                     value={form.status}
@@ -321,6 +356,20 @@ export function ProjectsClient({ projects: init, currency }: { projects: Project
                     className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
                   >
                     {Object.entries(STATUS_AR).map(([v, l]) => (
+                      <option key={v} value={v}>
+                        {l}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">مرحلة المشروع</label>
+                  <select
+                    value={form.stage}
+                    onChange={(e) => setForm((f: any) => ({ ...f, stage: e.target.value }))}
+                    className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  >
+                    {Object.entries(STAGE_AR).map(([v, l]) => (
                       <option key={v} value={v}>
                         {l}
                       </option>

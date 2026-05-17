@@ -82,9 +82,12 @@ export async function GET(req: NextRequest) {
     expensesByCategory['materials'] = (expensesByCategory['materials'] || 0) + totalMaterials
   }
 
+  const projectById = Object.fromEntries((projects.data || []).map((p) => [p.id, p]))
+
   const projectSummary = Object.entries(projectMap).map(([id, v]) => ({
     id,
     name: v.name,
+    status: projectById[id]?.status || 'unknown',
     income: v.income,
     costs: v.expenses + v.materials,
     profit: v.income - v.expenses - v.materials,

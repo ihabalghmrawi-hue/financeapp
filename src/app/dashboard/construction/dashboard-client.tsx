@@ -21,8 +21,23 @@ interface Project {
   status: string
   expected_cost: number
   actual_cost: number
+  contract_value: number
+  stage: string
   start_date: string
   end_date: string | null
+}
+
+const STAGE_AR: Record<string, string> = {
+  foundation: 'الأساسات',
+  structure: 'الهيكل',
+  rough_plumbing: 'السباكة الأولية',
+  rough_electrical: 'الكهرباء الأولية',
+  plastering: 'المحارة واللياسة',
+  tiling: 'البلاط والسيراميك',
+  carpentry: 'النجارة',
+  painting: 'الدهان',
+  finishing: 'التشطيب النهائي',
+  handover: 'التسليم',
 }
 interface Worker {
   id: string
@@ -36,6 +51,7 @@ interface Task {
   title: string
   status: string
   project_id: string
+  progress: number
   due_date: string | null
   priority: string
 }
@@ -68,8 +84,11 @@ const STATUS_AR: Record<string, string> = {
 }
 const TASK_STATUS_AR: Record<string, string> = {
   pending: 'قيد الانتظار',
-  in_progress: 'جارٍ',
+  todo: 'للتنفيذ',
+  in_progress: 'قيد التنفيذ',
+  review: 'مراجعة',
   done: 'مكتمل',
+  blocked: 'موقوف',
   cancelled: 'ملغي',
 }
 const PRIORITY_COLORS: Record<string, string> = {
@@ -238,6 +257,7 @@ export function ConstructionDashboardClient({
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{p.name}</p>
                     <p className="text-xs text-muted-foreground">{p.start_date}</p>
+                    {p.stage && <p className="text-xs text-primary">{STAGE_AR[p.stage] || p.stage}</p>}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {overrun && <AlertTriangle className="w-3.5 h-3.5 text-red-500" />}
@@ -269,27 +289,38 @@ export function ConstructionDashboardClient({
           </div>
           <div className="space-y-2">
             {recentTasks.map((t) => (
-              <div key={t.id} className="flex items-center justify-between p-2.5 rounded-lg bg-accent/30">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{t.title}</p>
-                  {t.due_date && (
-                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                      <Clock className="w-3 h-3" />
-                      {t.due_date}
-                    </p>
-                  )}
+              <div key={t.id} className="p-2.5 rounded-lg bg-accent/30 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{t.title}</p>
+                    {t.due_date && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                        <Clock className="w-3 h-3" />
+                        {t.due_date}
+                      </p>
+                    )}
+                  </div>
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${PRIORITY_COLORS[t.priority] || 'bg-gray-100 text-gray-500'}`}
+                  >
+                    {t.priority === 'urgent'
+                      ? 'عاجل'
+                      : t.priority === 'high'
+                        ? 'عالي'
+                        : t.priority === 'medium'
+                          ? 'متوسط'
+                          : 'منخفض'}
+                  </span>
                 </div>
-                <span
-                  className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${PRIORITY_COLORS[t.priority] || 'bg-gray-100 text-gray-500'}`}
-                >
-                  {t.priority === 'urgent'
-                    ? 'عاجل'
-                    : t.priority === 'high'
-                      ? 'عالي'
-                      : t.priority === 'medium'
-                        ? 'متوسط'
-                        : 'منخفض'}
-                </span>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${(t.progress || 0) >= 100 ? 'bg-green-500' : 'bg-primary'}`}
+                      style={{ width: `${t.progress || 0}%` }}
+                    />
+                  </div>
+                  <span className="text-xs font-medium tabular-nums w-7 text-left">{t.progress || 0}%</span>
+                </div>
               </div>
             ))}
             {recentTasks.length === 0 && (

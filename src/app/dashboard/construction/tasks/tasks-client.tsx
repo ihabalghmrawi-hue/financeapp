@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Search, Trash2, Edit, Calendar, Flag } from 'lucide-react'
+import { Plus, Search, Trash2, Edit, Calendar, Flag, CheckCircle2 } from 'lucide-react'
 
 interface Task {
   id: string
@@ -9,6 +9,7 @@ interface Task {
   description: string | null
   status: string
   priority: string
+  progress: number
   project_id: string | null
   worker_id: string | null
   due_date: string | null
@@ -26,29 +27,35 @@ interface Worker {
   name: string
 }
 
-// DB CHECK: ('todo','in_progress','review','done','blocked')
-const STATUSES = ['todo', 'in_progress', 'review', 'done', 'blocked']
+const STATUSES = ['pending', 'in_progress', 'review', 'done', 'blocked']
 const STATUS_AR: Record<string, string> = {
-  todo: 'قيد الانتظار',
-  in_progress: 'جارٍ',
+  pending: 'قيد الانتظار',
+  todo: 'للتنفيذ',
+  in_progress: 'قيد التنفيذ',
   review: 'مراجعة',
   done: 'مكتمل',
   blocked: 'موقوف',
+  cancelled: 'ملغي',
 }
 const STATUS_COLORS: Record<string, string> = {
-  todo: 'border-gray-200 bg-gray-50',
-  in_progress: 'border-blue-200 bg-blue-50',
+  pending: 'border-gray-200 bg-gray-50',
+  todo: 'border-blue-200 bg-blue-50',
+  in_progress: 'border-amber-200 bg-amber-50',
   review: 'border-purple-200 bg-purple-50',
   done: 'border-green-200 bg-green-50',
   blocked: 'border-red-200 bg-red-50',
+  cancelled: 'border-gray-200 bg-gray-100',
 }
 const STATUS_HEADER: Record<string, string> = {
-  todo: 'bg-gray-100 text-gray-600',
-  in_progress: 'bg-blue-100 text-blue-700',
+  pending: 'bg-gray-100 text-gray-600',
+  todo: 'bg-blue-100 text-blue-700',
+  in_progress: 'bg-amber-100 text-amber-700',
   review: 'bg-purple-100 text-purple-700',
   done: 'bg-green-100 text-green-700',
   blocked: 'bg-red-100 text-red-500',
+  cancelled: 'bg-gray-100 text-gray-400',
 }
+const PROGRESS_MILESTONES = [0, 25, 50, 75, 100]
 const PRIORITY_COLORS: Record<string, string> = {
   low: 'text-gray-400',
   medium: 'text-blue-500',
@@ -60,8 +67,9 @@ const PRIORITY_AR: Record<string, string> = { low: 'منخفض', medium: 'متو
 const emptyForm = {
   title: '',
   description: '',
-  status: 'todo',
+  status: 'pending',
   priority: 'medium',
+  progress: 0,
   project_id: '',
   worker_id: '',
   due_date: '',
@@ -123,6 +131,7 @@ export function TasksClient({
     try {
       const payload = {
         ...form,
+        progress: Number(form.progress) || 0,
         project_id: form.project_id || null,
         worker_id: form.worker_id || null,
         due_date: form.due_date || null,
@@ -161,11 +170,15 @@ export function TasksClient({
     setDeleting(null)
   }
 
-  const quickStatus = async (t: Task, status: string) => {
+  const quickStatus = async (t: Task, status: string, progress?: number) => {
+    const body: Record<string, unknown> = { status }
+    if (progress !== undefined) {
+      body.progress = progress
+    }
     const res = await fetch(`/api/construction/tasks/${t.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify(body),
     })
     const data = await res.json()
     if (res.ok) {
@@ -232,25 +245,48 @@ export function TasksClient({
                       <span>{t.due_date}</span>
                     </div>
                   )}
+                  {/* Progress Bar */}
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-1.5 bg-black/10 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${(t.progress || 0) >= 100 ? 'bg-green-500' : 'bg-primary'}`}
+                        style={{ width: `${t.progress || 0}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-medium tabular-nums w-7 text-left">{t.progress || 0}%</span>
+                  </div>
                   <div className="flex items-center justify-between pt-1 border-t border-black/5">
-                    <div className="flex gap-1">
+                    <div className="flex gap-1 flex-wrap">
                       {col.status !== 'done' && (
                         <button
-                          onClick={() => quickStatus(t, 'done')}
+                          onClick={() => quickStatus(t, 'done', 100)}
                           title="إتمام"
                           className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full hover:bg-green-200 transition-colors"
                         >
-                          ✓
+                          ✓ إتمام
                         </button>
                       )}
-                      {col.status === 'todo' && (
+                      {col.status === 'pending' && (
                         <button
-                          onClick={() => quickStatus(t, 'in_progress')}
+                          onClick={() => quickStatus(t, 'in_progress', 25)}
                           title="بدء"
-                          className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors"
+                          className="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full hover:bg-amber-200 transition-colors"
                         >
-                          ▶
+                          ▶ بدء
                         </button>
+                      )}
+                      {col.status === 'in_progress' && (
+                        <>
+                          {PROGRESS_MILESTONES.filter((m) => m > (t.progress || 0) && m < 100).map((m) => (
+                            <button
+                              key={m}
+                              onClick={() => quickStatus(t, 'in_progress', m)}
+                              className="text-xs px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+                            >
+                              {m}%
+                            </button>
+                          ))}
+                        </>
                       )}
                     </div>
                     <div className="flex gap-1">
@@ -353,6 +389,20 @@ export function TasksClient({
                     {Object.entries(STATUS_AR).map(([v, l]) => (
                       <option key={v} value={v}>
                         {l}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">نسبة الإنجاز</label>
+                  <select
+                    value={form.progress}
+                    onChange={(e) => setForm((f: any) => ({ ...f, progress: Number(e.target.value) }))}
+                    className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  >
+                    {PROGRESS_MILESTONES.map((m) => (
+                      <option key={m} value={m}>
+                        {m === 0 ? '0% - لم يبدأ' : m === 100 ? '100% - مكتمل' : `${m}%`}
                       </option>
                     ))}
                   </select>
