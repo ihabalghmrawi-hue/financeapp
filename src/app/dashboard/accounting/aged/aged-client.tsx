@@ -1,9 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import {
-  Users, Building2, Loader2, AlertCircle, Download,
-} from 'lucide-react'
+import { Users, Building2, Loader2, AlertCircle, Download } from 'lucide-react'
 
 function formatNumber(n: number) {
   return n.toLocaleString('ar-SA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -33,12 +31,7 @@ interface AgedReport {
   }
 }
 
-export function AgedClient({
-  company_id, currency,
-}: {
-  company_id: string
-  currency: string
-}) {
+export function AgedClient({ company_id, currency }: { company_id: string; currency: string }) {
   const [type, setType] = useState<'receivables' | 'payables'>('receivables')
   const [report, setReport] = useState<AgedReport | null>(null)
   const [loading, setLoading] = useState(false)
@@ -78,8 +71,11 @@ export function AgedClient({
           <h1 className="text-2xl font-bold text-gray-900">التقارير العمرية</h1>
           <p className="text-sm text-gray-500 mt-1">تحليل الذمم المدينة والدائنة حسب الفترات العمرية</p>
         </div>
-        <button onClick={fetchReport} disabled={loading}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50">
+        <button
+          onClick={fetchReport}
+          disabled={loading}
+          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50"
+        >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
           تحميل التقرير
         </button>
@@ -87,27 +83,38 @@ export function AgedClient({
 
       {error && (
         <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-          <AlertCircle className="h-4 w-4" />{error}
+          <AlertCircle className="h-4 w-4" />
+          {error}
         </div>
       )}
 
       {/* Type Toggle */}
       <div className="flex gap-2">
-        <button onClick={() => { setType('receivables'); setReport(null) }}
+        <button
+          onClick={() => {
+            setType('receivables')
+            setReport(null)
+          }}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm border transition-colors ${
             type === 'receivables'
               ? 'bg-blue-50 border-blue-200 text-blue-700'
               : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
-          }`}>
+          }`}
+        >
           <Users className="h-4 w-4" />
           ذمم مدينة (عملاء)
         </button>
-        <button onClick={() => { setType('payables'); setReport(null) }}
+        <button
+          onClick={() => {
+            setType('payables')
+            setReport(null)
+          }}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm border transition-colors ${
             type === 'payables'
               ? 'bg-blue-50 border-blue-200 text-blue-700'
               : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
-          }`}>
+          }`}
+        >
           <Building2 className="h-4 w-4" />
           ذمم دائنة (موردين)
         </button>
@@ -115,7 +122,7 @@ export function AgedClient({
 
       {!report && !loading && (
         <div className="bg-white rounded-xl border border-gray-200 p-12 text-center text-gray-400">
-          <p>اضغط "تحميل التقرير" لعرض البيانات</p>
+          <p>اضغط &quot;تحميل التقرير&quot; لعرض البيانات</p>
         </div>
       )}
 
@@ -138,7 +145,9 @@ export function AgedClient({
               <div key={key} className={`rounded-xl border p-4 shadow-sm ${color}`}>
                 <p className="text-xs mb-1">{label}</p>
                 <p className="text-lg font-bold">{formatNumber(report.buckets[key].length)}</p>
-                <p className="text-xs mt-0.5">{formatNumber(report[`total_${key.replace('-', '_')}` as keyof AgedReport] as number)}</p>
+                <p className="text-xs mt-0.5">
+                  {formatNumber(report[`total_${key.replace('-', '_')}` as keyof AgedReport] as number)}
+                </p>
               </div>
             ))}
           </div>

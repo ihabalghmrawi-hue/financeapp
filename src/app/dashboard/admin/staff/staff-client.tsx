@@ -346,7 +346,7 @@ export function StaffManagementClient({ staff: initialStaff, companyId }: Props)
       </div>
 
       {/* Staff List */}
-      <div className="bg-card border rounded-2xl overflow-hidden">
+      <div className="bg-card border rounded-2xl overflow-x-auto">
         {staff.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             <User className="w-10 h-10 mx-auto mb-2 opacity-20" />
@@ -427,8 +427,8 @@ export function StaffManagementClient({ staff: initialStaff, companyId }: Props)
 
       {/* Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-card rounded-2xl shadow-2xl w-full max-w-lg my-4 overflow-hidden">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+          <div className="bg-card rounded-2xl shadow-2xl w-full max-w-lg my-4 overflow-x-auto">
             <div className="flex items-center justify-between p-5 border-b">
               <h3 className="font-bold text-lg">{editTarget ? t('staff.editStaff') : t('staff.addStaff')}</h3>
               <button

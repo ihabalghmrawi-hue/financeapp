@@ -1,18 +1,10 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import {
-  AlertTriangle, AlertCircle, Info, Lightbulb,
-  Loader2, RefreshCw, Search, ArrowUpRight,
-} from 'lucide-react'
+import { AlertTriangle, AlertCircle, Info, Lightbulb, Loader2, RefreshCw, Search, ArrowUpRight } from 'lucide-react'
 import Link from 'next/link'
 
-export function AnomaliesClient({
-  company_id, currency,
-}: {
-  company_id: string
-  currency: string
-}) {
+export function AnomaliesClient({ company_id, currency }: { company_id: string; currency: string }) {
   const [anomalies, setAnomalies] = useState<any[]>([])
   const [insights, setInsights] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
@@ -41,9 +33,12 @@ export function AnomaliesClient({
 
   const severityIcon = (severity: string) => {
     switch (severity) {
-      case 'high': return <AlertCircle className="h-4 w-4 text-red-500" />
-      case 'medium': return <AlertTriangle className="h-4 w-4 text-yellow-500" />
-      default: return <Info className="h-4 w-4 text-blue-500" />
+      case 'high':
+        return <AlertCircle className="h-4 w-4 text-red-500" />
+      case 'medium':
+        return <AlertTriangle className="h-4 w-4 text-yellow-500" />
+      default:
+        return <Info className="h-4 w-4 text-blue-500" />
     }
   }
 
@@ -54,8 +49,11 @@ export function AnomaliesClient({
           <h1 className="text-2xl font-bold text-gray-900">الذكاء المحاسبي</h1>
           <p className="text-sm text-gray-500 mt-1">كشف الحالات الشاذة والرؤى المالية</p>
         </div>
-        <button onClick={fetchData} disabled={loading}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50">
+        <button
+          onClick={fetchData}
+          disabled={loading}
+          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50"
+        >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
           تحليل
         </button>
@@ -63,14 +61,15 @@ export function AnomaliesClient({
 
       {error && (
         <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-          <AlertCircle className="h-4 w-4" />{error}
+          <AlertCircle className="h-4 w-4" />
+          {error}
         </div>
       )}
 
       {!loading && anomalies.length === 0 && insights.length === 0 && (
         <div className="bg-white rounded-xl border border-gray-200 p-12 text-center text-gray-400">
           <Lightbulb className="h-10 w-10 mx-auto mb-3 text-gray-300" />
-          <p>اضغط "تحليل" لكشف الحالات الشاذة والرؤى المالية</p>
+          <p>اضغط &quot;تحليل&quot; لكشف الحالات الشاذة والرؤى المالية</p>
         </div>
       )}
 
@@ -89,22 +88,31 @@ export function AnomaliesClient({
           </h2>
           <div className="space-y-2">
             {anomalies.map((a, i) => (
-              <div key={i} className={`bg-white rounded-xl border p-4 shadow-sm ${
-                a.severity === 'high' ? 'border-red-200' : a.severity === 'medium' ? 'border-yellow-200' : 'border-blue-200'
-              }`}>
+              <div
+                key={i}
+                className={`bg-white rounded-xl border p-4 shadow-sm ${
+                  a.severity === 'high'
+                    ? 'border-red-200'
+                    : a.severity === 'medium'
+                      ? 'border-yellow-200'
+                      : 'border-blue-200'
+                }`}
+              >
                 <div className="flex items-start gap-3">
                   {severityIcon(a.severity)}
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-900">{a.message}</p>
-                    {a.suggestion && (
-                      <p className="text-xs text-gray-500 mt-1">اقتراح: {a.suggestion}</p>
-                    )}
+                    {a.suggestion && <p className="text-xs text-gray-500 mt-1">اقتراح: {a.suggestion}</p>}
                   </div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    a.severity === 'high' ? 'bg-red-100 text-red-700' :
-                    a.severity === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                    'bg-blue-100 text-blue-700'
-                  }`}>
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-full ${
+                      a.severity === 'high'
+                        ? 'bg-red-100 text-red-700'
+                        : a.severity === 'medium'
+                          ? 'bg-yellow-100 text-yellow-700'
+                          : 'bg-blue-100 text-blue-700'
+                    }`}
+                  >
                     {a.severity === 'high' ? 'عالية' : a.severity === 'medium' ? 'متوسطة' : 'منخفضة'}
                   </span>
                 </div>
@@ -122,19 +130,26 @@ export function AnomaliesClient({
           </h2>
           <div className="grid gap-2">
             {insights.map((ins, i) => (
-              <div key={i} className={`bg-white rounded-xl border p-4 shadow-sm ${
-                ins.severity === 'positive' ? 'border-green-200 bg-green-50/30' :
-                ins.severity === 'warning' ? 'border-yellow-200' :
-                'border-gray-200'
-              }`}>
+              <div
+                key={i}
+                className={`bg-white rounded-xl border p-4 shadow-sm ${
+                  ins.severity === 'positive'
+                    ? 'border-green-200 bg-green-50/30'
+                    : ins.severity === 'warning'
+                      ? 'border-yellow-200'
+                      : 'border-gray-200'
+                }`}
+              >
                 <div className="flex items-start gap-3">
                   {severityIcon(ins.severity)}
                   <div className="flex-1">
                     <p className="text-sm text-gray-900">{ins.message}</p>
                   </div>
                   {ins.action_url && (
-                    <Link href={ins.action_url}
-                      className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700">
+                    <Link
+                      href={ins.action_url}
+                      className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700"
+                    >
                       عرض <ArrowUpRight className="h-3 w-3" />
                     </Link>
                   )}

@@ -650,6 +650,11 @@
     padding-bottom: env(keyboard-inset-height, 0px);
   }
 
+  /* Adds bottom padding equal to the safe-area inset (gesture bar etc.). */
+  .pb-safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
   .orientation-portrait .orientation-hidden-portrait {
     display: none;
   }

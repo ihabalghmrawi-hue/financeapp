@@ -273,7 +273,7 @@ export function TrashClient({ initialItems, modules }: Props) {
       )}
 
       {/* Table */}
-      <div className="bg-card border rounded-2xl overflow-hidden">
+      <div className="bg-card border rounded-2xl overflow-x-auto">
         {filtered.length === 0 ? (
           <div className="p-16 text-center">
             <Trash2 className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />

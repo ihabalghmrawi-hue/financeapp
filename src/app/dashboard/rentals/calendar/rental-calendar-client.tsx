@@ -475,7 +475,7 @@ export function RentalCalendarClient({
       {/* ── Detail Panel ── */}
       {detailOrder && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40"
           onClick={() => setDetailOrder(null)}
         >
           <div

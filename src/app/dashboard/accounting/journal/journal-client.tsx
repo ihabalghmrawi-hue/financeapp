@@ -2,83 +2,93 @@
 
 import { useState, useMemo, useCallback } from 'react'
 import {
-  Plus, Search, Filter, ChevronDown, ChevronUp,
-  RefreshCw, CheckCircle, RotateCcw, X, Save, Send,
-  Loader2, AlertCircle,
+  Plus,
+  Search,
+  Filter,
+  ChevronDown,
+  ChevronUp,
+  RefreshCw,
+  CheckCircle,
+  RotateCcw,
+  X,
+  Save,
+  Send,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react'
 
 interface Account {
-  id:             string
-  code:           string
-  name:           string
-  name_ar:        string
-  type:           string
+  id: string
+  code: string
+  name: string
+  name_ar: string
+  type: string
   normal_balance: string
-  is_postable:    boolean
+  is_postable: boolean
 }
 
 interface JournalLine {
-  id:          string
-  account_id:  string
-  debit:       number
-  credit:      number
+  id: string
+  account_id: string
+  debit: number
+  credit: number
   description: string
   line_number: number
-  accounts?:   Account
+  accounts?: Account
 }
 
 interface JournalEntry {
-  id:                 string
-  entry_number:       string
-  date:               string
-  description:        string
-  description_ar?:    string
-  reference?:         string
-  status:             string
-  total_debit:        number
-  total_credit:       number
-  is_balanced:        boolean
-  source:             string
-  source_document?:   string
-  auto_generated:     boolean
-  posted_at?:         string
-  approved_by?:       string
-  reversal_of?:       string
+  id: string
+  entry_number: string
+  date: string
+  description: string
+  description_ar?: string
+  reference?: string
+  status: string
+  total_debit: number
+  total_credit: number
+  is_balanced: boolean
+  source: string
+  source_document?: string
+  auto_generated: boolean
+  posted_at?: string
+  approved_by?: string
+  reversal_of?: string
   reversal_entry_id?: string
-  created_at:         string
+  created_at: string
   journal_entry_lines: JournalLine[]
 }
 
 interface FormLine {
   account_code: string
-  debit:        string
-  credit:       string
-  description:  string
+  debit: string
+  credit: string
+  description: string
 }
 
 const STATUS_CONFIG: Record<string, { label: string; cls: string }> = {
-  draft:    { label: 'مسودة',  cls: 'bg-gray-100 text-gray-600' },
-  pending:  { label: 'معلق',   cls: 'bg-yellow-100 text-yellow-700' },
-  approved: { label: 'معتمد',  cls: 'bg-blue-100 text-blue-700' },
-  posted:   { label: 'مرحّل',  cls: 'bg-green-100 text-green-700' },
-  reversed: { label: 'معكوس',  cls: 'bg-red-100 text-red-600' },
-  void:     { label: 'ملغي',   cls: 'bg-gray-100 text-gray-400' },
+  draft: { label: 'مسودة', cls: 'bg-gray-100 text-gray-600' },
+  pending: { label: 'معلق', cls: 'bg-yellow-100 text-yellow-700' },
+  approved: { label: 'معتمد', cls: 'bg-blue-100 text-blue-700' },
+  posted: { label: 'مرحّل', cls: 'bg-green-100 text-green-700' },
+  reversed: { label: 'معكوس', cls: 'bg-red-100 text-red-600' },
+  void: { label: 'ملغي', cls: 'bg-gray-100 text-gray-400' },
 }
 
 function StatusBadge({ status }: { status: string }) {
   const s = STATUS_CONFIG[status] || { label: status, cls: 'bg-gray-100 text-gray-500' }
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${s.cls}`}>
-      {s.label}
-    </span>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${s.cls}`}>{s.label}</span>
   )
 }
 
 function SourceBadge({ auto_generated, source }: { auto_generated: boolean; source: string }) {
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-      auto_generated ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
-    }`}>
+    <span
+      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+        auto_generated ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+      }`}
+    >
       {auto_generated ? `تلقائي (${source})` : 'يدوي'}
     </span>
   )
@@ -95,39 +105,41 @@ export function JournalClient({
   currency,
 }: {
   initialEntries: JournalEntry[]
-  accounts:       Account[]
-  company_id:     string
-  currency:       string
+  accounts: Account[]
+  company_id: string
+  currency: string
 }) {
-  const [entries, setEntries]           = useState<JournalEntry[]>(initialEntries)
-  const [expandedId, setExpandedId]     = useState<string | null>(null)
-  const [showModal, setShowModal]       = useState(false)
-  const [loading, setLoading]           = useState(false)
+  const [entries, setEntries] = useState<JournalEntry[]>(initialEntries)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [showModal, setShowModal] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
-  const [error, setError]               = useState<string | null>(null)
-  const [success, setSuccess]           = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
   // Filters
   const [filterStatus, setFilterStatus] = useState('')
   const [filterSource, setFilterSource] = useState('')
   const [filterDateFrom, setFilterDateFrom] = useState('')
-  const [filterDateTo, setFilterDateTo]     = useState('')
-  const [filterSearch, setFilterSearch]     = useState('')
+  const [filterDateTo, setFilterDateTo] = useState('')
+  const [filterSearch, setFilterSearch] = useState('')
 
   // New entry form
   const emptyLine = (): FormLine => ({ account_code: '', debit: '', credit: '', description: '' })
   const [form, setForm] = useState({
-    description:    '',
+    description: '',
     description_ar: '',
-    reference:      '',
-    date:           new Date().toISOString().slice(0, 10),
-    lines:          [emptyLine(), emptyLine(), emptyLine()] as FormLine[],
+    reference: '',
+    date: new Date().toISOString().slice(0, 10),
+    lines: [emptyLine(), emptyLine(), emptyLine()] as FormLine[],
   })
 
   // Account map for quick lookup
   const accountByCode = useMemo(() => {
     const m: Record<string, Account> = {}
-    for (const a of accounts) m[a.code] = a
+    for (const a of accounts) {
+      m[a.code] = a
+    }
     return m
   }, [accounts])
 
@@ -135,11 +147,18 @@ export function JournalClient({
   const accountsByType = useMemo(() => {
     const g: Record<string, Account[]> = {}
     for (const a of accounts) {
-      const typeLabel = {
-        asset: 'أصول', liability: 'خصوم', equity: 'حقوق ملكية',
-        revenue: 'إيرادات', cogs: 'تكلفة المبيعات', expense: 'مصروفات',
-      }[a.type] || a.type
-      if (!g[typeLabel]) g[typeLabel] = []
+      const typeLabel =
+        {
+          asset: 'أصول',
+          liability: 'خصوم',
+          equity: 'حقوق ملكية',
+          revenue: 'إيرادات',
+          cogs: 'تكلفة المبيعات',
+          expense: 'مصروفات',
+        }[a.type] || a.type
+      if (!g[typeLabel]) {
+        g[typeLabel] = []
+      }
       g[typeLabel].push(a)
     }
     return g
@@ -147,10 +166,10 @@ export function JournalClient({
 
   // Computed totals for form
   const formTotals = useMemo(() => {
-    let debit  = 0
+    let debit = 0
     let credit = 0
     for (const line of form.lines) {
-      debit  += parseFloat(line.debit  || '0') || 0
+      debit += parseFloat(line.debit || '0') || 0
       credit += parseFloat(line.credit || '0') || 0
     }
     return { debit, credit, balanced: Math.abs(debit - credit) < 0.005 }
@@ -158,26 +177,38 @@ export function JournalClient({
 
   // Filtered entries
   const filtered = useMemo(() => {
-    return entries.filter(e => {
-      if (filterStatus && e.status !== filterStatus) return false
-      if (filterSource === 'auto'   && !e.auto_generated) return false
-      if (filterSource === 'manual' && e.auto_generated)  return false
-      if (filterDateFrom && e.date < filterDateFrom) return false
-      if (filterDateTo   && e.date > filterDateTo)   return false
+    return entries.filter((e) => {
+      if (filterStatus && e.status !== filterStatus) {
+        return false
+      }
+      if (filterSource === 'auto' && !e.auto_generated) {
+        return false
+      }
+      if (filterSource === 'manual' && e.auto_generated) {
+        return false
+      }
+      if (filterDateFrom && e.date < filterDateFrom) {
+        return false
+      }
+      if (filterDateTo && e.date > filterDateTo) {
+        return false
+      }
       if (filterSearch) {
         const q = filterSearch.toLowerCase()
         if (
           !e.entry_number.toLowerCase().includes(q) &&
           !e.description.toLowerCase().includes(q) &&
           !(e.reference || '').toLowerCase().includes(q)
-        ) return false
+        ) {
+          return false
+        }
       }
       return true
     })
   }, [entries, filterStatus, filterSource, filterDateFrom, filterDateTo, filterSearch])
 
   function updateLine(index: number, field: keyof FormLine, value: string) {
-    setForm(prev => {
+    setForm((prev) => {
       const lines = [...prev.lines]
       lines[index] = { ...lines[index], [field]: value }
       // Clear opposite amount
@@ -191,12 +222,14 @@ export function JournalClient({
   }
 
   function addLine() {
-    setForm(prev => ({ ...prev, lines: [...prev.lines, emptyLine()] }))
+    setForm((prev) => ({ ...prev, lines: [...prev.lines, emptyLine()] }))
   }
 
   function removeLine(index: number) {
-    if (form.lines.length <= 2) return
-    setForm(prev => ({ ...prev, lines: prev.lines.filter((_, i) => i !== index) }))
+    if (form.lines.length <= 2) {
+      return
+    }
+    setForm((prev) => ({ ...prev, lines: prev.lines.filter((_, i) => i !== index) }))
   }
 
   async function fetchEntries() {
@@ -226,12 +259,12 @@ export function JournalClient({
     }
 
     const lines = form.lines
-      .filter(l => l.account_code && (parseFloat(l.debit) > 0 || parseFloat(l.credit) > 0))
-      .map(l => ({
+      .filter((l) => l.account_code && (parseFloat(l.debit) > 0 || parseFloat(l.credit) > 0))
+      .map((l) => ({
         account_code: l.account_code,
-        debit:        parseFloat(l.debit)  || 0,
-        credit:       parseFloat(l.credit) || 0,
-        description:  l.description || undefined,
+        debit: parseFloat(l.debit) || 0,
+        credit: parseFloat(l.credit) || 0,
+        description: l.description || undefined,
       }))
 
     if (lines.length < 2) {
@@ -242,13 +275,13 @@ export function JournalClient({
     setLoading(true)
     try {
       const res = await fetch('/api/accounting/journal', {
-        method:  'POST',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-tenant-id': company_id },
-        body:    JSON.stringify({
-          description:    form.description,
+        body: JSON.stringify({
+          description: form.description,
           description_ar: form.description_ar || form.description,
-          reference:      form.reference || undefined,
-          date:           form.date,
+          reference: form.reference || undefined,
+          date: form.date,
           lines,
         }),
       })
@@ -259,7 +292,9 @@ export function JournalClient({
         setSuccess('تم إنشاء القيد بنجاح')
         setShowModal(false)
         setForm({
-          description: '', description_ar: '', reference: '',
+          description: '',
+          description_ar: '',
+          reference: '',
           date: new Date().toISOString().slice(0, 10),
           lines: [emptyLine(), emptyLine(), emptyLine()],
         })
@@ -276,18 +311,20 @@ export function JournalClient({
     setError(null)
     try {
       const res = await fetch(`/api/accounting/journal/${id}`, {
-        method:  'PATCH',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'x-tenant-id': company_id },
-        body:    JSON.stringify({ action }),
+        body: JSON.stringify({ action }),
       })
       const data = await res.json()
       if (!res.ok) {
         setError(data.error || 'فشل تنفيذ الإجراء')
       } else {
         setSuccess(
-          action === 'post'    ? 'تم ترحيل القيد بنجاح'  :
-          action === 'reverse' ? 'تم عكس القيد بنجاح'    :
-                                 'تم إلغاء القيد بنجاح'
+          action === 'post'
+            ? 'تم ترحيل القيد بنجاح'
+            : action === 'reverse'
+              ? 'تم عكس القيد بنجاح'
+              : 'تم إلغاء القيد بنجاح',
         )
         await fetchEntries()
         setTimeout(() => setSuccess(null), 3000)
@@ -327,7 +364,9 @@ export function JournalClient({
         <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
           <AlertCircle className="h-4 w-4 flex-shrink-0" />
           {error}
-          <button onClick={() => setError(null)} className="mr-auto"><X className="h-4 w-4" /></button>
+          <button onClick={() => setError(null)} className="mr-auto">
+            <X className="h-4 w-4" />
+          </button>
         </div>
       )}
       {success && (
@@ -346,13 +385,13 @@ export function JournalClient({
               type="text"
               placeholder="بحث..."
               value={filterSearch}
-              onChange={e => setFilterSearch(e.target.value)}
+              onChange={(e) => setFilterSearch(e.target.value)}
               className="w-full pr-9 pl-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <select
             value={filterStatus}
-            onChange={e => setFilterStatus(e.target.value)}
+            onChange={(e) => setFilterStatus(e.target.value)}
             className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">كل الحالات</option>
@@ -365,7 +404,7 @@ export function JournalClient({
           </select>
           <select
             value={filterSource}
-            onChange={e => setFilterSource(e.target.value)}
+            onChange={(e) => setFilterSource(e.target.value)}
             className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">كل المصادر</option>
@@ -375,14 +414,14 @@ export function JournalClient({
           <input
             type="date"
             value={filterDateFrom}
-            onChange={e => setFilterDateFrom(e.target.value)}
+            onChange={(e) => setFilterDateFrom(e.target.value)}
             className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="من تاريخ"
           />
           <input
             type="date"
             value={filterDateTo}
-            onChange={e => setFilterDateTo(e.target.value)}
+            onChange={(e) => setFilterDateTo(e.target.value)}
             className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="إلى تاريخ"
           />
@@ -400,7 +439,7 @@ export function JournalClient({
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 text-gray-500 text-xs border-b border-gray-100">
-                <th className="w-6 px-4 py-2"></th>
+                <th className="w-6 px-4 py-2" />
                 <th className="px-4 py-2 text-right font-medium">رقم القيد</th>
                 <th className="px-4 py-2 text-right font-medium">التاريخ</th>
                 <th className="px-4 py-2 text-right font-medium">الوصف</th>
@@ -418,136 +457,134 @@ export function JournalClient({
                     لا توجد قيود مطابقة للبحث
                   </td>
                 </tr>
-              ) : filtered.map(entry => (
-                <>
-                  <tr
-                    key={entry.id}
-                    className="hover:bg-gray-50 transition-colors cursor-pointer"
-                    onClick={() => setExpandedId(expandedId === entry.id ? null : entry.id)}
-                  >
-                    <td className="px-3 py-3 text-gray-400">
-                      {expandedId === entry.id
-                        ? <ChevronUp className="h-4 w-4" />
-                        : <ChevronDown className="h-4 w-4" />
-                      }
-                    </td>
-                    <td className="px-4 py-3 font-mono text-xs text-blue-700 font-medium">
-                      {entry.entry_number}
-                    </td>
-                    <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{entry.date}</td>
-                    <td className="px-4 py-3 text-gray-900 max-w-xs">
-                      <p className="truncate">{entry.description}</p>
-                      {entry.reference && (
-                        <p className="text-xs text-gray-400 truncate">#{entry.reference}</p>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <SourceBadge auto_generated={entry.auto_generated} source={entry.source} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={entry.status} />
-                    </td>
-                    <td className="px-4 py-3 text-left font-medium text-blue-700">
-                      {formatNumber(entry.total_debit)}
-                    </td>
-                    <td className="px-4 py-3 text-left font-medium text-red-600">
-                      {formatNumber(entry.total_credit)}
-                    </td>
-                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                      <div className="flex items-center gap-1 justify-end">
-                        {['draft', 'pending', 'approved'].includes(entry.status) && (
-                          <button
-                            onClick={() => handleAction(entry.id, 'post')}
-                            disabled={!!actionLoading}
-                            className="flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 border border-green-200 rounded text-xs hover:bg-green-100 transition-colors disabled:opacity-50"
-                          >
-                            {actionLoading === entry.id + 'post'
-                              ? <Loader2 className="h-3 w-3 animate-spin" />
-                              : <CheckCircle className="h-3 w-3" />
-                            }
-                            ترحيل
-                          </button>
+              ) : (
+                filtered.map((entry) => (
+                  <>
+                    <tr
+                      key={entry.id}
+                      className="hover:bg-gray-50 transition-colors cursor-pointer"
+                      onClick={() => setExpandedId(expandedId === entry.id ? null : entry.id)}
+                    >
+                      <td className="px-3 py-3 text-gray-400">
+                        {expandedId === entry.id ? (
+                          <ChevronUp className="h-4 w-4" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4" />
                         )}
-                        {entry.status === 'posted' && !entry.reversal_entry_id && (
-                          <button
-                            onClick={() => handleAction(entry.id, 'reverse')}
-                            disabled={!!actionLoading}
-                            className="flex items-center gap-1 px-2 py-1 bg-orange-50 text-orange-700 border border-orange-200 rounded text-xs hover:bg-orange-100 transition-colors disabled:opacity-50"
-                          >
-                            {actionLoading === entry.id + 'reverse'
-                              ? <Loader2 className="h-3 w-3 animate-spin" />
-                              : <RotateCcw className="h-3 w-3" />
-                            }
-                            عكس
-                          </button>
-                        )}
-                        {['draft', 'pending'].includes(entry.status) && (
-                          <button
-                            onClick={() => handleAction(entry.id, 'void')}
-                            disabled={!!actionLoading}
-                            className="flex items-center gap-1 px-2 py-1 bg-red-50 text-red-700 border border-red-200 rounded text-xs hover:bg-red-100 transition-colors disabled:opacity-50"
-                          >
-                            {actionLoading === entry.id + 'void'
-                              ? <Loader2 className="h-3 w-3 animate-spin" />
-                              : <X className="h-3 w-3" />
-                            }
-                            إلغاء
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                  {expandedId === entry.id && (
-                    <tr key={entry.id + '-lines'} className="bg-blue-50/30">
-                      <td colSpan={9} className="px-6 py-3">
-                        <table className="w-full text-xs border border-gray-200 rounded-lg overflow-hidden">
-                          <thead>
-                            <tr className="bg-gray-100 text-gray-500">
-                              <th className="px-3 py-2 text-right font-medium">#</th>
-                              <th className="px-3 py-2 text-right font-medium">رمز الحساب</th>
-                              <th className="px-3 py-2 text-right font-medium">اسم الحساب</th>
-                              <th className="px-3 py-2 text-right font-medium">الوصف</th>
-                              <th className="px-3 py-2 text-left font-medium">مدين</th>
-                              <th className="px-3 py-2 text-left font-medium">دائن</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-100 bg-white">
-                            {entry.journal_entry_lines
-                              .sort((a, b) => a.line_number - b.line_number)
-                              .map(line => (
-                              <tr key={line.id}>
-                                <td className="px-3 py-2 text-gray-400">{line.line_number}</td>
-                                <td className="px-3 py-2 font-mono text-blue-700">
-                                  {line.accounts?.code || '—'}
-                                </td>
-                                <td className="px-3 py-2 text-gray-900">
-                                  {line.accounts?.name_ar || line.accounts?.name || '—'}
-                                </td>
-                                <td className="px-3 py-2 text-gray-500">{line.description || '—'}</td>
-                                <td className="px-3 py-2 text-left text-blue-700 font-medium">
-                                  {line.debit  > 0 ? formatNumber(line.debit)  : '—'}
-                                </td>
-                                <td className="px-3 py-2 text-left text-red-600 font-medium">
-                                  {line.credit > 0 ? formatNumber(line.credit) : '—'}
-                                </td>
-                              </tr>
-                            ))}
-                            <tr className="bg-gray-50 font-bold">
-                              <td colSpan={4} className="px-3 py-2 text-gray-700 text-right">الإجمالي</td>
-                              <td className="px-3 py-2 text-left text-blue-700">
-                                {formatNumber(entry.total_debit)}
-                              </td>
-                              <td className="px-3 py-2 text-left text-red-600">
-                                {formatNumber(entry.total_credit)}
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
+                      </td>
+                      <td className="px-4 py-3 font-mono text-xs text-blue-700 font-medium">{entry.entry_number}</td>
+                      <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{entry.date}</td>
+                      <td className="px-4 py-3 text-gray-900 max-w-xs">
+                        <p className="truncate">{entry.description}</p>
+                        {entry.reference && <p className="text-xs text-gray-400 truncate">#{entry.reference}</p>}
+                      </td>
+                      <td className="px-4 py-3">
+                        <SourceBadge auto_generated={entry.auto_generated} source={entry.source} />
+                      </td>
+                      <td className="px-4 py-3">
+                        <StatusBadge status={entry.status} />
+                      </td>
+                      <td className="px-4 py-3 text-left font-medium text-blue-700">
+                        {formatNumber(entry.total_debit)}
+                      </td>
+                      <td className="px-4 py-3 text-left font-medium text-red-600">
+                        {formatNumber(entry.total_credit)}
+                      </td>
+                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center gap-1 justify-end">
+                          {['draft', 'pending', 'approved'].includes(entry.status) && (
+                            <button
+                              onClick={() => handleAction(entry.id, 'post')}
+                              disabled={!!actionLoading}
+                              className="flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 border border-green-200 rounded text-xs hover:bg-green-100 transition-colors disabled:opacity-50"
+                            >
+                              {actionLoading === `${entry.id}post` ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <CheckCircle className="h-3 w-3" />
+                              )}
+                              ترحيل
+                            </button>
+                          )}
+                          {entry.status === 'posted' && !entry.reversal_entry_id && (
+                            <button
+                              onClick={() => handleAction(entry.id, 'reverse')}
+                              disabled={!!actionLoading}
+                              className="flex items-center gap-1 px-2 py-1 bg-orange-50 text-orange-700 border border-orange-200 rounded text-xs hover:bg-orange-100 transition-colors disabled:opacity-50"
+                            >
+                              {actionLoading === `${entry.id}reverse` ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <RotateCcw className="h-3 w-3" />
+                              )}
+                              عكس
+                            </button>
+                          )}
+                          {['draft', 'pending'].includes(entry.status) && (
+                            <button
+                              onClick={() => handleAction(entry.id, 'void')}
+                              disabled={!!actionLoading}
+                              className="flex items-center gap-1 px-2 py-1 bg-red-50 text-red-700 border border-red-200 rounded text-xs hover:bg-red-100 transition-colors disabled:opacity-50"
+                            >
+                              {actionLoading === `${entry.id}void` ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <X className="h-3 w-3" />
+                              )}
+                              إلغاء
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
-                  )}
-                </>
-              ))}
+                    {expandedId === entry.id && (
+                      <tr key={`${entry.id}-lines`} className="bg-blue-50/30">
+                        <td colSpan={9} className="px-6 py-3">
+                          <table className="w-full text-xs border border-gray-200 rounded-lg overflow-hidden">
+                            <thead>
+                              <tr className="bg-gray-100 text-gray-500">
+                                <th className="px-3 py-2 text-right font-medium">#</th>
+                                <th className="px-3 py-2 text-right font-medium">رمز الحساب</th>
+                                <th className="px-3 py-2 text-right font-medium">اسم الحساب</th>
+                                <th className="px-3 py-2 text-right font-medium">الوصف</th>
+                                <th className="px-3 py-2 text-left font-medium">مدين</th>
+                                <th className="px-3 py-2 text-left font-medium">دائن</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 bg-white">
+                              {entry.journal_entry_lines
+                                .sort((a, b) => a.line_number - b.line_number)
+                                .map((line) => (
+                                  <tr key={line.id}>
+                                    <td className="px-3 py-2 text-gray-400">{line.line_number}</td>
+                                    <td className="px-3 py-2 font-mono text-blue-700">{line.accounts?.code || '—'}</td>
+                                    <td className="px-3 py-2 text-gray-900">
+                                      {line.accounts?.name_ar || line.accounts?.name || '—'}
+                                    </td>
+                                    <td className="px-3 py-2 text-gray-500">{line.description || '—'}</td>
+                                    <td className="px-3 py-2 text-left text-blue-700 font-medium">
+                                      {line.debit > 0 ? formatNumber(line.debit) : '—'}
+                                    </td>
+                                    <td className="px-3 py-2 text-left text-red-600 font-medium">
+                                      {line.credit > 0 ? formatNumber(line.credit) : '—'}
+                                    </td>
+                                  </tr>
+                                ))}
+                              <tr className="bg-gray-50 font-bold">
+                                <td colSpan={4} className="px-3 py-2 text-gray-700 text-right">
+                                  الإجمالي
+                                </td>
+                                <td className="px-3 py-2 text-left text-blue-700">{formatNumber(entry.total_debit)}</td>
+                                <td className="px-3 py-2 text-left text-red-600">{formatNumber(entry.total_credit)}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                    )}
+                  </>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -555,7 +592,7 @@ export function JournalClient({
 
       {/* New Entry Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
               <h2 className="text-lg font-bold text-gray-900">قيد محاسبي جديد</h2>
@@ -582,7 +619,7 @@ export function JournalClient({
                   <input
                     type="date"
                     value={form.date}
-                    onChange={e => setForm(p => ({ ...p, date: e.target.value }))}
+                    onChange={(e) => setForm((p) => ({ ...p, date: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -591,7 +628,7 @@ export function JournalClient({
                   <input
                     type="text"
                     value={form.reference}
-                    onChange={e => setForm(p => ({ ...p, reference: e.target.value }))}
+                    onChange={(e) => setForm((p) => ({ ...p, reference: e.target.value }))}
                     placeholder="رقم مرجعي"
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -601,7 +638,7 @@ export function JournalClient({
                   <input
                     type="text"
                     value={form.description}
-                    onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
+                    onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
                     placeholder="وصف القيد المحاسبي"
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -609,24 +646,26 @@ export function JournalClient({
               </div>
 
               {/* Balance Indicator */}
-              <div className={`flex items-center gap-3 px-4 py-3 rounded-lg border ${
-                formTotals.balanced
-                  ? 'bg-green-50 border-green-200 text-green-700'
-                  : 'bg-red-50 border-red-200 text-red-700'
-              }`}>
-                {formTotals.balanced
-                  ? <CheckCircle className="h-4 w-4" />
-                  : <AlertCircle className="h-4 w-4" />
-                }
+              <div
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg border ${
+                  formTotals.balanced
+                    ? 'bg-green-50 border-green-200 text-green-700'
+                    : 'bg-red-50 border-red-200 text-red-700'
+                }`}
+              >
+                {formTotals.balanced ? <CheckCircle className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
                 <span className="text-sm font-medium">
                   {formTotals.balanced
                     ? 'القيد متوازن'
-                    : `القيد غير متوازن — مدين: ${formatNumber(formTotals.debit)} | دائن: ${formatNumber(formTotals.credit)} | الفرق: ${formatNumber(Math.abs(formTotals.debit - formTotals.credit))}`
-                  }
+                    : `القيد غير متوازن — مدين: ${formatNumber(formTotals.debit)} | دائن: ${formatNumber(formTotals.credit)} | الفرق: ${formatNumber(Math.abs(formTotals.debit - formTotals.credit))}`}
                 </span>
                 <div className="mr-auto flex gap-4 text-sm">
-                  <span>مدين: <strong>{formatNumber(formTotals.debit)}</strong></span>
-                  <span>دائن: <strong>{formatNumber(formTotals.credit)}</strong></span>
+                  <span>
+                    مدين: <strong>{formatNumber(formTotals.debit)}</strong>
+                  </span>
+                  <span>
+                    دائن: <strong>{formatNumber(formTotals.credit)}</strong>
+                  </span>
                 </div>
               </div>
 
@@ -639,7 +678,7 @@ export function JournalClient({
                       <th className="px-3 py-2 text-right font-medium">الوصف</th>
                       <th className="px-3 py-2 text-left font-medium w-32">مدين</th>
                       <th className="px-3 py-2 text-left font-medium w-32">دائن</th>
-                      <th className="w-8 px-2 py-2"></th>
+                      <th className="w-8 px-2 py-2" />
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -648,13 +687,13 @@ export function JournalClient({
                         <td className="px-3 py-2">
                           <select
                             value={line.account_code}
-                            onChange={e => updateLine(i, 'account_code', e.target.value)}
+                            onChange={(e) => updateLine(i, 'account_code', e.target.value)}
                             className="w-full px-2 py-1.5 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                           >
                             <option value="">اختر حساباً...</option>
                             {Object.entries(accountsByType).map(([type, accts]) => (
                               <optgroup key={type} label={type}>
-                                {accts.map(a => (
+                                {accts.map((a) => (
                                   <option key={a.id} value={a.code}>
                                     {a.code} - {a.name_ar}
                                   </option>
@@ -667,7 +706,7 @@ export function JournalClient({
                           <input
                             type="text"
                             value={line.description}
-                            onChange={e => updateLine(i, 'description', e.target.value)}
+                            onChange={(e) => updateLine(i, 'description', e.target.value)}
                             placeholder="وصف اختياري"
                             className="w-full px-2 py-1.5 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                           />
@@ -676,7 +715,7 @@ export function JournalClient({
                           <input
                             type="number"
                             value={line.debit}
-                            onChange={e => updateLine(i, 'debit', e.target.value)}
+                            onChange={(e) => updateLine(i, 'debit', e.target.value)}
                             min="0"
                             step="0.01"
                             placeholder="0.00"
@@ -687,7 +726,7 @@ export function JournalClient({
                           <input
                             type="number"
                             value={line.credit}
-                            onChange={e => updateLine(i, 'credit', e.target.value)}
+                            onChange={(e) => updateLine(i, 'credit', e.target.value)}
                             min="0"
                             step="0.01"
                             placeholder="0.00"

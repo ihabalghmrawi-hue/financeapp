@@ -100,6 +100,7 @@ export function POSClient({
 }: POSClientProps) {
   const { t } = useT()
   const [cart, setCart] = useState<CartItem[]>([])
+  const [mobileCartOpen, setMobileCartOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null)
@@ -558,8 +559,40 @@ export function POSClient({
         </div>
       </div>
 
+      {/* Mobile cart FAB — visible only when cart has items and panel is closed */}
+      {cart.length > 0 && (
+        <button
+          type="button"
+          onClick={() => setMobileCartOpen(true)}
+          className="lg:hidden fixed bottom-20 left-1/2 -translate-x-1/2 z-30 bg-primary text-white px-5 h-12 rounded-full shadow-xl flex items-center gap-2 font-bold text-sm active:scale-95 transition-transform"
+          style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        >
+          <ShoppingCart className="w-4 h-4" />
+          <span>{cart.length}</span>
+          <span className="opacity-80">·</span>
+          <span>{formatCurrency(total, currency)}</span>
+        </button>
+      )}
+
+      {/* Mobile cart backdrop */}
+      {mobileCartOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40 animate-fade-in"
+          onClick={() => setMobileCartOpen(false)}
+        />
+      )}
+
       {/* ═══════════════ RIGHT: Cart + Payment ═══════════════ */}
-      <div className="w-[360px] xl:w-[400px] shrink-0 flex flex-col bg-card border-r shadow-xl">
+      <div
+        className={cn(
+          'flex flex-col bg-card border-r shadow-xl transition-transform duration-300',
+          // Desktop: side panel, always visible
+          'lg:relative lg:w-[360px] xl:w-[400px] lg:shrink-0 lg:translate-x-0',
+          // Mobile: fixed drawer from the left (LTR) / right (RTL)
+          'fixed inset-y-0 left-0 w-full max-w-sm z-40',
+          mobileCartOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+        )}
+      >
         {/* Cart Header */}
         <div className="px-4 py-3 border-b flex items-center justify-between bg-card">
           <div className="flex items-center gap-2">
@@ -581,6 +614,14 @@ export function POSClient({
                 {t('pos.clear')} F5
               </button>
             )}
+            <button
+              type="button"
+              onClick={() => setMobileCartOpen(false)}
+              className="lg:hidden p-2 -m-2 rounded-xl hover:bg-secondary text-muted-foreground"
+              aria-label="إغلاق"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
         </div>
 

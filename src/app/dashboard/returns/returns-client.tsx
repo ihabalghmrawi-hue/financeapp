@@ -25,7 +25,9 @@ export function ReturnsClient({ returns: initialReturns, warehouses, companyId, 
   const [foundSale, setFoundSale] = useState<any>(null)
   const [searching, setSearching] = useState(false)
   const [searchError, setSearchError] = useState('')
-  const [selectedItems, setSelectedItems] = useState<Record<string, { selected: boolean; quantity: number; reason: string }>>({})
+  const [selectedItems, setSelectedItems] = useState<
+    Record<string, { selected: boolean; quantity: number; reason: string }>
+  >({})
   const [refundMethod, setRefundMethod] = useState('cash')
   const [reason, setReason] = useState('')
   const [notes, setNotes] = useState('')
@@ -35,12 +37,19 @@ export function ReturnsClient({ returns: initialReturns, warehouses, companyId, 
   const [success, setSuccess] = useState('')
 
   const searchInvoice = async () => {
-    if (!invoiceSearch.trim()) return
-    setSearching(true); setSearchError(''); setFoundSale(null); setSelectedItems({})
+    if (!invoiceSearch.trim()) {
+      return
+    }
+    setSearching(true)
+    setSearchError('')
+    setFoundSale(null)
+    setSelectedItems({})
     try {
       const res = await fetch(`/api/sales/lookup?invoice=${encodeURIComponent(invoiceSearch.trim())}`)
       const data = await res.json()
-      if (!res.ok || !data) throw new Error('لم يتم العثور على الفاتورة')
+      if (!res.ok || !data) {
+        throw new Error('لم يتم العثور على الفاتورة')
+      }
       setFoundSale(data)
       // Init selected items
       const init: Record<string, any> = {}
@@ -56,27 +65,31 @@ export function ReturnsClient({ returns: initialReturns, warehouses, companyId, 
   }
 
   const toggleItem = (itemId: string) => {
-    setSelectedItems(prev => ({
+    setSelectedItems((prev) => ({
       ...prev,
       [itemId]: { ...prev[itemId], selected: !prev[itemId].selected },
     }))
   }
 
   const updateQty = (itemId: string, qty: number) => {
-    setSelectedItems(prev => ({ ...prev, [itemId]: { ...prev[itemId], quantity: qty } }))
+    setSelectedItems((prev) => ({ ...prev, [itemId]: { ...prev[itemId], quantity: qty } }))
   }
 
-  const selectedCount = Object.values(selectedItems).filter(i => i.selected).length
-  const returnTotal = foundSale?.sale_items
-    ?.filter((item: any) => selectedItems[item.id]?.selected)
-    .reduce((s: number, item: any) => {
-      const qty = selectedItems[item.id]?.quantity || 0
-      return s + qty * item.unit_price
-    }, 0) || 0
+  const selectedCount = Object.values(selectedItems).filter((i) => i.selected).length
+  const returnTotal =
+    foundSale?.sale_items
+      ?.filter((item: any) => selectedItems[item.id]?.selected)
+      .reduce((s: number, item: any) => {
+        const qty = selectedItems[item.id]?.quantity || 0
+        return s + qty * item.unit_price
+      }, 0) || 0
 
   const handleReturn = async () => {
-    if (!foundSale || selectedCount === 0) return
-    setLoading(true); setError('')
+    if (!foundSale || selectedCount === 0) {
+      return
+    }
+    setLoading(true)
+    setError('')
     try {
       const items = foundSale.sale_items
         .filter((item: any) => selectedItems[item.id]?.selected)
@@ -102,9 +115,13 @@ export function ReturnsClient({ returns: initialReturns, warehouses, companyId, 
         }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
+      if (!res.ok) {
+        throw new Error(data.error)
+      }
       setSuccess(`تم إنشاء المرتجع ${data.return_number} بنجاح`)
-      setFoundSale(null); setInvoiceSearch(''); setSelectedItems({})
+      setFoundSale(null)
+      setInvoiceSearch('')
+      setSelectedItems({})
       setView('list')
     } catch (e: any) {
       setError(e.message)
@@ -122,10 +139,23 @@ export function ReturnsClient({ returns: initialReturns, warehouses, companyId, 
           <p className="text-sm text-muted-foreground">{returns.length} مرتجع</p>
         </div>
         <button
-          onClick={() => { setView(view === 'list' ? 'new' : 'list'); setFoundSale(null); setSuccess(''); setError('') }}
+          onClick={() => {
+            setView(view === 'list' ? 'new' : 'list')
+            setFoundSale(null)
+            setSuccess('')
+            setError('')
+          }}
           className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl text-sm font-medium hover:bg-primary/90"
         >
-          {view === 'new' ? <><ArrowRight className="w-4 h-4" /> القائمة</> : <><Plus className="w-4 h-4" /> مرتجع جديد</>}
+          {view === 'new' ? (
+            <>
+              <ArrowRight className="w-4 h-4" /> القائمة
+            </>
+          ) : (
+            <>
+              <Plus className="w-4 h-4" /> مرتجع جديد
+            </>
+          )}
         </button>
       </div>
 
@@ -142,15 +172,17 @@ export function ReturnsClient({ returns: initialReturns, warehouses, companyId, 
           {/* Step 1: Search Invoice */}
           <div className="bg-card border rounded-2xl p-5">
             <h2 className="font-bold mb-3 flex items-center gap-2">
-              <span className="w-6 h-6 bg-primary text-white rounded-full text-xs flex items-center justify-center font-bold">1</span>
+              <span className="w-6 h-6 bg-primary text-white rounded-full text-xs flex items-center justify-center font-bold">
+                1
+              </span>
               ابحث عن الفاتورة
             </h2>
             <div className="flex gap-2">
               <input
                 type="text"
                 value={invoiceSearch}
-                onChange={e => setInvoiceSearch(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && searchInvoice()}
+                onChange={(e) => setInvoiceSearch(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && searchInvoice()}
                 placeholder="رقم الفاتورة (مثال: INV-00001)"
                 className="flex-1 border border-input rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 bg-background font-mono"
                 dir="ltr"
@@ -178,12 +210,18 @@ export function ReturnsClient({ returns: initialReturns, warehouses, companyId, 
             <div className="bg-card border rounded-2xl p-5">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="font-bold flex items-center gap-2">
-                  <span className="w-6 h-6 bg-primary text-white rounded-full text-xs flex items-center justify-center font-bold">2</span>
+                  <span className="w-6 h-6 bg-primary text-white rounded-full text-xs flex items-center justify-center font-bold">
+                    2
+                  </span>
                   اختر المنتجات المُرجَعة
                 </h2>
                 <div className="text-right">
-                  <p className="text-xs text-muted-foreground">فاتورة: <span className="font-mono font-bold text-primary">{foundSale.invoice_number}</span></p>
-                  {foundSale.customers?.name && <p className="text-xs text-muted-foreground">العميل: {foundSale.customers.name}</p>}
+                  <p className="text-xs text-muted-foreground">
+                    فاتورة: <span className="font-mono font-bold text-primary">{foundSale.invoice_number}</span>
+                  </p>
+                  {foundSale.customers?.name && (
+                    <p className="text-xs text-muted-foreground">العميل: {foundSale.customers.name}</p>
+                  )}
                 </div>
               </div>
 
@@ -193,30 +231,43 @@ export function ReturnsClient({ returns: initialReturns, warehouses, companyId, 
                   return (
                     <div
                       key={item.id}
-                      className={cn('border rounded-xl p-3 transition-all cursor-pointer',
-                        sel?.selected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'
+                      className={cn(
+                        'border rounded-xl p-3 transition-all cursor-pointer',
+                        sel?.selected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30',
                       )}
                       onClick={() => toggleItem(item.id)}
                     >
                       <div className="flex items-center gap-3">
-                        <div className={cn('w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all',
-                          sel?.selected ? 'bg-primary border-primary' : 'border-border'
-                        )}>
+                        <div
+                          className={cn(
+                            'w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all',
+                            sel?.selected ? 'bg-primary border-primary' : 'border-border',
+                          )}
+                        >
                           {sel?.selected && <Check className="w-3 h-3 text-white" />}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{item.products?.name_ar || item.products?.name || 'منتج'}</p>
-                          <p className="text-xs text-muted-foreground">{item.quantity} × {formatCurrency(item.unit_price, currency)}</p>
+                          <p className="text-sm font-medium truncate">
+                            {item.products?.name_ar || item.products?.name || 'منتج'}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {item.quantity} × {formatCurrency(item.unit_price, currency)}
+                          </p>
                         </div>
                         <p className="text-sm font-bold text-primary">{formatCurrency(item.total, currency)}</p>
                       </div>
                       {sel?.selected && (
-                        <div className="mt-2 pt-2 border-t border-primary/20 flex items-center gap-3" onClick={e => e.stopPropagation()}>
+                        <div
+                          className="mt-2 pt-2 border-t border-primary/20 flex items-center gap-3"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <label className="text-xs text-muted-foreground whitespace-nowrap">الكمية المُرجَعة:</label>
                           <input
                             type="number"
                             value={sel.quantity}
-                            onChange={e => updateQty(item.id, Math.min(parseFloat(e.target.value) || 1, item.quantity))}
+                            onChange={(e) =>
+                              updateQty(item.id, Math.min(parseFloat(e.target.value) || 1, item.quantity))
+                            }
                             className="w-20 border border-border rounded-lg px-2 py-1 text-sm text-center focus:outline-none bg-background"
                             min="0.01"
                             max={item.quantity}
@@ -236,7 +287,9 @@ export function ReturnsClient({ returns: initialReturns, warehouses, companyId, 
           {foundSale && selectedCount > 0 && (
             <div className="bg-card border rounded-2xl p-5 space-y-4">
               <h2 className="font-bold flex items-center gap-2">
-                <span className="w-6 h-6 bg-primary text-white rounded-full text-xs flex items-center justify-center font-bold">3</span>
+                <span className="w-6 h-6 bg-primary text-white rounded-full text-xs flex items-center justify-center font-bold">
+                  3
+                </span>
                 تفاصيل الإرجاع
               </h2>
 
@@ -244,9 +297,16 @@ export function ReturnsClient({ returns: initialReturns, warehouses, companyId, 
                 <div>
                   <label className="text-sm font-medium mb-1 block">طريقة الاسترداد</label>
                   <div className="space-y-1">
-                    {REFUND_METHODS.map(m => (
+                    {REFUND_METHODS.map((m) => (
                       <label key={m.value} className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="refund" value={m.value} checked={refundMethod === m.value} onChange={() => setRefundMethod(m.value)} className="accent-primary" />
+                        <input
+                          type="radio"
+                          name="refund"
+                          value={m.value}
+                          checked={refundMethod === m.value}
+                          onChange={() => setRefundMethod(m.value)}
+                          className="accent-primary"
+                        />
                         <span className="text-sm">{m.label}</span>
                       </label>
                     ))}
@@ -255,8 +315,16 @@ export function ReturnsClient({ returns: initialReturns, warehouses, companyId, 
                 {warehouses.length > 1 && (
                   <div>
                     <label className="text-sm font-medium mb-1 block">المستودع</label>
-                    <select value={warehouseId} onChange={e => setWarehouseId(e.target.value)} className="w-full border border-input rounded-xl px-3 py-2 text-sm bg-background focus:outline-none">
-                      {warehouses.map(w => <option key={w.id} value={w.id}>{w.name_ar || w.name}</option>)}
+                    <select
+                      value={warehouseId}
+                      onChange={(e) => setWarehouseId(e.target.value)}
+                      className="w-full border border-input rounded-xl px-3 py-2 text-sm bg-background focus:outline-none"
+                    >
+                      {warehouses.map((w) => (
+                        <option key={w.id} value={w.id}>
+                          {w.name_ar || w.name}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 )}
@@ -264,10 +332,22 @@ export function ReturnsClient({ returns: initialReturns, warehouses, companyId, 
 
               <div>
                 <label className="text-sm font-medium mb-1 block">سبب الإرجاع</label>
-                <input type="text" value={reason} onChange={e => setReason(e.target.value)} placeholder="مثال: منتج تالف، خطأ في الطلب..." className="w-full border border-input rounded-xl px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" />
+                <input
+                  type="text"
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder="مثال: منتج تالف، خطأ في الطلب..."
+                  className="w-full border border-input rounded-xl px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
               </div>
 
-              <input type="text" value={notes} onChange={e => setNotes(e.target.value)} placeholder="ملاحظات إضافية..." className="w-full border border-input rounded-xl px-3 py-2 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-primary/20" />
+              <input
+                type="text"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="ملاحظات إضافية..."
+                className="w-full border border-input rounded-xl px-3 py-2 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-primary/20"
+              />
 
               {/* Summary */}
               <div className="bg-muted/50 rounded-xl p-4 flex items-center justify-between">
@@ -303,7 +383,7 @@ export function ReturnsClient({ returns: initialReturns, warehouses, companyId, 
 
       {/* RETURNS LIST */}
       {view === 'list' && (
-        <div className="bg-card border rounded-2xl overflow-hidden">
+        <div className="bg-card border rounded-2xl overflow-x-auto">
           {returns.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <RotateCcw className="w-10 h-10 mx-auto mb-2 opacity-20" />
@@ -322,7 +402,7 @@ export function ReturnsClient({ returns: initialReturns, warehouses, companyId, 
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {returns.map(ret => (
+                {returns.map((ret) => (
                   <tr key={ret.id} className="hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-3 font-mono font-bold text-primary">{ret.return_number}</td>
                     <td className="px-4 py-3 font-mono text-xs">{(ret.sales as any)?.invoice_number || '—'}</td>
@@ -330,7 +410,7 @@ export function ReturnsClient({ returns: initialReturns, warehouses, companyId, 
                     <td className="px-4 py-3 font-medium text-red-600">{formatCurrency(ret.total, currency)}</td>
                     <td className="px-4 py-3">
                       <span className="text-xs bg-accent px-2 py-0.5 rounded-full">
-                        {REFUND_METHODS.find(m => m.value === ret.refund_method)?.label || ret.refund_method}
+                        {REFUND_METHODS.find((m) => m.value === ret.refund_method)?.label || ret.refund_method}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground text-xs">{formatDate(ret.created_at)}</td>
