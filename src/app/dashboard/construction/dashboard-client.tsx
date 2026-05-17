@@ -205,8 +205,8 @@ export function ConstructionDashboardClient({
           >
             {fmt(stats.totalIncome - stats.totalExpense - stats.totalPaid)}
           </p>
-          <Link href="/dashboard/construction/reports" className="text-xs text-blue-600 hover:underline mt-1 block">
-            عرض التقارير ←
+          <Link href="/dashboard/construction/projects" className="text-xs text-blue-600 hover:underline mt-1 block">
+            عرض المشاريع ←
           </Link>
         </div>
       </div>

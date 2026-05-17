@@ -187,12 +187,17 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
     {
       label: t('nav.reportsSection'),
       items: [
-        { label: t('nav.reports'), href: '/dashboard/reports', icon: BarChart3, show: can(staff, 'reports.view') },
+        {
+          label: t('nav.reports'),
+          href: '/dashboard/reports',
+          icon: BarChart3,
+          show: !features.hasConstruction && can(staff, 'reports.view'),
+        },
         {
           label: t('nav.profitLoss'),
           href: '/dashboard/reports/profit-loss',
           icon: TrendingUp,
-          show: can(staff, 'reports.view'),
+          show: !features.hasConstruction && can(staff, 'reports.view'),
         },
       ],
     },
@@ -233,12 +238,6 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
           label: t('nav.constructionPayments'),
           href: '/dashboard/construction/payments',
           icon: CreditCard,
-          show: features.hasConstruction,
-        },
-        {
-          label: t('nav.constructionReports'),
-          href: '/dashboard/construction/reports',
-          icon: BarChart3,
           show: features.hasConstruction,
         },
       ],

@@ -94,7 +94,6 @@ const QUICK_ACTIONS: { label: string; href: string; icon: any; color: string }[]
   { label: 'المهام', href: '/dashboard/construction/tasks', icon: CheckSquare, color: 'green' },
   { label: 'المواد', href: '/dashboard/construction/materials', icon: PackageOpen, color: 'purple' },
   { label: 'التدفقات', href: '/dashboard/construction/payments', icon: CreditCard, color: 'emerald' },
-  { label: 'التقارير', href: '/dashboard/construction/reports', icon: BarChart3, color: 'sky' },
   { label: 'العملاء', href: '/dashboard/customers', icon: Users, color: 'pink' },
 ]
 
@@ -188,7 +187,7 @@ export function ConstructionDashboard({
           sub={`من ${activeProjects.length} مشروع نشط`}
           icon={BarChart3}
           color="green"
-          href="/dashboard/construction/reports"
+          href="/dashboard/construction/projects"
           isText
         />
       </div>
