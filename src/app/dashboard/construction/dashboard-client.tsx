@@ -3,19 +3,25 @@
 import { useMemo } from 'react'
 import Link from 'next/link'
 import { formatCurrency } from '@/lib/utils'
-import { Building2, Users, CheckSquare, TrendingUp, ArrowUpRight, Clock, AlertTriangle, DollarSign } from 'lucide-react'
-
-interface Project {
-  id: string
-  name: string
-  status: string
-  expected_cost: number
-  actual_cost: number
-  contract_value: number
-  stage: string
-  start_date: string
-  end_date: string | null
-}
+import {
+  Building2,
+  Users,
+  CheckSquare,
+  TrendingUp,
+  ArrowUpRight,
+  ArrowDownLeft,
+  Clock,
+  AlertTriangle,
+  DollarSign,
+} from 'lucide-react'
+import { ErrorBoundary } from '@/components/ui/error-boundary'
+import type {
+  ConstructionProject,
+  ConstructionWorker,
+  ConstructionTask,
+  ConstructionPayment,
+  ConstructionExpense,
+} from '@/types/construction'
 
 const STAGE_AR: Record<string, string> = {
   foundation: 'الأساسات',
@@ -29,32 +35,9 @@ const STAGE_AR: Record<string, string> = {
   finishing: 'التشطيب النهائي',
   handover: 'التسليم',
 }
-interface Worker {
-  id: string
-  name: string
-  job_type: string
-  status: string
-  daily_rate: number
-}
-interface Task {
-  id: string
-  title: string
-  status: string
-  project_id: string
-  progress: number
-  due_date: string | null
-  priority: string
-}
-interface Payment {
-  type: string
-  amount: number
-  payment_date: string
-  project_id: string | null
-}
-interface Expense {
+interface MaterialAsExpense {
   amount: number
   category: string
-  expense_date: string
   project_id: string | null
 }
 
@@ -96,11 +79,11 @@ export function ConstructionDashboardClient({
   expenses,
   currency,
 }: {
-  projects: Project[]
-  workers: Worker[]
-  tasks: Task[]
-  payments: Payment[]
-  expenses: Expense[]
+  projects: ConstructionProject[]
+  workers: ConstructionWorker[]
+  tasks: ConstructionTask[]
+  payments: ConstructionPayment[]
+  expenses: (ConstructionExpense | MaterialAsExpense)[]
   currency: string
 }) {
   const fmt = (n: number) => formatCurrency(n, currency)
@@ -132,178 +115,162 @@ export function ConstructionDashboardClient({
   const recentPayments = payments.slice(0, 8)
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">لوحة التشطيبات والبناء</h1>
-          <p className="text-muted-foreground text-sm mt-0.5">نظرة عامة على المشاريع والعمال والمصروفات</p>
-        </div>
-        <Link
-          href="/dashboard/construction/projects"
-          className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors flex items-center gap-2"
-        >
-          <Building2 className="w-4 h-4" />
-          إدارة المشاريع
-        </Link>
-      </div>
-
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          label="المشاريع النشطة"
-          value={stats.activeProjects}
-          icon={Building2}
-          color="blue"
-          href="/dashboard/construction/projects"
-        />
-        <StatCard
-          label="العمال النشطون"
-          value={stats.activeWorkers}
-          icon={Users}
-          color="green"
-          href="/dashboard/construction/workers"
-        />
-        <StatCard
-          label="المهام المعلقة"
-          value={stats.pendingTasks}
-          icon={CheckSquare}
-          color="orange"
-          href="/dashboard/construction/tasks"
-        />
-        <StatCard
-          label="مشاريع تجاوزت الميزانية"
-          value={stats.overrunProjects}
-          icon={AlertTriangle}
-          color="red"
-          href="/dashboard/construction/projects"
-        />
-      </div>
-
-      {/* Financial Summary */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-xl p-4">
-          <div className="flex items-center gap-2 text-green-700 dark:text-green-400 mb-1">
-            <TrendingUp className="w-4 h-4" />
-            <span className="text-xs font-medium">إجمالي الإيرادات</span>
+    <ErrorBoundary>
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">لوحة التشطيبات والبناء</h1>
+            <p className="text-muted-foreground text-sm mt-0.5">نظرة عامة على المشاريع والعمال والمصروفات</p>
           </div>
-          <p className="text-2xl font-bold text-green-800 dark:text-green-300">{fmt(stats.totalIncome)}</p>
-          <Link href="/dashboard/construction/payments" className="text-xs text-green-600 hover:underline mt-1 block">
-            عرض التدفقات ←
+          <Link
+            href="/dashboard/construction/projects"
+            className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors flex items-center gap-2"
+          >
+            <Building2 className="w-4 h-4" />
+            إدارة المشاريع
           </Link>
         </div>
-        <div
-          className={`border rounded-xl p-4 ${stats.totalIncome - stats.totalExpense - stats.totalPaid >= 0 ? 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800' : 'bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800'}`}
-        >
-          <div
-            className={`flex items-center gap-2 mb-1 ${stats.totalIncome - stats.totalExpense - stats.totalPaid >= 0 ? 'text-blue-700 dark:text-blue-400' : 'text-orange-700 dark:text-orange-400'}`}
-          >
-            <DollarSign className="w-4 h-4" />
-            <span className="text-xs font-medium">صافي الربح</span>
-          </div>
-          <p
-            className={`text-2xl font-bold ${stats.totalIncome - stats.totalExpense - stats.totalPaid >= 0 ? 'text-blue-800 dark:text-blue-300' : 'text-orange-800 dark:text-orange-300'}`}
-          >
-            {fmt(stats.totalIncome - stats.totalExpense - stats.totalPaid)}
-          </p>
-          <Link href="/dashboard/construction/reports" className="text-xs text-blue-600 hover:underline mt-1 block">
-            عرض التقارير ←
-          </Link>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Projects List */}
-        <div className="bg-card border rounded-xl p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-sm">المشاريع الحالية</h2>
-            <Link
-              href="/dashboard/construction/projects"
-              className="text-xs text-primary hover:underline flex items-center gap-1"
-            >
-              عرض الكل <ArrowUpRight className="w-3 h-3" />
+        {/* KPI Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard
+            label="المشاريع النشطة"
+            value={stats.activeProjects}
+            icon={Building2}
+            color="blue"
+            href="/dashboard/construction/projects"
+          />
+          <StatCard
+            label="العمال النشطون"
+            value={stats.activeWorkers}
+            icon={Users}
+            color="green"
+            href="/dashboard/construction/workers"
+          />
+          <StatCard
+            label="المهام المعلقة"
+            value={stats.pendingTasks}
+            icon={CheckSquare}
+            color="orange"
+            href="/dashboard/construction/tasks"
+          />
+          <StatCard
+            label="مشاريع تجاوزت الميزانية"
+            value={stats.overrunProjects}
+            icon={AlertTriangle}
+            color="red"
+            href="/dashboard/construction/projects"
+          />
+        </div>
+
+        {/* Financial Summary */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-xl p-4">
+            <div className="flex items-center gap-2 text-green-700 dark:text-green-400 mb-1">
+              <TrendingUp className="w-4 h-4" />
+              <span className="text-xs font-medium">إجمالي الإيرادات</span>
+            </div>
+            <p className="text-2xl font-bold text-green-800 dark:text-green-300">{fmt(stats.totalIncome)}</p>
+            <Link href="/dashboard/construction/payments" className="text-xs text-green-600 hover:underline mt-1 block">
+              عرض التدفقات ←
             </Link>
           </div>
-          <div className="space-y-2">
-            {projects.slice(0, 6).map((p) => {
-              const overrun = Number(p.actual_cost) > Number(p.expected_cost)
-              return (
-                <Link
-                  key={p.id}
-                  href={`/dashboard/construction/projects/${p.id}`}
-                  className="flex items-center justify-between p-2.5 rounded-lg hover:bg-accent transition-colors"
-                >
+          <div
+            className={`border rounded-xl p-4 ${stats.totalIncome - stats.totalExpense - stats.totalPaid >= 0 ? 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800' : 'bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800'}`}
+          >
+            <div
+              className={`flex items-center gap-2 mb-1 ${stats.totalIncome - stats.totalExpense - stats.totalPaid >= 0 ? 'text-blue-700 dark:text-blue-400' : 'text-orange-700 dark:text-orange-400'}`}
+            >
+              <DollarSign className="w-4 h-4" />
+              <span className="text-xs font-medium">صافي الربح</span>
+            </div>
+            <p
+              className={`text-2xl font-bold ${stats.totalIncome - stats.totalExpense - stats.totalPaid >= 0 ? 'text-blue-800 dark:text-blue-300' : 'text-orange-800 dark:text-orange-300'}`}
+            >
+              {fmt(stats.totalIncome - stats.totalExpense - stats.totalPaid)}
+            </p>
+            <Link href="/dashboard/construction/reports" className="text-xs text-blue-600 hover:underline mt-1 block">
+              عرض التقارير ←
+            </Link>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Projects List */}
+          <div className="bg-card border rounded-xl p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-semibold text-sm">المشاريع الحالية</h2>
+              <Link
+                href="/dashboard/construction/projects"
+                className="text-xs text-primary hover:underline flex items-center gap-1"
+              >
+                عرض الكل <ArrowUpRight className="w-3 h-3" />
+              </Link>
+            </div>
+            <div className="space-y-2">
+              {projects.slice(0, 6).map((p) => {
+                const overrun = Number(p.actual_cost) > Number(p.expected_cost)
+                return (
+                  <Link
+                    key={p.id}
+                    href={`/dashboard/construction/projects/${p.id}`}
+                    className="flex items-center justify-between p-2.5 rounded-lg hover:bg-accent transition-colors"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{p.name}</p>
+                      <p className="text-xs text-muted-foreground">{p.start_date}</p>
+                      {p.stage && <p className="text-xs text-primary">{STAGE_AR[p.stage] || p.stage}</p>}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {overrun && <AlertTriangle className="w-3.5 h-3.5 text-red-500" />}
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[p.status] || 'bg-gray-100 text-gray-600'}`}
+                      >
+                        {STATUS_AR[p.status] || p.status}
+                      </span>
+                    </div>
+                  </Link>
+                )
+              })}
+              {projects.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">لا توجد مشاريع بعد</p>
+              )}
+            </div>
+          </div>
+
+          {/* Tasks Feed */}
+          <div className="bg-card border rounded-xl p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-semibold text-sm">المهام المعلقة</h2>
+              <Link
+                href="/dashboard/construction/tasks"
+                className="text-xs text-primary hover:underline flex items-center gap-1"
+              >
+                عرض الكل <ArrowUpRight className="w-3 h-3" />
+              </Link>
+            </div>
+            <div className="space-y-2">
+              {recentTasks.map((t) => (
+                <div key={t.id} className="flex items-center justify-between p-2 rounded-lg bg-accent/30">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{p.name}</p>
-                    <p className="text-xs text-muted-foreground">{p.start_date}</p>
-                    {p.stage && <p className="text-xs text-primary">{STAGE_AR[p.stage] || p.stage}</p>}
+                    <p className="text-sm truncate">{t.title}</p>
+                    <p className="text-xs text-muted-foreground">{t.due_date || 'بدون تاريخ'}</p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    {overrun && <AlertTriangle className="w-3.5 h-3.5 text-red-500" />}
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[p.status] || 'bg-gray-100 text-gray-600'}`}
-                    >
-                      {STATUS_AR[p.status] || p.status}
-                    </span>
+                    <div className="h-1.5 w-16 bg-secondary rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-primary rounded-full transition-all"
+                        style={{ width: `${t.progress || 0}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-medium tabular-nums">{t.progress || 0}%</span>
                   </div>
-                </Link>
-              )
-            })}
-            {projects.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-4">لا توجد مشاريع بعد</p>
-            )}
-          </div>
-        </div>
-
-        {/* Pending Tasks */}
-        <div className="bg-card border rounded-xl p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-sm">المهام المعلقة</h2>
-            <Link
-              href="/dashboard/construction/tasks"
-              className="text-xs text-primary hover:underline flex items-center gap-1"
-            >
-              عرض الكل <ArrowUpRight className="w-3 h-3" />
-            </Link>
-          </div>
-          <div className="space-y-2">
-            {recentTasks.map((t) => (
-              <div key={t.id} className="p-2.5 rounded-lg bg-accent/30 space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{t.title}</p>
-                    {t.due_date && (
-                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                        <Clock className="w-3 h-3" />
-                        {t.due_date}
-                      </p>
-                    )}
-                  </div>
-                  <span
-                    className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${PRIORITY_COLORS[t.priority] || 'bg-gray-100 text-gray-500'}`}
-                  >
-                    {t.priority === 'urgent'
-                      ? 'عاجل'
-                      : t.priority === 'high'
-                        ? 'عالي'
-                        : t.priority === 'medium'
-                          ? 'متوسط'
-                          : 'منخفض'}
-                  </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full ${(t.progress || 0) >= 100 ? 'bg-green-500' : 'bg-primary'}`}
-                      style={{ width: `${t.progress || 0}%` }}
-                    />
-                  </div>
-                  <span className="text-xs font-medium tabular-nums w-7 text-left">{t.progress || 0}%</span>
-                </div>
-              </div>
-            ))}
-            {recentTasks.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-4">لا توجد مهام معلقة</p>
-            )}
+              ))}
+              {recentTasks.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">لا توجد مهام معلقة</p>
+              )}
+            </div>
           </div>
         </div>
 
@@ -319,58 +286,37 @@ export function ConstructionDashboardClient({
             </Link>
           </div>
           <div className="space-y-2">
-            {recentPayments.map((p, i) => (
-              <div key={i} className="flex items-center justify-between p-2.5 rounded-lg bg-accent/30">
-                <div>
-                  <p className="text-sm font-medium">{p.type === 'incoming' ? 'دفعة واردة' : 'دفعة صادرة'}</p>
-                  <p className="text-xs text-muted-foreground">{p.payment_date}</p>
+            {recentPayments.map((p) => (
+              <div
+                key={p.id}
+                className="flex items-center justify-between p-2 rounded-lg hover:bg-accent/30 transition-colors"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  {p.type === 'incoming' ? (
+                    <ArrowUpRight className="w-4 h-4 text-green-500 shrink-0" />
+                  ) : (
+                    <ArrowDownLeft className="w-4 h-4 text-red-500 shrink-0" />
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-sm truncate">{p.description}</p>
+                    <p className="text-xs text-muted-foreground">{p.payment_date}</p>
+                  </div>
                 </div>
-                <span className={`text-sm font-bold ${p.type === 'incoming' ? 'text-green-600' : 'text-red-600'}`}>
+                <span
+                  className={`text-sm font-bold shrink-0 ${p.type === 'incoming' ? 'text-green-600' : 'text-red-500'}`}
+                >
                   {p.type === 'incoming' ? '+' : '-'}
                   {fmt(Number(p.amount))}
                 </span>
               </div>
             ))}
             {recentPayments.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-4">لا توجد تدفقات بعد</p>
+              <p className="text-sm text-muted-foreground text-center py-4">لا توجد تدفقات</p>
             )}
           </div>
         </div>
-
-        {/* Workers */}
-        <div className="bg-card border rounded-xl p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-sm">العمال</h2>
-            <Link
-              href="/dashboard/construction/workers"
-              className="text-xs text-primary hover:underline flex items-center gap-1"
-            >
-              عرض الكل <ArrowUpRight className="w-3 h-3" />
-            </Link>
-          </div>
-          <div className="space-y-2">
-            {workers.slice(0, 6).map((w) => (
-              <div key={w.id} className="flex items-center justify-between p-2.5 rounded-lg bg-accent/30">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold text-sm">
-                    {w.name[0]}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">{w.name}</p>
-                    <p className="text-xs text-muted-foreground">{w.job_type}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium">{fmt(Number(w.daily_rate))}</p>
-                  <p className="text-xs text-muted-foreground">يومياً</p>
-                </div>
-              </div>
-            ))}
-            {workers.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">لا يوجد عمال بعد</p>}
-          </div>
-        </div>
       </div>
-    </div>
+    </ErrorBoundary>
   )
 }
 

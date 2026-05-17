@@ -123,3 +123,6 @@ export { LoadingScreen } from './loading-screen'
 
 // Network Status
 export { NetworkStatus } from './network-status'
+
+// Error Boundary
+export { ErrorBoundary } from './error-boundary'

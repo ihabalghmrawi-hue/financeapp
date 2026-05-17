@@ -2,28 +2,11 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Plus, Search, Building2, Edit, Trash2, AlertTriangle, ChevronRight } from 'lucide-react'
+import { Plus, Search, Building2, Edit, Trash2, AlertTriangle, ChevronRight, Download } from 'lucide-react'
 import { formatCurrency, cn } from '@/lib/utils'
-
-interface Project {
-  id: string
-  name: string
-  description: string | null
-  status: string
-  type: string
-  client_name: string | null
-  client_phone: string | null
-  location: string | null
-  engineer_name: string | null
-  expected_cost: number
-  actual_cost: number
-  contract_value: number
-  stage: string
-  start_date: string
-  end_date: string | null
-  notes: string | null
-  created_at: string
-}
+import { ErrorBoundary } from '@/components/ui/error-boundary'
+import { exportCSV } from '@/lib/export-csv'
+import type { ConstructionProject } from '@/types/construction'
 
 const TYPE_AR: Record<string, string> = {
   apartment: 'شقة',
@@ -78,12 +61,12 @@ const emptyForm = {
   notes: '',
 }
 
-export function ProjectsClient({ projects: init, currency }: { projects: Project[]; currency: string }) {
+export function ProjectsClient({ projects: init, currency }: { projects: ConstructionProject[]; currency: string }) {
   const [projects, setProjects] = useState(init)
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [showForm, setShowForm] = useState(false)
-  const [editing, setEditing] = useState<Project | null>(null)
+  const [editing, setEditing] = useState<ConstructionProject | null>(null)
   const [form, setForm] = useState<any>(emptyForm)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -108,7 +91,7 @@ export function ProjectsClient({ projects: init, currency }: { projects: Project
     setError('')
     setShowForm(true)
   }
-  const openEdit = (p: Project) => {
+  const openEdit = (p: ConstructionProject) => {
     setForm({
       name: p.name,
       description: p.description || '',
@@ -176,307 +159,345 @@ export function ProjectsClient({ projects: init, currency }: { projects: Project
   }
 
   return (
-    <div className="p-6 space-y-5">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">المشاريع</h1>
-        <button
-          onClick={openNew}
-          className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" /> مشروع جديد
-        </button>
-      </div>
-
-      {/* Filters */}
-      <div className="flex gap-3 flex-wrap">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="بحث..."
-            className="w-full border rounded-lg pr-9 pl-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 bg-background"
-          />
+    <ErrorBoundary>
+      <div className="p-6 space-y-5">
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-bold">المشاريع</h1>
+          <button
+            onClick={openNew}
+            className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" /> مشروع جديد
+          </button>
+          <button
+            onClick={() =>
+              exportCSV(
+                filtered.map((p) => ({
+                  الاسم: p.name,
+                  الحالة: STATUS_AR[p.status] || p.status,
+                  النوع: TYPE_AR[p.type] || p.type,
+                  العميل: p.client_name || '',
+                  الموقع: p.location || '',
+                  المهندس: p.engineer_name || '',
+                  الميزانية: p.expected_cost,
+                  'قيمة العقد': p.contract_value,
+                  'تاريخ البداية': p.start_date || '',
+                  'تاريخ النهاية': p.end_date || '',
+                  'نسبة الإنجاز': `${p.progress_pct}%`,
+                })),
+                [
+                  { key: 'الاسم', label: 'الاسم' },
+                  { key: 'الحالة', label: 'الحالة' },
+                  { key: 'النوع', label: 'النوع' },
+                  { key: 'العميل', label: 'العميل' },
+                  { key: 'الموقع', label: 'الموقع' },
+                  { key: 'المهندس', label: 'المهندس' },
+                  { key: 'الميزانية', label: 'الميزانية' },
+                  { key: 'قيمة العقد', label: 'قيمة العقد' },
+                  { key: 'تاريخ البداية', label: 'تاريخ البداية' },
+                  { key: 'تاريخ النهاية', label: 'تاريخ النهاية' },
+                  { key: 'نسبة الإنجاز', label: 'نسبة الإنجاز' },
+                ],
+                'المشاريع',
+              )
+            }
+            className="border rounded-lg px-3 py-2 text-sm hover:bg-accent flex items-center gap-2"
+          >
+            <Download className="w-4 h-4" /> تصدير
+          </button>
         </div>
-        <select
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-          className="border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
-        >
-          <option value="">كل الحالات</option>
-          {Object.entries(STATUS_AR).map(([v, l]) => (
-            <option key={v} value={v}>
-              {l}
-            </option>
-          ))}
-        </select>
-      </div>
 
-      {/* Projects Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {filtered.map((p) => {
-          const overrun = Number(p.actual_cost) > Number(p.expected_cost)
-          const pct =
-            Number(p.expected_cost) > 0
-              ? Math.min(100, Math.round((Number(p.actual_cost) / Number(p.expected_cost)) * 100))
-              : 0
-          return (
-            <div key={p.id} className="bg-card border rounded-xl p-4 space-y-3 hover:shadow-sm transition-shadow">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-sm truncate">{p.name}</h3>
-                  {p.type && (
-                    <span className="text-xs bg-muted px-1.5 py-0.5 rounded">{TYPE_AR[p.type] || p.type}</span>
-                  )}
-                  {p.client_name && <p className="text-xs text-muted-foreground truncate">{p.client_name}</p>}
-                  {p.location && <p className="text-xs text-muted-foreground truncate">{p.location}</p>}
-                  {p.engineer_name && (
-                    <p className="text-xs text-muted-foreground truncate">مهندس: {p.engineer_name}</p>
-                  )}
-                  {p.stage && <p className="text-xs text-primary truncate">{STAGE_AR[p.stage] || p.stage}</p>}
+        {/* Filters */}
+        <div className="flex gap-3 flex-wrap">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="بحث..."
+              className="w-full border rounded-lg pr-9 pl-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 bg-background"
+            />
+          </div>
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+          >
+            <option value="">كل الحالات</option>
+            {Object.entries(STATUS_AR).map(([v, l]) => (
+              <option key={v} value={v}>
+                {l}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Projects Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {filtered.map((p) => {
+            const overrun = Number(p.actual_cost) > Number(p.expected_cost)
+            const pct =
+              Number(p.expected_cost) > 0
+                ? Math.min(100, Math.round((Number(p.actual_cost) / Number(p.expected_cost)) * 100))
+                : 0
+            return (
+              <div key={p.id} className="bg-card border rounded-xl p-4 space-y-3 hover:shadow-sm transition-shadow">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-sm truncate">{p.name}</h3>
+                    {p.type && (
+                      <span className="text-xs bg-muted px-1.5 py-0.5 rounded">{TYPE_AR[p.type] || p.type}</span>
+                    )}
+                    {p.client_name && <p className="text-xs text-muted-foreground truncate">{p.client_name}</p>}
+                    {p.location && <p className="text-xs text-muted-foreground truncate">{p.location}</p>}
+                    {p.engineer_name && (
+                      <p className="text-xs text-muted-foreground truncate">مهندس: {p.engineer_name}</p>
+                    )}
+                    {p.stage && <p className="text-xs text-primary truncate">{STAGE_AR[p.stage] || p.stage}</p>}
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    {overrun && <AlertTriangle className="w-4 h-4 text-red-500" />}
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[p.status] || 'bg-gray-100 text-gray-600'}`}
+                    >
+                      {STATUS_AR[p.status] || p.status}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  {overrun && <AlertTriangle className="w-4 h-4 text-red-500" />}
-                  <span
-                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[p.status] || 'bg-gray-100 text-gray-600'}`}
-                  >
-                    {STATUS_AR[p.status] || p.status}
-                  </span>
+
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>الميزانية المستهلكة</span>
+                    <span className={overrun ? 'text-red-500 font-medium' : ''}>{pct}%</span>
+                  </div>
+                  <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${overrun ? 'bg-red-500' : 'bg-primary'}`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">
+                      الفعلي: <span className="font-medium text-foreground">{fmt(Number(p.actual_cost))}</span>
+                    </span>
+                    <span className="text-muted-foreground">
+                      العقد: <span className="font-medium text-foreground">{fmt(Number(p.contract_value))}</span>
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <p className="text-xs text-muted-foreground">
+                    {p.start_date}
+                    {p.end_date ? ` — ${p.end_date}` : ''}
+                  </p>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => openEdit(p)}
+                      className="p-1.5 hover:bg-accent rounded-lg text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(p.id)}
+                      disabled={deleting === p.id}
+                      className="p-1.5 hover:bg-red-50 rounded-lg text-muted-foreground hover:text-red-500 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                    <Link
+                      href={`/dashboard/construction/projects/${p.id}`}
+                      className="p-1.5 hover:bg-accent rounded-lg text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
                 </div>
               </div>
-
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>الميزانية المستهلكة</span>
-                  <span className={overrun ? 'text-red-500 font-medium' : ''}>{pct}%</span>
-                </div>
-                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all ${overrun ? 'bg-red-500' : 'bg-primary'}`}
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">
-                    الفعلي: <span className="font-medium text-foreground">{fmt(Number(p.actual_cost))}</span>
-                  </span>
-                  <span className="text-muted-foreground">
-                    العقد: <span className="font-medium text-foreground">{fmt(Number(p.contract_value))}</span>
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-1">
-                <p className="text-xs text-muted-foreground">
-                  {p.start_date}
-                  {p.end_date ? ` — ${p.end_date}` : ''}
-                </p>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => openEdit(p)}
-                    className="p-1.5 hover:bg-accent rounded-lg text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <Edit className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(p.id)}
-                    disabled={deleting === p.id}
-                    className="p-1.5 hover:bg-red-50 rounded-lg text-muted-foreground hover:text-red-500 transition-colors"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                  <Link
-                    href={`/dashboard/construction/projects/${p.id}`}
-                    className="p-1.5 hover:bg-accent rounded-lg text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              </div>
+            )
+          })}
+          {filtered.length === 0 && (
+            <div className="col-span-full text-center py-16 text-muted-foreground">
+              <Building2 className="w-12 h-12 mx-auto mb-3 opacity-30" />
+              <p>لا توجد مشاريع</p>
             </div>
-          )
-        })}
-        {filtered.length === 0 && (
-          <div className="col-span-full text-center py-16 text-muted-foreground">
-            <Building2 className="w-12 h-12 mx-auto mb-3 opacity-30" />
-            <p>لا توجد مشاريع</p>
+          )}
+        </div>
+
+        {/* Form Modal */}
+        {showForm && (
+          <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+            <div className="bg-card border rounded-t-2xl sm:rounded-2xl w-full max-w-lg shadow-2xl pb-safe-bottom max-h-[92vh] overflow-y-auto">
+              <div className="p-5 border-b">
+                <h2 className="font-semibold">{editing ? 'تعديل مشروع' : 'مشروع جديد'}</h2>
+              </div>
+              <form onSubmit={handleSubmit} className="p-5 space-y-4">
+                {error && <p className="text-sm text-red-500 bg-red-50 rounded-lg p-3">{error}</p>}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="col-span-2">
+                    <label className="text-xs text-muted-foreground mb-1 block">اسم المشروع *</label>
+                    <input
+                      required
+                      value={form.name}
+                      onChange={(e) => setForm((f: any) => ({ ...f, name: e.target.value }))}
+                      className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">اسم العميل</label>
+                    <input
+                      value={form.client_name}
+                      onChange={(e) => setForm((f: any) => ({ ...f, client_name: e.target.value }))}
+                      className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">هاتف العميل</label>
+                    <input
+                      value={form.client_phone}
+                      onChange={(e) => setForm((f: any) => ({ ...f, client_phone: e.target.value }))}
+                      className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="text-xs text-muted-foreground mb-1 block">الموقع</label>
+                    <input
+                      value={form.location}
+                      onChange={(e) => setForm((f: any) => ({ ...f, location: e.target.value }))}
+                      className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">نوع المشروع</label>
+                    <select
+                      value={form.type}
+                      onChange={(e) => setForm((f: any) => ({ ...f, type: e.target.value }))}
+                      className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    >
+                      {Object.entries(TYPE_AR).map(([v, l]) => (
+                        <option key={v} value={v}>
+                          {l}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">المهندس المشرف</label>
+                    <input
+                      value={form.engineer_name}
+                      onChange={(e) => setForm((f: any) => ({ ...f, engineer_name: e.target.value }))}
+                      className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">الميزانية المتوقعة</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={form.expected_cost}
+                      onChange={(e) => setForm((f: any) => ({ ...f, expected_cost: e.target.value }))}
+                      className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">قيمة العقد</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={form.contract_value}
+                      onChange={(e) => setForm((f: any) => ({ ...f, contract_value: e.target.value }))}
+                      className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">الحالة</label>
+                    <select
+                      value={form.status}
+                      onChange={(e) => setForm((f: any) => ({ ...f, status: e.target.value }))}
+                      className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    >
+                      {Object.entries(STATUS_AR).map(([v, l]) => (
+                        <option key={v} value={v}>
+                          {l}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">مرحلة المشروع</label>
+                    <select
+                      value={form.stage}
+                      onChange={(e) => setForm((f: any) => ({ ...f, stage: e.target.value }))}
+                      className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    >
+                      {Object.entries(STAGE_AR).map(([v, l]) => (
+                        <option key={v} value={v}>
+                          {l}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">تاريخ البداية *</label>
+                    <input
+                      required
+                      type="date"
+                      value={form.start_date}
+                      onChange={(e) => setForm((f: any) => ({ ...f, start_date: e.target.value }))}
+                      className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">تاريخ النهاية</label>
+                    <input
+                      type="date"
+                      value={form.end_date}
+                      onChange={(e) => setForm((f: any) => ({ ...f, end_date: e.target.value }))}
+                      className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="text-xs text-muted-foreground mb-1 block">وصف</label>
+                    <textarea
+                      rows={2}
+                      value={form.description}
+                      onChange={(e) => setForm((f: any) => ({ ...f, description: e.target.value }))}
+                      className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="text-xs text-muted-foreground mb-1 block">ملاحظات</label>
+                    <textarea
+                      rows={2}
+                      value={form.notes}
+                      onChange={(e) => setForm((f: any) => ({ ...f, notes: e.target.value }))}
+                      className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="flex-1 bg-primary text-primary-foreground py-2 rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
+                  >
+                    {loading ? 'جاري الحفظ...' : editing ? 'حفظ التعديلات' : 'إنشاء المشروع'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowForm(false)}
+                    className="px-5 py-2 border rounded-lg text-sm hover:bg-accent"
+                  >
+                    إلغاء
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
       </div>
-
-      {/* Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
-          <div className="bg-card border rounded-t-2xl sm:rounded-2xl w-full max-w-lg shadow-2xl pb-safe-bottom max-h-[92vh] overflow-y-auto">
-            <div className="p-5 border-b">
-              <h2 className="font-semibold">{editing ? 'تعديل مشروع' : 'مشروع جديد'}</h2>
-            </div>
-            <form onSubmit={handleSubmit} className="p-5 space-y-4">
-              {error && <p className="text-sm text-red-500 bg-red-50 rounded-lg p-3">{error}</p>}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2">
-                  <label className="text-xs text-muted-foreground mb-1 block">اسم المشروع *</label>
-                  <input
-                    required
-                    value={form.name}
-                    onChange={(e) => setForm((f: any) => ({ ...f, name: e.target.value }))}
-                    className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">اسم العميل</label>
-                  <input
-                    value={form.client_name}
-                    onChange={(e) => setForm((f: any) => ({ ...f, client_name: e.target.value }))}
-                    className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">هاتف العميل</label>
-                  <input
-                    value={form.client_phone}
-                    onChange={(e) => setForm((f: any) => ({ ...f, client_phone: e.target.value }))}
-                    className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <label className="text-xs text-muted-foreground mb-1 block">الموقع</label>
-                  <input
-                    value={form.location}
-                    onChange={(e) => setForm((f: any) => ({ ...f, location: e.target.value }))}
-                    className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">نوع المشروع</label>
-                  <select
-                    value={form.type}
-                    onChange={(e) => setForm((f: any) => ({ ...f, type: e.target.value }))}
-                    className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  >
-                    {Object.entries(TYPE_AR).map(([v, l]) => (
-                      <option key={v} value={v}>
-                        {l}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">المهندس المشرف</label>
-                  <input
-                    value={form.engineer_name}
-                    onChange={(e) => setForm((f: any) => ({ ...f, engineer_name: e.target.value }))}
-                    className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">الميزانية المتوقعة</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={form.expected_cost}
-                    onChange={(e) => setForm((f: any) => ({ ...f, expected_cost: e.target.value }))}
-                    className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">قيمة العقد</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={form.contract_value}
-                    onChange={(e) => setForm((f: any) => ({ ...f, contract_value: e.target.value }))}
-                    className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">الحالة</label>
-                  <select
-                    value={form.status}
-                    onChange={(e) => setForm((f: any) => ({ ...f, status: e.target.value }))}
-                    className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  >
-                    {Object.entries(STATUS_AR).map(([v, l]) => (
-                      <option key={v} value={v}>
-                        {l}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">مرحلة المشروع</label>
-                  <select
-                    value={form.stage}
-                    onChange={(e) => setForm((f: any) => ({ ...f, stage: e.target.value }))}
-                    className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  >
-                    {Object.entries(STAGE_AR).map(([v, l]) => (
-                      <option key={v} value={v}>
-                        {l}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">تاريخ البداية *</label>
-                  <input
-                    required
-                    type="date"
-                    value={form.start_date}
-                    onChange={(e) => setForm((f: any) => ({ ...f, start_date: e.target.value }))}
-                    className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">تاريخ النهاية</label>
-                  <input
-                    type="date"
-                    value={form.end_date}
-                    onChange={(e) => setForm((f: any) => ({ ...f, end_date: e.target.value }))}
-                    className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <label className="text-xs text-muted-foreground mb-1 block">وصف</label>
-                  <textarea
-                    rows={2}
-                    value={form.description}
-                    onChange={(e) => setForm((f: any) => ({ ...f, description: e.target.value }))}
-                    className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <label className="text-xs text-muted-foreground mb-1 block">ملاحظات</label>
-                  <textarea
-                    rows={2}
-                    value={form.notes}
-                    onChange={(e) => setForm((f: any) => ({ ...f, notes: e.target.value }))}
-                    className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 bg-primary text-primary-foreground py-2 rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
-                >
-                  {loading ? 'جاري الحفظ...' : editing ? 'حفظ التعديلات' : 'إنشاء المشروع'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="px-5 py-2 border rounded-lg text-sm hover:bg-accent"
-                >
-                  إلغاء
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
+    </ErrorBoundary>
   )
 }
