@@ -222,6 +222,12 @@ export function useNavGroups(features: Features, staff?: StaffInfo): NavGroup[] 
           icon: CreditCard,
           show: features.hasConstruction,
         },
+        {
+          label: t('nav.constructionReports'),
+          href: '/dashboard/construction/reports',
+          icon: BarChart3,
+          show: features.hasConstruction,
+        },
       ],
     },
     {

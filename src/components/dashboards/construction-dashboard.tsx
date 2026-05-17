@@ -94,6 +94,7 @@ const QUICK_ACTIONS: { label: string; href: string; icon: any; color: string }[]
   { label: 'المهام', href: '/dashboard/construction/tasks', icon: CheckSquare, color: 'green' },
   { label: 'المواد', href: '/dashboard/construction/materials', icon: PackageOpen, color: 'purple' },
   { label: 'التدفقات', href: '/dashboard/construction/payments', icon: CreditCard, color: 'emerald' },
+  { label: 'التقارير', href: '/dashboard/construction/reports', icon: BarChart3, color: 'sky' },
   { label: 'العملاء', href: '/dashboard/customers', icon: Users, color: 'pink' },
 ]
 
@@ -239,7 +240,7 @@ export function ConstructionDashboard({
               <Building2 className="w-10 h-10 mx-auto text-muted-foreground/30 mb-2" />
               <p className="text-sm text-muted-foreground">لا توجد مشاريع نشطة</p>
               <Link
-                href="/dashboard/construction/projects"
+                href="/dashboard/construction/reports"
                 className="inline-flex items-center gap-1 mt-3 text-xs text-primary hover:underline"
               >
                 <Plus className="w-3 h-3" /> إضافة أول مشروع

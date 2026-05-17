@@ -240,6 +240,12 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
           icon: CreditCard,
           show: features.hasConstruction,
         },
+        {
+          label: t('nav.constructionReports'),
+          href: '/dashboard/construction/reports',
+          icon: BarChart3,
+          show: features.hasConstruction,
+        },
       ],
     },
     {

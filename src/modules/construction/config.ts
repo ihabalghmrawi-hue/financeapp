@@ -11,6 +11,7 @@ export const constructionModule = {
     { href: '/dashboard/construction/workers', label: 'العمال', icon: 'HardHat' },
     { href: '/dashboard/construction/materials', label: 'المواد', icon: 'PackageOpen' },
     { href: '/dashboard/construction/payments', label: 'التدفقات', icon: 'CreditCard' },
+    { href: '/dashboard/construction/reports', label: 'تقارير البناء', icon: 'BarChart2' },
   ],
 
   permissions: ['construction:read', 'construction:write', 'construction:manage'] as string[],
@@ -29,6 +30,7 @@ export const constructionModule = {
   shortcuts: [
     { href: '/dashboard/construction/projects?new=1', label: 'مشروع جديد', icon: 'Plus' },
     { href: '/dashboard/construction/workers?new=1', label: 'إضافة عامل', icon: 'UserPlus' },
+    { href: '/dashboard/construction/reports', label: 'التقارير', icon: 'BarChart2' },
   ],
 
   // COA account codes used for auto-posting
