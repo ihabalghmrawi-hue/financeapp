@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Search, Receipt, Eye, TrendingUp, DollarSign, ShoppingBag, Clock } from 'lucide-react'
-import { formatCurrency, formatDate } from '@/lib/utils'
-import { cn } from '@/lib/utils'
+import { Search, ShoppingBag } from 'lucide-react'
+import { formatCurrency, formatDate, cn } from '@/lib/utils'
 import type { Sale } from '@/types/erp'
 import Link from 'next/link'
+import { ResponsiveTable, type ResponsiveColumn } from '@/components/mobile'
+import { MobilePageHeader } from '@/components/mobile/MobilePageHeader'
 
 interface SalesClientProps {
   sales: Sale[]
@@ -27,132 +28,170 @@ const PAYMENT_STATUS: Record<string, { label: string; color: string }> = {
   refunded: { label: 'مسترجعة', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30' },
 }
 
-export function SalesClient({ sales, currency, companyId }: SalesClientProps) {
+export function SalesClient({ sales, currency }: SalesClientProps) {
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [filterPayment, setFilterPayment] = useState('')
 
-  const filtered = useMemo(() =>
-    sales.filter(s => {
-      const matchSearch = !search ||
-        s.invoice_number.includes(search) ||
-        (s.customers as any)?.name?.toLowerCase().includes(search.toLowerCase())
-      const matchStatus = !filterStatus || s.status === filterStatus
-      const matchPayment = !filterPayment || s.payment_status === filterPayment
-      return matchSearch && matchStatus && matchPayment
-    }), [sales, search, filterStatus, filterPayment])
+  const filtered = useMemo(
+    () =>
+      sales.filter((s) => {
+        const matchSearch =
+          !search ||
+          s.invoice_number.includes(search) ||
+          (s.customers as any)?.name?.toLowerCase().includes(search.toLowerCase())
+        const matchStatus = !filterStatus || s.status === filterStatus
+        const matchPayment = !filterPayment || s.payment_status === filterPayment
+        return matchSearch && matchStatus && matchPayment
+      }),
+    [sales, search, filterStatus, filterPayment],
+  )
 
-  // Stats
   const today = new Date().toDateString()
-  const todaySales = sales.filter(s => new Date(s.sale_date).toDateString() === today && s.status === 'completed')
+  const todaySales = sales.filter((s) => new Date(s.sale_date).toDateString() === today && s.status === 'completed')
   const totalToday = todaySales.reduce((s, sale) => s + sale.total, 0)
-  const totalMonth = sales.filter(s => {
-    const d = new Date(s.sale_date)
-    const now = new Date()
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() && s.status === 'completed'
-  }).reduce((s, sale) => s + sale.total, 0)
-  const unpaidTotal = sales.filter(s => s.payment_status === 'unpaid' || s.payment_status === 'partial').reduce((s, sale) => s + sale.due_amount, 0)
+  const totalMonth = sales
+    .filter((s) => {
+      const d = new Date(s.sale_date)
+      const now = new Date()
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() && s.status === 'completed'
+    })
+    .reduce((s, sale) => s + sale.total, 0)
+  const unpaidTotal = sales
+    .filter((s) => s.payment_status === 'unpaid' || s.payment_status === 'partial')
+    .reduce((s, sale) => s + sale.due_amount, 0)
+
+  const columns: ResponsiveColumn<Sale>[] = [
+    {
+      key: 'invoice_number',
+      header: 'رقم الفاتورة',
+      mobile: 'primary',
+      render: (s) => <span className="font-mono font-medium text-primary">{s.invoice_number}</span>,
+    },
+    {
+      key: 'customer',
+      header: 'العميل',
+      mobile: 'meta',
+      render: (s) => (s.customers as any)?.name || <span className="text-muted-foreground">نقدي</span>,
+    },
+    {
+      key: 'date',
+      header: 'التاريخ',
+      mobile: 'meta',
+      render: (s) => <span className="text-muted-foreground text-xs">{formatDate(s.sale_date)}</span>,
+    },
+    {
+      key: 'total',
+      header: 'الإجمالي',
+      mobile: 'secondary',
+      render: (s) => <span className="font-bold">{formatCurrency(s.total, currency)}</span>,
+    },
+    {
+      key: 'status',
+      header: 'الحالة',
+      mobileLabel: 'الحالة',
+      render: (s) => (
+        <span className={cn('text-xs px-2 py-0.5 rounded-full', STATUS_LABELS[s.status]?.color)}>
+          {STATUS_LABELS[s.status]?.label}
+        </span>
+      ),
+    },
+    {
+      key: 'payment',
+      header: 'الدفع',
+      mobileLabel: 'الدفع',
+      render: (s) => (
+        <div className="space-y-0.5">
+          <span className={cn('text-xs px-2 py-0.5 rounded-full', PAYMENT_STATUS[s.payment_status]?.color)}>
+            {PAYMENT_STATUS[s.payment_status]?.label}
+          </span>
+          {s.due_amount > 0 && <p className="text-xs text-red-500">{formatCurrency(s.due_amount, currency)}</p>}
+        </div>
+      ),
+    },
+  ]
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold">فواتير المبيعات</h1>
-          <p className="text-sm text-muted-foreground">{sales.length} فاتورة</p>
-        </div>
-        <Link href="/dashboard/pos" className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90">
-          <ShoppingBag className="w-4 h-4" />
-          فاتورة جديدة (POS)
-        </Link>
-      </div>
+      <MobilePageHeader
+        title="فواتير المبيعات"
+        description={`${sales.length} فاتورة`}
+        actions={
+          <Link
+            href="/dashboard/pos"
+            className="flex items-center gap-2 bg-primary text-primary-foreground px-3 sm:px-4 h-10 rounded-lg text-sm font-medium hover:bg-primary/90"
+          >
+            <ShoppingBag className="w-4 h-4" />
+            <span className="hidden sm:inline">فاتورة جديدة (POS)</span>
+            <span className="sm:hidden">POS</span>
+          </Link>
+        }
+      />
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
         <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-3">
-          <p className="text-xs text-green-600 opacity-70">مبيعات اليوم</p>
-          <p className="text-lg font-bold text-green-700 mt-0.5">{formatCurrency(totalToday, currency)}</p>
-          <p className="text-xs text-green-600">{todaySales.length} فاتورة</p>
+          <p className="text-[10px] sm:text-xs text-green-600 opacity-70">مبيعات اليوم</p>
+          <p className="text-sm sm:text-lg font-bold text-green-700 mt-0.5 truncate">
+            {formatCurrency(totalToday, currency)}
+          </p>
+          <p className="text-[10px] sm:text-xs text-green-600">{todaySales.length} فاتورة</p>
         </div>
         <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-3">
-          <p className="text-xs text-blue-600 opacity-70">مبيعات الشهر</p>
-          <p className="text-lg font-bold text-blue-700 mt-0.5">{formatCurrency(totalMonth, currency)}</p>
+          <p className="text-[10px] sm:text-xs text-blue-600 opacity-70">مبيعات الشهر</p>
+          <p className="text-sm sm:text-lg font-bold text-blue-700 mt-0.5 truncate">
+            {formatCurrency(totalMonth, currency)}
+          </p>
         </div>
         <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-3">
-          <p className="text-xs text-red-600 opacity-70">مبالغ مستحقة</p>
-          <p className="text-lg font-bold text-red-700 mt-0.5">{formatCurrency(unpaidTotal, currency)}</p>
+          <p className="text-[10px] sm:text-xs text-red-600 opacity-70">مبالغ مستحقة</p>
+          <p className="text-sm sm:text-lg font-bold text-red-700 mt-0.5 truncate">
+            {formatCurrency(unpaidTotal, currency)}
+          </p>
         </div>
         <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-3">
-          <p className="text-xs text-purple-600 opacity-70">إجمالي الفواتير</p>
-          <p className="text-lg font-bold text-purple-700 mt-0.5">{sales.length}</p>
+          <p className="text-[10px] sm:text-xs text-purple-600 opacity-70">إجمالي الفواتير</p>
+          <p className="text-sm sm:text-lg font-bold text-purple-700 mt-0.5">{sales.length}</p>
         </div>
       </div>
 
-      {/* Filters */}
       <div className="flex gap-2 flex-wrap">
-        <div className="relative flex-1 min-w-48">
+        <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="بحث برقم الفاتورة أو العميل..." className="w-full border border-input rounded-lg px-3 py-2 pr-9 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="بحث برقم الفاتورة أو العميل..."
+            className="w-full border border-input rounded-lg pr-9 pl-3 h-11 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+          />
         </div>
-        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none">
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          className="border border-input rounded-lg px-3 h-11 text-sm bg-background focus:outline-none flex-1 sm:flex-initial min-w-[120px]"
+        >
           <option value="">كل الحالات</option>
-          {Object.entries(STATUS_LABELS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+          {Object.entries(STATUS_LABELS).map(([k, v]) => (
+            <option key={k} value={k}>
+              {v.label}
+            </option>
+          ))}
         </select>
-        <select value={filterPayment} onChange={e => setFilterPayment(e.target.value)} className="border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none">
+        <select
+          value={filterPayment}
+          onChange={(e) => setFilterPayment(e.target.value)}
+          className="border border-input rounded-lg px-3 h-11 text-sm bg-background focus:outline-none flex-1 sm:flex-initial min-w-[120px]"
+        >
           <option value="">كل المدفوعات</option>
-          {Object.entries(PAYMENT_STATUS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+          {Object.entries(PAYMENT_STATUS).map(([k, v]) => (
+            <option key={k} value={k}>
+              {v.label}
+            </option>
+          ))}
         </select>
       </div>
 
-      {/* Table */}
-      <div className="bg-card rounded-xl border overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50">
-              <tr>
-                <th className="text-right px-4 py-3 font-medium text-muted-foreground">رقم الفاتورة</th>
-                <th className="text-right px-4 py-3 font-medium text-muted-foreground">العميل</th>
-                <th className="text-right px-4 py-3 font-medium text-muted-foreground">التاريخ</th>
-                <th className="text-right px-4 py-3 font-medium text-muted-foreground">الإجمالي</th>
-                <th className="text-right px-4 py-3 font-medium text-muted-foreground">الحالة</th>
-                <th className="text-right px-4 py-3 font-medium text-muted-foreground">الدفع</th>
-                <th className="px-4 py-3"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {filtered.length === 0 ? (
-                <tr><td colSpan={7} className="text-center py-12 text-muted-foreground">لا توجد فواتير</td></tr>
-              ) : (
-                filtered.map(sale => (
-                  <tr key={sale.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3 font-mono font-medium text-primary">{sale.invoice_number}</td>
-                    <td className="px-4 py-3">{(sale.customers as any)?.name || <span className="text-muted-foreground">نقدي</span>}</td>
-                    <td className="px-4 py-3 text-muted-foreground text-xs">{formatDate(sale.sale_date)}</td>
-                    <td className="px-4 py-3 font-bold">{formatCurrency(sale.total, currency)}</td>
-                    <td className="px-4 py-3">
-                      <span className={cn('text-xs px-2 py-0.5 rounded-full', STATUS_LABELS[sale.status]?.color)}>
-                        {STATUS_LABELS[sale.status]?.label}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={cn('text-xs px-2 py-0.5 rounded-full', PAYMENT_STATUS[sale.payment_status]?.color)}>
-                        {PAYMENT_STATUS[sale.payment_status]?.label}
-                      </span>
-                      {sale.due_amount > 0 && (
-                        <p className="text-xs text-red-500 mt-0.5">{formatCurrency(sale.due_amount, currency)}</p>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <button className="p-1.5 hover:bg-accent rounded-lg text-muted-foreground hover:text-foreground">
-                        <Eye className="w-3.5 h-3.5" />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <ResponsiveTable data={filtered} columns={columns} rowKey={(s) => s.id} empty="لا توجد فواتير" />
     </div>
   )
 }

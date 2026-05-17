@@ -348,25 +348,25 @@ export function InventoryClient({
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold">المنتجات والمخزون</h1>
-          <p className="text-sm text-muted-foreground">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-lg sm:text-xl font-bold truncate">المنتجات والمخزون</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">
             {products.length} منتج
             {lowStockCount > 0 && (
               <>
                 {' '}
-                · <span className="text-red-500">{lowStockCount} منخفض المخزون</span>
+                · <span className="text-red-500">{lowStockCount} منخفض</span>
               </>
             )}
           </p>
         </div>
         <button
           onClick={openNew}
-          className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+          className="flex items-center gap-2 bg-primary text-primary-foreground px-3 sm:px-4 h-10 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors shrink-0"
         >
           <Plus className="w-4 h-4" />
-          منتج جديد
+          <span className="hidden sm:inline">منتج جديد</span>
         </button>
       </div>
 
@@ -433,8 +433,115 @@ export function InventoryClient({
         </button>
       </div>
 
-      {/* Table */}
-      <div className="bg-card rounded-xl border overflow-hidden">
+      {/* Mobile cards (< lg) */}
+      <div className="lg:hidden space-y-2">
+        {filtered.length === 0 ? (
+          <div className="bg-card rounded-xl border p-8 text-center text-sm text-muted-foreground">لا توجد منتجات</div>
+        ) : (
+          filtered.map((product) => {
+            const stock = getTotalStock(product)
+            const isLow = product.track_inventory && stock <= product.min_stock_level
+            return (
+              <div key={product.id} className="bg-card border rounded-xl p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm truncate">{product.name_ar || product.name}</p>
+                    {(product.sku || product.barcode) && (
+                      <p className="text-xs text-muted-foreground truncate" dir="ltr">
+                        {product.sku || product.barcode}
+                      </p>
+                    )}
+                    {(product.sizes?.length > 0 || product.colors?.length > 0) && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {product.sizes?.slice(0, 3).map((s: string) => (
+                          <span key={s} className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">
+                            {s}
+                          </span>
+                        ))}
+                        {product.sizes?.length > 3 && (
+                          <span className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full">
+                            +{product.sizes.length - 3}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-0.5 shrink-0">
+                    <button
+                      onClick={() => openEdit(product)}
+                      className="p-2 hover:bg-accent rounded-lg text-muted-foreground hover:text-foreground min-h-[40px] min-w-[40px] flex items-center justify-center"
+                      aria-label="تعديل"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(product.id)}
+                      className="p-2 hover:bg-red-100 rounded-lg text-muted-foreground hover:text-red-600 min-h-[40px] min-w-[40px] flex items-center justify-center"
+                      aria-label="حذف"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+                <div className="mt-2 pt-2 border-t border-border/50 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">سعر التكلفة</span>
+                    <span className="font-medium">{formatCurrency(product.cost_price, currency)}</span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">سعر البيع</span>
+                    <span className="font-medium text-primary">{formatCurrency(product.sale_price, currency)}</span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">المخزون</span>
+                    {product.track_inventory ? (
+                      <span className={cn('font-medium', isLow ? 'text-red-500' : 'text-foreground')}>
+                        {isLow && <AlertTriangle className="w-3.5 h-3.5 inline ml-1" />}
+                        {stock}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">غير محدود</span>
+                    )}
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">الحالة</span>
+                    <span
+                      className={cn(
+                        'text-[10px] px-2 py-0.5 rounded-full',
+                        product.is_active
+                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30'
+                          : 'bg-red-100 text-red-700 dark:bg-red-900/30',
+                      )}
+                    >
+                      {product.is_active ? 'نشط' : 'موقوف'}
+                    </span>
+                  </div>
+                  {features.hasExpiry && product.expiry_date && (
+                    <div className="flex justify-between gap-2 col-span-2">
+                      <span className="text-muted-foreground">الانتهاء</span>
+                      <span
+                        className={cn(
+                          'font-medium',
+                          new Date(product.expiry_date) < new Date()
+                            ? 'text-red-500'
+                            : new Date(product.expiry_date) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+                              ? 'text-amber-500'
+                              : 'text-foreground',
+                        )}
+                      >
+                        {new Date(product.expiry_date).toLocaleDateString('ar-SA')}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )
+          })
+        )}
+      </div>
+
+      {/* Desktop table (lg+) */}
+      <div className="hidden lg:block bg-card rounded-xl border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
