@@ -26,6 +26,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { InsightsWidget } from '@/components/insights-widget'
 import { DashboardOnboarding } from '@/components/onboarding/dashboard-onboarding'
 import { getCompanyId, getCurrency } from '@/lib/tenant'
+import { ConstructionDashboard } from '@/components/dashboards/construction-dashboard'
 
 export const dynamic = 'force-dynamic'
 
@@ -228,6 +229,51 @@ export default async function DashboardPage() {
           hasPricingRules={(pricingRules as any)?.length > 0}
         />
       </DashboardShell>
+    )
+  }
+
+  // ── Construction dashboard ──
+  if (features.hasConstruction) {
+    const [{ data: projects }, { data: tasks }, { data: workers }, { count: customersCount }, { data: aiInsights }] =
+      await Promise.all([
+        supabase
+          .from('con_projects')
+          .select(
+            'id, name, status, progress_pct, client_name, engineer_name, contract_value, actual_cost, start_date, end_date',
+          )
+          .eq('company_id', COMPANY_ID)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('con_tasks')
+          .select('id, title, status, project_id, con_workers(name, job_type)')
+          .eq('company_id', COMPANY_ID)
+          .eq('status', 'in_progress'),
+        supabase.from('con_workers').select('id, status').eq('company_id', COMPANY_ID),
+        supabase.from('customers').select('id', { count: 'exact', head: true }).eq('company_id', COMPANY_ID),
+        supabase
+          .from('ai_insights')
+          .select('*')
+          .eq('company_id', COMPANY_ID)
+          .gte('expires_at', new Date().toISOString())
+          .order('generated_at', { ascending: false }),
+      ])
+
+    const workersList = workers || []
+    const workersTotal = workersList.length
+    const workersBusy = workersList.filter((w: any) => w.status === 'busy').length
+
+    return (
+      <ConstructionDashboard
+        greeting={greeting}
+        staffName={staffName}
+        currency={CURRENCY}
+        projects={(projects as any) || []}
+        tasks={(tasks as any) || []}
+        workersTotal={workersTotal}
+        workersBusy={workersBusy}
+        customersCount={customersCount || 0}
+        aiInsights={(aiInsights as any) || []}
+      />
     )
   }
 

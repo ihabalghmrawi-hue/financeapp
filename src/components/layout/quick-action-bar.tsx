@@ -2,7 +2,20 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ShoppingCart, Calendar, Plus, User, Package, DollarSign, RotateCcw, Shirt } from 'lucide-react'
+import {
+  ShoppingCart,
+  Calendar,
+  Plus,
+  User,
+  Package,
+  DollarSign,
+  RotateCcw,
+  Shirt,
+  Building2,
+  HardHat,
+  CheckSquare,
+  PackageOpen,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/language-provider'
 import type { Features } from '@/lib/features'
@@ -28,6 +41,18 @@ function getActions(features: Features, t: Translator): Action[] {
       { label: t('layout.quickActions.newDress'), href: '/dashboard/rentals/dresses', icon: Shirt },
       { label: t('layout.quickActions.calendar'), href: '/dashboard/rentals/calendar', icon: Calendar },
       { label: t('layout.quickActions.return'), href: '/dashboard/rentals/returns', icon: RotateCcw },
+    ]
+  }
+  if (features.hasConstruction) {
+    // Construction companies execute projects, not products. Surface
+    // project / task / worker / material / expense flows instead.
+    return [
+      { label: 'مشروع جديد', href: '/dashboard/construction/projects', icon: Building2, primary: true },
+      { label: 'مهمة', href: '/dashboard/construction/tasks', icon: CheckSquare },
+      { label: 'عامل', href: '/dashboard/construction/workers', icon: HardHat },
+      { label: 'مواد', href: '/dashboard/construction/materials', icon: PackageOpen },
+      { label: 'مصروف', href: '/dashboard/construction/expenses', icon: DollarSign },
+      { label: 'عميل', href: '/dashboard/customers', icon: User },
     ]
   }
   const actions: Action[] = []
