@@ -17,6 +17,8 @@ import {
   FileText,
   Printer,
   BarChart3,
+  ExternalLink,
+  Upload,
 } from 'lucide-react'
 import { RadialProgress } from '@/components/charts/radial-progress'
 import { formatCurrency } from '@/lib/utils'
@@ -77,6 +79,15 @@ interface Payment {
 interface Worker {
   id: string
   name: string
+}
+interface ConFile {
+  id: string
+  name: string
+  url: string
+  type: string
+  size_bytes: number
+  notes: string | null
+  uploaded_at: string
 }
 
 const STATUS_AR: Record<string, string> = {
@@ -174,7 +185,7 @@ const CATEGORY_AR: Record<string, string> = {
 
 const PROGRESS_MILESTONES = [0, 25, 50, 75, 100]
 
-type Tab = 'overview' | 'tasks' | 'expenses' | 'materials' | 'payments' | 'contract'
+type Tab = 'overview' | 'tasks' | 'expenses' | 'materials' | 'payments' | 'files' | 'contract'
 
 export function ProjectDetailClient({
   project,
@@ -183,6 +194,7 @@ export function ProjectDetailClient({
   materials: initMaterials,
   payments: initPayments,
   workers,
+  files: initFiles,
   currency,
 }: {
   project: Project
@@ -191,6 +203,7 @@ export function ProjectDetailClient({
   materials: Material[]
   payments: Payment[]
   workers: Worker[]
+  files: ConFile[]
   currency: string
 }) {
   const [tab, setTab] = useState<Tab>('overview')
@@ -198,11 +211,13 @@ export function ProjectDetailClient({
   const [expenses, setExpenses] = useState(initExpenses)
   const [materials, setMaterials] = useState(initMaterials)
   const [payments, setPayments] = useState(initPayments)
+  const [files, setFiles] = useState(initFiles)
 
   const [showTaskForm, setShowTaskForm] = useState(false)
   const [showExpForm, setShowExpForm] = useState(false)
   const [showMatForm, setShowMatForm] = useState(false)
   const [showPayForm, setShowPayForm] = useState(false)
+  const [showFileForm, setShowFileForm] = useState(false)
 
   const [taskForm, setTaskForm] = useState({
     title: '',
@@ -234,6 +249,12 @@ export function ProjectDetailClient({
     payment_method: 'cash',
     payment_date: new Date().toISOString().slice(0, 10),
     reference: '',
+  })
+  const [fileForm, setFileForm] = useState({
+    name: '',
+    url: '',
+    type: 'document',
+    notes: '',
   })
 
   const [loading, setLoading] = useState(false)
@@ -465,12 +486,46 @@ export function ProjectDetailClient({
     setPayments((p) => p.filter((x) => x.id !== id))
   }
 
+  const saveFile = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    try {
+      const res = await fetch('/api/construction/files', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...fileForm,
+          project_id: project.id,
+          notes: fileForm.notes || null,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error)
+      }
+      setFiles((prev) => [data, ...prev])
+      setShowFileForm(false)
+      setFileForm({ name: '', url: '', type: 'document', notes: '' })
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const deleteFile = async (id: string) => {
+    await fetch(`/api/construction/files/${id}`, { method: 'DELETE' })
+    setFiles((p) => p.filter((x) => x.id !== id))
+  }
+
   const TABS: { key: Tab; label: string; count?: number }[] = [
     { key: 'overview', label: 'نظرة عامة' },
     { key: 'tasks', label: 'المهام', count: tasks.length },
     { key: 'expenses', label: 'المصروفات', count: expenses.length },
     { key: 'materials', label: 'المواد', count: materials.length },
     { key: 'payments', label: 'التدفقات', count: payments.length },
+    { key: 'files', label: 'الملفات', count: files.length },
     { key: 'contract', label: 'العقد والماليات' },
   ]
 
@@ -961,6 +1016,57 @@ export function ProjectDetailClient({
         </div>
       )}
 
+      {/* Files Tab */}
+      {tab === 'files' && (
+        <div className="space-y-3">
+          <div className="flex justify-end">
+            <button
+              onClick={() => setShowFileForm(true)}
+              className="bg-primary text-primary-foreground px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-primary/90 flex items-center gap-1.5"
+            >
+              <Upload className="w-3.5 h-3.5" /> إضافة ملف
+            </button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {files.map((f) => (
+              <div key={f.id} className="bg-card border rounded-xl p-4 space-y-2 hover:shadow-sm transition-shadow">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <FileText className="w-5 h-5 text-primary shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{f.name}</p>
+                      <p className="text-xs text-muted-foreground">{f.type}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => deleteFile(f.id)}
+                    className="p-1 hover:bg-red-50 rounded text-muted-foreground hover:text-red-500 shrink-0"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <a
+                  href={f.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-xs text-primary hover:underline"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  فتح الملف
+                </a>
+                <p className="text-xs text-muted-foreground">{f.uploaded_at?.slice(0, 10)}</p>
+              </div>
+            ))}
+            {files.length === 0 && (
+              <div className="col-span-full text-center py-12 text-muted-foreground">
+                <FileText className="w-10 h-10 mx-auto mb-2 opacity-30" />
+                <p>لا توجد ملفات</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Task Form Modal */}
       {showTaskForm && (
         <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
@@ -1331,6 +1437,68 @@ export function ProjectDetailClient({
                 <p className="text-xl font-bold">{fmt(contractValue - refundedAmount)}</p>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* File Form Modal */}
+      {showFileForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+          <div className="bg-card border rounded-t-2xl sm:rounded-2xl w-full max-w-sm shadow-2xl pb-safe-bottom max-h-[92vh] overflow-y-auto">
+            <div className="p-4 border-b">
+              <h2 className="font-semibold text-sm">إضافة ملف</h2>
+            </div>
+            <form onSubmit={saveFile} className="p-4 space-y-3">
+              <input
+                required
+                placeholder="اسم الملف *"
+                value={fileForm.name}
+                onChange={(e) => setFileForm((f) => ({ ...f, name: e.target.value }))}
+                className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
+              <input
+                required
+                placeholder="رابط الملف *"
+                value={fileForm.url}
+                onChange={(e) => setFileForm((f) => ({ ...f, url: e.target.value }))}
+                className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
+              <select
+                value={fileForm.type}
+                onChange={(e) => setFileForm((f) => ({ ...f, type: e.target.value }))}
+                className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+              >
+                <option value="document">مستند</option>
+                <option value="image">صورة</option>
+                <option value="drawing">مخطط</option>
+                <option value="contract">عقد</option>
+                <option value="invoice">فاتورة</option>
+                <option value="report">تقرير</option>
+                <option value="other">أخرى</option>
+              </select>
+              <input
+                placeholder="ملاحظات"
+                value={fileForm.notes}
+                onChange={(e) => setFileForm((f) => ({ ...f, notes: e.target.value }))}
+                className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 bg-primary text-primary-foreground py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+                >
+                  {loading ? '...' : 'إضافة'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowFileForm(false)}
+                  className="px-4 py-2 border rounded-lg text-sm hover:bg-accent"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

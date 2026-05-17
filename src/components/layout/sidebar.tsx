@@ -35,6 +35,7 @@ import {
   PackageOpen,
   CreditCard,
   ChevronLeft,
+  FileText,
 } from 'lucide-react'
 import { cn, getInitials } from '@/lib/utils'
 import type { Features } from '@/lib/features'
@@ -238,6 +239,12 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
           label: t('nav.constructionPayments'),
           href: '/dashboard/construction/payments',
           icon: CreditCard,
+          show: features.hasConstruction,
+        },
+        {
+          label: t('nav.constructionFiles'),
+          href: '/dashboard/construction/files',
+          icon: FileText,
           show: features.hasConstruction,
         },
         {

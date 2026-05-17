@@ -11,6 +11,7 @@ export const constructionModule = {
     { href: '/dashboard/construction/workers', label: 'العمال', icon: 'HardHat' },
     { href: '/dashboard/construction/materials', label: 'المواد', icon: 'PackageOpen' },
     { href: '/dashboard/construction/payments', label: 'التدفقات', icon: 'CreditCard' },
+    { href: '/dashboard/construction/files', label: 'الملفات', icon: 'FileText' },
     { href: '/dashboard/construction/reports', label: 'تقارير البناء', icon: 'BarChart2' },
   ],
 

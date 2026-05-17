@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Search, ArrowDownLeft, ArrowUpRight, Trash2 } from 'lucide-react'
+import { Plus, Search, ArrowDownLeft, ArrowUpRight, Trash2, Edit } from 'lucide-react'
 import { formatCurrency, cn } from '@/lib/utils'
 
 interface Payment {
@@ -58,6 +58,7 @@ export function PaymentsClient({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [editing, setEditing] = useState<Payment | null>(null)
 
   const fmt = (n: number) => formatCurrency(n, currency)
 
@@ -85,8 +86,10 @@ export function PaymentsClient({
         reference: form.reference || null,
         notes: form.notes || null,
       }
-      const res = await fetch('/api/construction/payments', {
-        method: 'POST',
+      const url = editing ? `/api/construction/payments/${editing.id}` : '/api/construction/payments'
+      const method = editing ? 'PATCH' : 'POST'
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
@@ -94,14 +97,35 @@ export function PaymentsClient({
       if (!res.ok) {
         throw new Error(data.error)
       }
-      setPayments((prev) => [data, ...prev])
+      if (editing) {
+        setPayments((prev) => prev.map((p) => (p.id === editing.id ? { ...p, ...data } : p)))
+      } else {
+        setPayments((prev) => [data, ...prev])
+      }
       setShowForm(false)
       setForm(emptyForm)
+      setEditing(null)
     } catch (err: any) {
       setError(err.message)
     } finally {
       setLoading(false)
     }
+  }
+
+  const openEdit = (p: Payment) => {
+    setForm({
+      project_id: p.project_id || '',
+      type: p.type,
+      amount: String(p.amount),
+      description: p.description,
+      payment_method: p.payment_method,
+      payment_date: p.payment_date || new Date().toISOString().slice(0, 10),
+      reference: p.reference || '',
+      notes: p.notes || '',
+    })
+    setEditing(p)
+    setError('')
+    setShowForm(true)
   }
 
   const handleDelete = async (id: string) => {
@@ -137,6 +161,7 @@ export function PaymentsClient({
         <button
           onClick={() => {
             setForm(emptyForm)
+            setEditing(null)
             setError('')
             setShowForm(true)
           }}
@@ -221,13 +246,21 @@ export function PaymentsClient({
                   {fmt(Number(p.amount))}
                 </td>
                 <td className="px-4 py-3">
-                  <button
-                    onClick={() => handleDelete(p.id)}
-                    disabled={deleting === p.id}
-                    className="p-1.5 hover:bg-red-50 rounded text-muted-foreground hover:text-red-500 transition-colors"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => openEdit(p)}
+                      className="p-1.5 hover:bg-blue-50 rounded text-muted-foreground hover:text-blue-500 transition-colors"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(p.id)}
+                      disabled={deleting === p.id}
+                      className="p-1.5 hover:bg-red-50 rounded text-muted-foreground hover:text-red-500 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -246,7 +279,7 @@ export function PaymentsClient({
         <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
           <div className="bg-card border rounded-t-2xl sm:rounded-2xl w-full max-w-md shadow-2xl pb-safe-bottom max-h-[92vh] overflow-y-auto">
             <div className="p-5 border-b">
-              <h2 className="font-semibold">تدفق جديد</h2>
+              <h2 className="font-semibold">{editing ? 'تعديل تدفق' : 'تدفق جديد'}</h2>
             </div>
             <form onSubmit={handleSubmit} className="p-5 space-y-4">
               {error && <p className="text-sm text-red-500 bg-red-50 rounded-lg p-3">{error}</p>}
@@ -345,7 +378,7 @@ export function PaymentsClient({
                   disabled={loading}
                   className="flex-1 bg-primary text-primary-foreground py-2 rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
                 >
-                  {loading ? 'جاري الحفظ...' : 'إضافة التدفق'}
+                  {loading ? 'جاري الحفظ...' : editing ? 'حفظ التعديلات' : 'إضافة التدفق'}
                 </button>
                 <button
                   type="button"

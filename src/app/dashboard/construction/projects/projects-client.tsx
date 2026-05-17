@@ -10,9 +10,11 @@ interface Project {
   name: string
   description: string | null
   status: string
+  type: string
   client_name: string | null
   client_phone: string | null
   location: string | null
+  engineer_name: string | null
   expected_cost: number
   actual_cost: number
   contract_value: number
@@ -21,6 +23,14 @@ interface Project {
   end_date: string | null
   notes: string | null
   created_at: string
+}
+
+const TYPE_AR: Record<string, string> = {
+  apartment: 'شقة',
+  shop: 'محل تجاري',
+  villa: 'فيلا',
+  office: 'مكتب',
+  other: 'أخرى',
 }
 
 const STAGE_AR: Record<string, string> = {
@@ -55,9 +65,11 @@ const emptyForm = {
   name: '',
   description: '',
   status: 'planning',
+  type: 'apartment',
   client_name: '',
   client_phone: '',
   location: '',
+  engineer_name: '',
   expected_cost: '',
   contract_value: '',
   stage: 'foundation',
@@ -101,9 +113,11 @@ export function ProjectsClient({ projects: init, currency }: { projects: Project
       name: p.name,
       description: p.description || '',
       status: p.status,
+      type: p.type || 'apartment',
       client_name: p.client_name || '',
       client_phone: p.client_phone || '',
       location: p.location || '',
+      engineer_name: p.engineer_name || '',
       expected_cost: String(p.expected_cost),
       contract_value: String(p.contract_value || ''),
       stage: p.stage || 'foundation',
@@ -125,6 +139,7 @@ export function ProjectsClient({ projects: init, currency }: { projects: Project
         ...form,
         expected_cost: Number(form.expected_cost) || 0,
         contract_value: Number(form.contract_value) || 0,
+        engineer_name: form.engineer_name || null,
       }
       const url = editing ? `/api/construction/projects/${editing.id}` : '/api/construction/projects'
       const method = editing ? 'PATCH' : 'POST'
@@ -210,8 +225,14 @@ export function ProjectsClient({ projects: init, currency }: { projects: Project
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-sm truncate">{p.name}</h3>
+                  {p.type && (
+                    <span className="text-xs bg-muted px-1.5 py-0.5 rounded">{TYPE_AR[p.type] || p.type}</span>
+                  )}
                   {p.client_name && <p className="text-xs text-muted-foreground truncate">{p.client_name}</p>}
                   {p.location && <p className="text-xs text-muted-foreground truncate">{p.location}</p>}
+                  {p.engineer_name && (
+                    <p className="text-xs text-muted-foreground truncate">مهندس: {p.engineer_name}</p>
+                  )}
                   {p.stage && <p className="text-xs text-primary truncate">{STAGE_AR[p.stage] || p.stage}</p>}
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
@@ -323,6 +344,28 @@ export function ProjectsClient({ projects: init, currency }: { projects: Project
                   <input
                     value={form.location}
                     onChange={(e) => setForm((f: any) => ({ ...f, location: e.target.value }))}
+                    className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">نوع المشروع</label>
+                  <select
+                    value={form.type}
+                    onChange={(e) => setForm((f: any) => ({ ...f, type: e.target.value }))}
+                    className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  >
+                    {Object.entries(TYPE_AR).map(([v, l]) => (
+                      <option key={v} value={v}>
+                        {l}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">المهندس المشرف</label>
+                  <input
+                    value={form.engineer_name}
+                    onChange={(e) => setForm((f: any) => ({ ...f, engineer_name: e.target.value }))}
                     className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
                   />
                 </div>

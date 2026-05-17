@@ -30,6 +30,7 @@ import {
   CheckSquare,
   PackageOpen,
   CreditCard,
+  FileText,
   type LucideIcon,
 } from 'lucide-react'
 import type { Features } from '@/lib/features'
@@ -220,6 +221,12 @@ export function useNavGroups(features: Features, staff?: StaffInfo): NavGroup[] 
           label: t('nav.constructionPayments'),
           href: '/dashboard/construction/payments',
           icon: CreditCard,
+          show: features.hasConstruction,
+        },
+        {
+          label: t('nav.constructionFiles'),
+          href: '/dashboard/construction/files',
+          icon: FileText,
           show: features.hasConstruction,
         },
         {

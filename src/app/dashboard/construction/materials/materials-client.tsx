@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Search, Trash2 } from 'lucide-react'
+import { Plus, Search, Trash2, Edit } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 
 interface Material {
@@ -65,6 +65,7 @@ export function MaterialsClient({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [editing, setEditing] = useState<Material | null>(null)
 
   const fmt = (n: number) => formatCurrency(n, currency)
 
@@ -91,8 +92,10 @@ export function MaterialsClient({
         supplier: form.supplier || null,
         notes: form.notes || null,
       }
-      const res = await fetch('/api/construction/materials', {
-        method: 'POST',
+      const url = editing ? `/api/construction/materials/${editing.id}` : '/api/construction/materials'
+      const method = editing ? 'PATCH' : 'POST'
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
@@ -100,14 +103,35 @@ export function MaterialsClient({
       if (!res.ok) {
         throw new Error(data.error)
       }
-      setMaterials((prev) => [data, ...prev])
+      if (editing) {
+        setMaterials((prev) => prev.map((m) => (m.id === editing.id ? { ...m, ...data } : m)))
+      } else {
+        setMaterials((prev) => [data, ...prev])
+      }
       setShowForm(false)
       setForm(emptyForm)
+      setEditing(null)
     } catch (err: any) {
       setError(err.message)
     } finally {
       setLoading(false)
     }
+  }
+
+  const openEdit = (m: Material) => {
+    setForm({
+      project_id: m.project_id || '',
+      name: m.name,
+      supplier: m.supplier || '',
+      unit: m.unit,
+      quantity: String(m.quantity),
+      unit_price: String(m.unit_price),
+      purchase_date: m.purchase_date || new Date().toISOString().slice(0, 10),
+      notes: m.notes || '',
+    })
+    setEditing(m)
+    setError('')
+    setShowForm(true)
   }
 
   const handleDelete = async (id: string) => {
@@ -132,6 +156,7 @@ export function MaterialsClient({
         <button
           onClick={() => {
             setForm(emptyForm)
+            setEditing(null)
             setError('')
             setShowForm(true)
           }}
@@ -194,13 +219,21 @@ export function MaterialsClient({
                   {fmt(Number(m.total_price || Number(m.quantity) * Number(m.unit_price)))}
                 </td>
                 <td className="px-4 py-3">
-                  <button
-                    onClick={() => handleDelete(m.id)}
-                    disabled={deleting === m.id}
-                    className="p-1.5 hover:bg-red-50 rounded text-muted-foreground hover:text-red-500 transition-colors"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => openEdit(m)}
+                      className="p-1.5 hover:bg-blue-50 rounded text-muted-foreground hover:text-blue-500 transition-colors"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(m.id)}
+                      disabled={deleting === m.id}
+                      className="p-1.5 hover:bg-red-50 rounded text-muted-foreground hover:text-red-500 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -219,7 +252,7 @@ export function MaterialsClient({
         <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
           <div className="bg-card border rounded-t-2xl sm:rounded-2xl w-full max-w-md shadow-2xl pb-safe-bottom max-h-[92vh] overflow-y-auto">
             <div className="p-5 border-b">
-              <h2 className="font-semibold">إضافة مواد</h2>
+              <h2 className="font-semibold">{editing ? 'تعديل المواد' : 'إضافة مواد'}</h2>
             </div>
             <form onSubmit={handleSubmit} className="p-5 space-y-4">
               {error && <p className="text-sm text-red-500 bg-red-50 rounded-lg p-3">{error}</p>}
@@ -328,7 +361,7 @@ export function MaterialsClient({
                   disabled={loading}
                   className="flex-1 bg-primary text-primary-foreground py-2 rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
                 >
-                  {loading ? 'جاري الحفظ...' : 'إضافة المواد'}
+                  {loading ? 'جاري الحفظ...' : editing ? 'حفظ التعديلات' : 'إضافة المواد'}
                 </button>
                 <button
                   type="button"

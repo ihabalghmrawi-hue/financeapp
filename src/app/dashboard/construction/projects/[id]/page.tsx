@@ -18,6 +18,7 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
     { data: materials },
     { data: payments },
     { data: workers },
+    { data: files },
   ] = await Promise.all([
     admin.from('con_projects').select('*').eq('id', params.id).eq('company_id', COMPANY).single(),
     admin
@@ -45,6 +46,12 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
       .eq('company_id', COMPANY)
       .order('payment_date', { ascending: false }),
     admin.from('con_workers').select('id, name').eq('company_id', COMPANY).eq('status', 'active').order('name'),
+    admin
+      .from('con_files')
+      .select('*')
+      .eq('project_id', params.id)
+      .eq('company_id', COMPANY)
+      .order('uploaded_at', { ascending: false }),
   ])
 
   if (!project) {
@@ -59,6 +66,7 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
       materials={materials || []}
       payments={payments || []}
       workers={workers || []}
+      files={files || []}
       currency={CURRENCY}
     />
   )

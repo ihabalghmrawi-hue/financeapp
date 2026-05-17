@@ -1,27 +1,67 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getCompanyId } from '@/lib/tenant'
 
-export async function DELETE(
-  _: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params
+
+  const admin = createAdminClient()
+  const companyId = await getCompanyId()
+  const body = await req.json()
+
+  const allowed: Record<string, unknown> = {}
+
+  if ('project_id' in body) {
+    allowed.project_id = body.project_id || null
+  }
+  if ('category' in body) {
+    allowed.category = String(body.category)
+  }
+  if ('description' in body) {
+    allowed.description = String(body.description)
+  }
+  if ('amount' in body) {
+    allowed.amount = Number(body.amount) || 0
+  }
+  if ('supplier' in body) {
+    allowed.supplier = body.supplier || null
+  }
+  if ('payment_method' in body) {
+    allowed.payment_method = String(body.payment_method)
+  }
+  if ('expense_date' in body) {
+    allowed.expense_date = body.expense_date
+  }
+  if ('notes' in body) {
+    allowed.notes = body.notes || null
+  }
+
+  const { data, error } = await admin
+    .from('con_expenses')
+    .update({ ...allowed, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .eq('company_id', companyId)
+    .select('*, con_projects(name)')
+    .single()
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  return NextResponse.json(data)
+}
+
+export async function DELETE(_: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params
 
   const admin = createAdminClient()
   const companyId = await getCompanyId()
 
-  const { error } = await admin
-    .from('con_expenses')
-    .delete()
-    .eq('id', id)
-    .eq('company_id', companyId)
+  const { error } = await admin.from('con_expenses').delete().eq('id', id).eq('company_id', companyId)
 
   if (error) {
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
   return NextResponse.json({ ok: true })

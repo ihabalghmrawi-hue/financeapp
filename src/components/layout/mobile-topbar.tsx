@@ -35,6 +35,7 @@ const pageTitles: Record<string, string> = {
 
   '/dashboard/construction/materials': 'nav.constructionMaterials',
   '/dashboard/construction/payments': 'nav.constructionPayments',
+  '/dashboard/construction/files': 'nav.constructionFiles',
   '/dashboard/construction/reports': 'nav.constructionReports',
 }
 

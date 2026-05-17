@@ -11,7 +11,7 @@ export default async function TasksPage() {
   const [{ data: tasks }, { data: projects }, { data: workers }] = await Promise.all([
     admin
       .from('con_tasks')
-      .select('*, con_projects(name)')
+      .select('*, con_projects(name), con_workers(name, job_type)')
       .eq('company_id', COMPANY)
       .order('created_at', { ascending: false }),
     admin.from('con_projects').select('id, name').eq('company_id', COMPANY).neq('status', 'cancelled').order('name'),

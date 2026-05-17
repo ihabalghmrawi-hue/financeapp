@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Search, Trash2 } from 'lucide-react'
+import { Plus, Search, Trash2, Edit } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 
 interface Expense {
@@ -58,6 +58,7 @@ export function ExpensesClient({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [editing, setEditing] = useState<Expense | null>(null)
 
   const fmt = (n: number) => formatCurrency(n, currency)
 
@@ -87,8 +88,10 @@ export function ExpensesClient({
         vendor: form.vendor || null,
         notes: form.notes || null,
       }
-      const res = await fetch('/api/construction/expenses', {
-        method: 'POST',
+      const url = editing ? `/api/construction/expenses/${editing.id}` : '/api/construction/expenses'
+      const method = editing ? 'PATCH' : 'POST'
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
@@ -96,14 +99,34 @@ export function ExpensesClient({
       if (!res.ok) {
         throw new Error(data.error)
       }
-      setExpenses((prev) => [data, ...prev])
+      if (editing) {
+        setExpenses((prev) => prev.map((e) => (e.id === editing.id ? { ...e, ...data } : e)))
+      } else {
+        setExpenses((prev) => [data, ...prev])
+      }
       setShowForm(false)
       setForm(emptyForm)
+      setEditing(null)
     } catch (err: any) {
       setError(err.message)
     } finally {
       setLoading(false)
     }
+  }
+
+  const openEdit = (e: Expense) => {
+    setForm({
+      project_id: e.project_id || '',
+      category: e.category,
+      amount: String(e.amount),
+      description: e.description,
+      vendor: e.vendor || '',
+      expense_date: e.expense_date || new Date().toISOString().slice(0, 10),
+      notes: e.notes || '',
+    })
+    setEditing(e)
+    setError('')
+    setShowForm(true)
   }
 
   const handleDelete = async (id: string) => {
@@ -128,6 +151,7 @@ export function ExpensesClient({
         <button
           onClick={() => {
             setForm(emptyForm)
+            setEditing(null)
             setError('')
             setShowForm(true)
           }}
@@ -200,13 +224,21 @@ export function ExpensesClient({
                 <td className="px-4 py-3 text-muted-foreground">{e.vendor || '—'}</td>
                 <td className="px-4 py-3 font-medium text-left">{fmt(Number(e.amount))}</td>
                 <td className="px-4 py-3">
-                  <button
-                    onClick={() => handleDelete(e.id)}
-                    disabled={deleting === e.id}
-                    className="p-1.5 hover:bg-red-50 rounded text-muted-foreground hover:text-red-500 transition-colors"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => openEdit(e)}
+                      className="p-1.5 hover:bg-blue-50 rounded text-muted-foreground hover:text-blue-500 transition-colors"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(e.id)}
+                      disabled={deleting === e.id}
+                      className="p-1.5 hover:bg-red-50 rounded text-muted-foreground hover:text-red-500 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -225,7 +257,7 @@ export function ExpensesClient({
         <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
           <div className="bg-card border rounded-t-2xl sm:rounded-2xl w-full max-w-md shadow-2xl pb-safe-bottom max-h-[92vh] overflow-y-auto">
             <div className="p-5 border-b">
-              <h2 className="font-semibold">مصروف جديد</h2>
+              <h2 className="font-semibold">{editing ? 'تعديل مصروف' : 'مصروف جديد'}</h2>
             </div>
             <form onSubmit={handleSubmit} className="p-5 space-y-4">
               {error && <p className="text-sm text-red-500 bg-red-50 rounded-lg p-3">{error}</p>}
@@ -313,7 +345,7 @@ export function ExpensesClient({
                   disabled={loading}
                   className="flex-1 bg-primary text-primary-foreground py-2 rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
                 >
-                  {loading ? 'جاري الحفظ...' : 'إضافة المصروف'}
+                  {loading ? 'جاري الحفظ...' : editing ? 'حفظ التعديلات' : 'إضافة المصروف'}
                 </button>
                 <button
                   type="button"
