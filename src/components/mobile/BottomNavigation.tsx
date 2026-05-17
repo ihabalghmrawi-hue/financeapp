@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, type MouseEvent } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -49,13 +49,13 @@ export function BottomNavigation({ items, className }: BottomNavigationProps) {
   const pathname = usePathname()
   const safeArea = useSafeArea()
   const isCapacitor = useIsCapacitor()
-  const { isKeyboardOpen } = useMobileLayout()
+  const { isKeyboardOpen, openSidebar } = useMobileLayout()
   const { isOnline } = useNetworkStatus()
   const { pendingCount, failedCount, isSyncing } = useSyncStatus()
 
   const isActive = useCallback(
     (href: string) => {
-      if (href === '#') {
+      if (href === '#' || href === '__open_drawer__') {
         return false
       }
       if (href === '/dashboard') {
@@ -64,6 +64,16 @@ export function BottomNavigation({ items, className }: BottomNavigationProps) {
       return pathname.startsWith(href)
     },
     [pathname],
+  )
+
+  const handleClick = useCallback(
+    (href: string) => (e: MouseEvent<HTMLAnchorElement>) => {
+      if (href === '__open_drawer__' || href === '#') {
+        e.preventDefault()
+        openSidebar()
+      }
+    },
+    [openSidebar],
   )
 
   const visibleItems = useMemo(() => resolvedItems.slice(0, 5), [resolvedItems])
@@ -89,7 +99,8 @@ export function BottomNavigation({ items, className }: BottomNavigationProps) {
           return (
             <Link
               key={item.href}
-              href={item.href}
+              href={item.href === '__open_drawer__' || item.href === '#' ? '#' : item.href}
+              onClick={handleClick(item.href)}
               className={cn(
                 'flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-full px-2 py-1.5 rounded-2xl transition-all duration-200',
                 active ? 'text-primary' : 'text-muted-foreground/60 hover:text-muted-foreground',

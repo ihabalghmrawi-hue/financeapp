@@ -627,6 +627,29 @@
     display: none;
   }
 
+  /* Sticky elements respecting safe-area top */
+  .sticky-safe-top {
+    position: sticky;
+    top: 0;
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Disable browser tap highlight on mobile touch */
+  .no-tap-highlight {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Prevent body scroll when a sheet is open */
+  .lock-scroll {
+    overflow: hidden;
+    touch-action: none;
+  }
+
+  /* Keyboard-aware bottom padding */
+  .keyboard-safe {
+    padding-bottom: env(keyboard-inset-height, 0px);
+  }
+
   .orientation-portrait .orientation-hidden-portrait {
     display: none;
   }

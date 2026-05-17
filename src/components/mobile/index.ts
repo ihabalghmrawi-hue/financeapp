@@ -23,3 +23,7 @@ export {
   useTouchOptimized,
 } from './MobileOptimized'
 export { useResponsiveWorkspace, useResponsivePersistence } from './useResponsiveWorkspace'
+export { BottomSheet } from './BottomSheet'
+export { ResponsiveTable } from './ResponsiveTable'
+export type { Column as ResponsiveColumn } from './ResponsiveTable'
+export { MobilePageHeader } from './MobilePageHeader'

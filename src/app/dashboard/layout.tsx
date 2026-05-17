@@ -7,6 +7,7 @@ import { Sidebar } from '@/components/layout/sidebar'
 import { TopBar } from '@/components/layout/topbar'
 import { QuickActionBar } from '@/components/layout/quick-action-bar'
 import { DashboardMobileLayout } from '@/components/layout/dashboard-mobile-layout'
+import { MobileTopBar } from '@/components/layout/mobile-topbar'
 import { PageTransitionWrapper } from '@/components/layout/page-transition-wrapper'
 import { CommandBar } from '@/components/command-center'
 import type { Lang } from '@/lib/i18n'
@@ -83,16 +84,30 @@ export default async function DashboardLayout({ children }: { children: React.Re
     settings: null,
   }
 
+  const companyDisplayName = branding?.name_ar || company.name || 'شركتي'
+
   return (
-    <DashboardMobileLayout companyId={company.id} userId={staffId}>
+    <DashboardMobileLayout
+      companyId={company.id}
+      userId={staffId}
+      features={features}
+      staff={staff}
+      companyName={companyDisplayName}
+      branding={branding}
+    >
       <div className="flex h-screen overflow-hidden bg-background">
         <div className="hidden lg:block">
           <Sidebar company={company as any} user={null} staff={staff} features={features} branding={branding} />
         </div>
         <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Desktop topbar (md+) */}
           <div className="hidden md:block">
             <TopBar company={company} user={null} staff={staff} features={features} />
             <QuickActionBar features={features} />
+          </div>
+          {/* Mobile topbar (< md) */}
+          <div className="md:hidden">
+            <MobileTopBar />
           </div>
           <main className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">
             <PageTransitionWrapper>{children}</PageTransitionWrapper>
