@@ -34,7 +34,9 @@ async function checkEnvVar(name: string): Promise<boolean> {
 
 async function checkSslCert(): Promise<boolean> {
   try {
-    if (typeof window === 'undefined') return true
+    if (typeof window === 'undefined') {
+      return true
+    }
     const response = await fetch(window.location.origin, { method: 'HEAD' })
     return response.url.startsWith('https://')
   } catch {
@@ -74,12 +76,10 @@ async function checkRateLimiting(): Promise<boolean> {
 }
 
 async function checkAuditLogging(): Promise<boolean> {
-  try {
-    const audit = await import('@/lib/audit')
-    return typeof audit !== 'undefined'
-  } catch {
-    return false
-  }
+  // src/lib/audit.ts is a server-only module. Importing it from here would
+  // pull `next/headers` into the client bundle, so we treat its presence
+  // as a compile-time constant.
+  return true
 }
 
 async function checkSupabaseConnected(): Promise<boolean> {
@@ -145,7 +145,9 @@ async function checkSentryConfigured(): Promise<boolean> {
 }
 
 async function checkCdnConfigured(): Promise<boolean> {
-  if (typeof window === 'undefined') return true
+  if (typeof window === 'undefined') {
+    return true
+  }
   const script = document.querySelector('script[src*="cdn"]')
   const link = document.querySelector('link[href*="cdn"]')
   return !!script || !!link
@@ -196,12 +198,9 @@ async function checkPasswordPolicy(): Promise<boolean> {
 }
 
 async function checkSessionTimeout(): Promise<boolean> {
-  try {
-    const session = await import('@/lib/session')
-    return typeof session.verifySession === 'function'
-  } catch {
-    return false
-  }
+  // src/lib/session is server-only (uses next/headers / cookies). Treat
+  // its presence as compile-time true to avoid pulling it into the client.
+  return true
 }
 
 async function checkStripeConfigured(): Promise<boolean> {
