@@ -3,17 +3,7 @@
 import { useMemo } from 'react'
 import Link from 'next/link'
 import { formatCurrency } from '@/lib/utils'
-import {
-  Building2,
-  Users,
-  CheckSquare,
-  TrendingUp,
-  TrendingDown,
-  ArrowUpRight,
-  Clock,
-  AlertTriangle,
-  DollarSign,
-} from 'lucide-react'
+import { Building2, Users, CheckSquare, TrendingUp, ArrowUpRight, Clock, AlertTriangle, DollarSign } from 'lucide-react'
 
 interface Project {
   id: string
@@ -190,7 +180,7 @@ export function ConstructionDashboardClient({
       </div>
 
       {/* Financial Summary */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-xl p-4">
           <div className="flex items-center gap-2 text-green-700 dark:text-green-400 mb-1">
             <TrendingUp className="w-4 h-4" />
@@ -198,19 +188,7 @@ export function ConstructionDashboardClient({
           </div>
           <p className="text-2xl font-bold text-green-800 dark:text-green-300">{fmt(stats.totalIncome)}</p>
           <Link href="/dashboard/construction/payments" className="text-xs text-green-600 hover:underline mt-1 block">
-            عرض المدفوعات ←
-          </Link>
-        </div>
-        <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
-          <div className="flex items-center gap-2 text-red-700 dark:text-red-400 mb-1">
-            <TrendingDown className="w-4 h-4" />
-            <span className="text-xs font-medium">إجمالي المصروفات</span>
-          </div>
-          <p className="text-2xl font-bold text-red-800 dark:text-red-300">
-            {fmt(stats.totalExpense + stats.totalPaid)}
-          </p>
-          <Link href="/dashboard/construction/expenses" className="text-xs text-red-600 hover:underline mt-1 block">
-            عرض المصروفات ←
+            عرض التدفقات ←
           </Link>
         </div>
         <div
@@ -332,7 +310,7 @@ export function ConstructionDashboardClient({
         {/* Recent Payments */}
         <div className="bg-card border rounded-xl p-4">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-sm">آخر المدفوعات</h2>
+            <h2 className="font-semibold text-sm">آخر التدفقات</h2>
             <Link
               href="/dashboard/construction/payments"
               className="text-xs text-primary hover:underline flex items-center gap-1"
@@ -354,7 +332,7 @@ export function ConstructionDashboardClient({
               </div>
             ))}
             {recentPayments.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-4">لا توجد مدفوعات بعد</p>
+              <p className="text-sm text-muted-foreground text-center py-4">لا توجد تدفقات بعد</p>
             )}
           </div>
         </div>

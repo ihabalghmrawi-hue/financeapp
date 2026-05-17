@@ -153,7 +153,7 @@ const en = {
     constructionTasks: 'Tasks',
     constructionExpenses: 'Expenses',
     constructionMaterials: 'Materials',
-    constructionPayments: 'Payments',
+    constructionPayments: 'Flows',
     constructionReports: 'Reports',
     rentals: 'Rentals Dashboard',
     dresses: 'Dresses',

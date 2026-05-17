@@ -32,7 +32,7 @@ const pageTitles: Record<string, string> = {
   '/dashboard/construction/projects': 'nav.constructionProjects',
   '/dashboard/construction/workers': 'nav.constructionWorkers',
   '/dashboard/construction/tasks': 'nav.constructionTasks',
-  '/dashboard/construction/expenses': 'nav.constructionExpenses',
+
   '/dashboard/construction/materials': 'nav.constructionMaterials',
   '/dashboard/construction/payments': 'nav.constructionPayments',
   '/dashboard/construction/reports': 'nav.constructionReports',

@@ -3,7 +3,6 @@ import {
   Building2,
   HardHat,
   CheckSquare,
-  DollarSign,
   PackageOpen,
   CreditCard,
   BarChart3,
@@ -93,9 +92,8 @@ const QUICK_ACTIONS: { label: string; href: string; icon: any; color: string }[]
   { label: 'المشاريع', href: '/dashboard/construction/projects', icon: Building2, color: 'blue' },
   { label: 'العمال', href: '/dashboard/construction/workers', icon: Users, color: 'amber' },
   { label: 'المهام', href: '/dashboard/construction/tasks', icon: CheckSquare, color: 'green' },
-  { label: 'المصروفات', href: '/dashboard/construction/expenses', icon: DollarSign, color: 'red' },
   { label: 'المواد', href: '/dashboard/construction/materials', icon: PackageOpen, color: 'purple' },
-  { label: 'المدفوعات', href: '/dashboard/construction/payments', icon: CreditCard, color: 'emerald' },
+  { label: 'التدفقات', href: '/dashboard/construction/payments', icon: CreditCard, color: 'emerald' },
   { label: 'التقارير', href: '/dashboard/construction/reports', icon: BarChart3, color: 'sky' },
   { label: 'العملاء', href: '/dashboard/customers', icon: Users, color: 'pink' },
 ]

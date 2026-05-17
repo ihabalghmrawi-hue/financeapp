@@ -470,7 +470,7 @@ export function ProjectDetailClient({
     { key: 'tasks', label: 'المهام', count: tasks.length },
     { key: 'expenses', label: 'المصروفات', count: expenses.length },
     { key: 'materials', label: 'المواد', count: materials.length },
-    { key: 'payments', label: 'المدفوعات', count: payments.length },
+    { key: 'payments', label: 'التدفقات', count: payments.length },
     { key: 'contract', label: 'العقد والماليات' },
   ]
 
@@ -951,7 +951,7 @@ export function ProjectDetailClient({
                 {payments.length === 0 && (
                   <tr>
                     <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
-                      لا توجد مدفوعات
+                      لا توجد تدفقات
                     </td>
                   </tr>
                 )}
@@ -1270,7 +1270,7 @@ export function ProjectDetailClient({
             <div className="bg-card border rounded-xl p-4">
               <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
                 <DollarSign className="w-4 h-4 text-green-500" />
-                المدفوعات المستلمة
+                التدفقات المستلمة
               </h3>
               <div className="space-y-2">
                 {payments
@@ -1287,7 +1287,7 @@ export function ProjectDetailClient({
                     </div>
                   ))}
                 {payments.filter((p) => p.type === 'incoming').length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-4">لا توجد مدفوعات مستلمة</p>
+                  <p className="text-sm text-muted-foreground text-center py-4">لا توجد تدفقات مستلمة</p>
                 )}
                 <div className="flex justify-between text-sm font-bold pt-2 border-t">
                   <span>الإجمالي</span>

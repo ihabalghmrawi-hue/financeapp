@@ -170,8 +170,18 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
     {
       label: t('nav.financialSection'),
       items: [
-        { label: t('nav.expenses'), href: '/dashboard/expenses', icon: DollarSign, show: can(staff, 'expenses.view') },
-        { label: t('nav.wallet'), href: '/dashboard/wallet', icon: Wallet, show: can(staff, 'reports.view') },
+        {
+          label: t('nav.expenses'),
+          href: '/dashboard/expenses',
+          icon: DollarSign,
+          show: !features.hasConstruction && can(staff, 'expenses.view'),
+        },
+        {
+          label: t('nav.wallet'),
+          href: '/dashboard/wallet',
+          icon: Wallet,
+          show: !features.hasConstruction && can(staff, 'reports.view'),
+        },
       ],
     },
     {
@@ -211,12 +221,6 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
           label: t('nav.constructionTasks'),
           href: '/dashboard/construction/tasks',
           icon: CheckSquare,
-          show: features.hasConstruction,
-        },
-        {
-          label: t('nav.constructionExpenses'),
-          href: '/dashboard/construction/expenses',
-          icon: DollarSign,
           show: features.hasConstruction,
         },
         {

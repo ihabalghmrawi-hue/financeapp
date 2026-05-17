@@ -105,7 +105,7 @@ export function PaymentsClient({
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('هل تريد حذف هذه الدفعة؟')) {
+    if (!confirm('هل تريد حذف هذا التدفق؟')) {
       return
     }
     setDeleting(id)
@@ -118,7 +118,7 @@ export function PaymentsClient({
     <div className="p-6 space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold">المدفوعات</h1>
+          <h1 className="text-xl font-bold">التدفقات</h1>
           <div className="flex items-center gap-4 mt-1">
             <p className="text-sm text-green-600">
               وارد: <span className="font-bold">{fmt(totalIn)}</span>
@@ -142,7 +142,7 @@ export function PaymentsClient({
           }}
           className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 flex items-center gap-2"
         >
-          <Plus className="w-4 h-4" /> دفعة جديدة
+          <Plus className="w-4 h-4" /> تدفق جديد
         </button>
       </div>
 
@@ -234,7 +234,7 @@ export function PaymentsClient({
             {filtered.length === 0 && (
               <tr>
                 <td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">
-                  لا توجد مدفوعات
+                  لا توجد تدفقات
                 </td>
               </tr>
             )}
@@ -246,7 +246,7 @@ export function PaymentsClient({
         <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
           <div className="bg-card border rounded-t-2xl sm:rounded-2xl w-full max-w-md shadow-2xl pb-safe-bottom max-h-[92vh] overflow-y-auto">
             <div className="p-5 border-b">
-              <h2 className="font-semibold">دفعة جديدة</h2>
+              <h2 className="font-semibold">تدفق جديد</h2>
             </div>
             <form onSubmit={handleSubmit} className="p-5 space-y-4">
               {error && <p className="text-sm text-red-500 bg-red-50 rounded-lg p-3">{error}</p>}
@@ -345,7 +345,7 @@ export function PaymentsClient({
                   disabled={loading}
                   className="flex-1 bg-primary text-primary-foreground py-2 rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
                 >
-                  {loading ? 'جاري الحفظ...' : 'إضافة الدفعة'}
+                  {loading ? 'جاري الحفظ...' : 'إضافة التدفق'}
                 </button>
                 <button
                   type="button"

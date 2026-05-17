@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Search, Trash2, Edit, Calendar, Flag, CheckCircle2 } from 'lucide-react'
+import { Plus, Search, Trash2, Edit, Calendar, Flag, CheckCircle2, FolderKanban } from 'lucide-react'
 
 interface Task {
   id: string
@@ -100,7 +100,27 @@ export function TasksClient({
     return (!q || t.title.toLowerCase().includes(q)) && (!filterProject || t.project_id === filterProject)
   })
 
-  const byStatus = STATUSES.map((s) => ({ status: s, tasks: filtered.filter((t) => t.status === s) }))
+  // Group tasks by project
+  const projectMap = new Map<string, Task[]>()
+  const noProject: Task[] = []
+  for (const t of filtered) {
+    if (t.project_id) {
+      const arr = projectMap.get(t.project_id) || []
+      arr.push(t)
+      projectMap.set(t.project_id, arr)
+    } else {
+      noProject.push(t)
+    }
+  }
+  const projectGroups: { name: string; tasks: Task[] }[] = []
+  for (const [pid, ptasks] of projectMap) {
+    const p = projects.find((p) => p.id === pid)
+    projectGroups.push({ name: p?.name || 'مشروع محذوف', tasks: ptasks })
+  }
+  projectGroups.sort((a, b) => a.name.localeCompare(b.name))
+  if (noProject.length > 0) {
+    projectGroups.push({ name: 'بدون مشروع', tasks: noProject })
+  }
 
   const openNew = () => {
     setForm(emptyForm)
@@ -222,100 +242,114 @@ export function TasksClient({
         </select>
       </div>
 
-      {/* Kanban Board */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
-        {byStatus.map((col) => (
-          <div key={col.status} className="space-y-3">
-            <div className={`flex items-center justify-between px-3 py-2 rounded-lg ${STATUS_HEADER[col.status]}`}>
-              <span className="text-xs font-semibold">{STATUS_AR[col.status]}</span>
-              <span className="text-xs bg-white/50 px-1.5 py-0.5 rounded-full font-bold">{col.tasks.length}</span>
-            </div>
-            <div className="space-y-2 min-h-[100px]">
-              {col.tasks.map((t) => (
-                <div key={t.id} className={`border rounded-xl p-3 space-y-2 ${STATUS_COLORS[t.status]}`}>
-                  <div className="flex items-start justify-between gap-1">
-                    <p className="text-sm font-medium leading-tight">{t.title}</p>
-                    <Flag className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${PRIORITY_COLORS[t.priority]}`} />
+      {/* Kanban Board grouped by project */}
+      {projectGroups.map((group) => {
+        const byStatus = STATUSES.map((s) => ({ status: s, tasks: group.tasks.filter((t) => t.status === s) }))
+        return (
+          <section key={group.name} className="space-y-3">
+            <h2 className="text-lg font-bold border-b pb-1 flex items-center gap-2">
+              <FolderKanban className="w-5 h-5 text-primary" />
+              {group.name}
+              <span className="text-sm font-normal text-muted-foreground">({group.tasks.length} مهام)</span>
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+              {byStatus.map((col) => (
+                <div key={col.status} className="space-y-3">
+                  <div
+                    className={`flex items-center justify-between px-3 py-2 rounded-lg ${STATUS_HEADER[col.status]}`}
+                  >
+                    <span className="text-xs font-semibold">{STATUS_AR[col.status]}</span>
+                    <span className="text-xs bg-white/50 px-1.5 py-0.5 rounded-full font-bold">{col.tasks.length}</span>
                   </div>
-                  {t.con_projects && <p className="text-xs text-muted-foreground">{t.con_projects.name}</p>}
-                  {t.con_workers && <p className="text-xs text-muted-foreground">{t.con_workers.name}</p>}
-                  {t.due_date && (
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Calendar className="w-3 h-3" />
-                      <span>{t.due_date}</span>
-                    </div>
-                  )}
-                  {/* Progress Bar */}
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 h-1.5 bg-black/10 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all ${(t.progress || 0) >= 100 ? 'bg-green-500' : 'bg-primary'}`}
-                        style={{ width: `${t.progress || 0}%` }}
-                      />
-                    </div>
-                    <span className="text-xs font-medium tabular-nums w-7 text-left">{t.progress || 0}%</span>
-                  </div>
-                  <div className="flex items-center justify-between pt-1 border-t border-black/5">
-                    <div className="flex gap-1 flex-wrap">
-                      {col.status !== 'done' && (
-                        <button
-                          onClick={() => quickStatus(t, 'done', 100)}
-                          title="إتمام"
-                          className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full hover:bg-green-200 transition-colors"
-                        >
-                          ✓ إتمام
-                        </button>
-                      )}
-                      {col.status === 'pending' && (
-                        <button
-                          onClick={() => quickStatus(t, 'in_progress', 25)}
-                          title="بدء"
-                          className="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full hover:bg-amber-200 transition-colors"
-                        >
-                          ▶ بدء
-                        </button>
-                      )}
-                      {col.status === 'in_progress' && (
-                        <>
-                          {PROGRESS_MILESTONES.filter((m) => m > (t.progress || 0) && m < 100).map((m) => (
+                  <div className="space-y-2 min-h-[100px]">
+                    {col.tasks.map((t) => (
+                      <div key={t.id} className={`border rounded-xl p-3 space-y-2 ${STATUS_COLORS[t.status]}`}>
+                        <div className="flex items-start justify-between gap-1">
+                          <p className="text-sm font-medium leading-tight">{t.title}</p>
+                          <Flag className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${PRIORITY_COLORS[t.priority]}`} />
+                        </div>
+                        {t.con_projects && <p className="text-xs text-muted-foreground">{t.con_projects.name}</p>}
+                        {t.con_workers && <p className="text-xs text-muted-foreground">{t.con_workers.name}</p>}
+                        {t.due_date && (
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Calendar className="w-3 h-3" />
+                            <span>{t.due_date}</span>
+                          </div>
+                        )}
+                        {/* Progress Bar */}
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-1.5 bg-black/10 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all ${(t.progress || 0) >= 100 ? 'bg-green-500' : 'bg-primary'}`}
+                              style={{ width: `${t.progress || 0}%` }}
+                            />
+                          </div>
+                          <span className="text-xs font-medium tabular-nums w-7 text-left">{t.progress || 0}%</span>
+                        </div>
+                        <div className="flex items-center justify-between pt-1 border-t border-black/5">
+                          <div className="flex gap-1 flex-wrap">
+                            {col.status !== 'done' && (
+                              <button
+                                onClick={() => quickStatus(t, 'done', 100)}
+                                title="إتمام"
+                                className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full hover:bg-green-200 transition-colors"
+                              >
+                                ✓ إتمام
+                              </button>
+                            )}
+                            {col.status === 'pending' && (
+                              <button
+                                onClick={() => quickStatus(t, 'in_progress', 25)}
+                                title="بدء"
+                                className="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full hover:bg-amber-200 transition-colors"
+                              >
+                                ▶ بدء
+                              </button>
+                            )}
+                            {col.status === 'in_progress' && (
+                              <>
+                                {PROGRESS_MILESTONES.filter((m) => m > (t.progress || 0) && m < 100).map((m) => (
+                                  <button
+                                    key={m}
+                                    onClick={() => quickStatus(t, 'in_progress', m)}
+                                    className="text-xs px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+                                  >
+                                    {m}%
+                                  </button>
+                                ))}
+                              </>
+                            )}
+                          </div>
+                          <div className="flex gap-1">
                             <button
-                              key={m}
-                              onClick={() => quickStatus(t, 'in_progress', m)}
-                              className="text-xs px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+                              onClick={() => openEdit(t)}
+                              className="p-1 hover:bg-white/60 rounded text-muted-foreground hover:text-foreground"
                             >
-                              {m}%
+                              <Edit className="w-3 h-3" />
                             </button>
-                          ))}
-                        </>
-                      )}
-                    </div>
-                    <div className="flex gap-1">
-                      <button
-                        onClick={() => openEdit(t)}
-                        className="p-1 hover:bg-white/60 rounded text-muted-foreground hover:text-foreground"
-                      >
-                        <Edit className="w-3 h-3" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(t.id)}
-                        disabled={deleting === t.id}
-                        className="p-1 hover:bg-red-50 rounded text-muted-foreground hover:text-red-500"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-                    </div>
+                            <button
+                              onClick={() => handleDelete(t.id)}
+                              disabled={deleting === t.id}
+                              className="p-1 hover:bg-red-50 rounded text-muted-foreground hover:text-red-500"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {col.tasks.length === 0 && (
+                      <div className="border-2 border-dashed border-muted rounded-xl p-4 text-center text-xs text-muted-foreground">
+                        لا توجد مهام
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
-              {col.tasks.length === 0 && (
-                <div className="border-2 border-dashed border-muted rounded-xl p-4 text-center text-xs text-muted-foreground">
-                  لا توجد مهام
-                </div>
-              )}
             </div>
-          </div>
-        ))}
-      </div>
+          </section>
+        )
+      })}
 
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">

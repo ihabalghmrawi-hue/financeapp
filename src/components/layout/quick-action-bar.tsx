@@ -51,7 +51,6 @@ function getActions(features: Features, t: Translator): Action[] {
       { label: 'مهمة', href: '/dashboard/construction/tasks', icon: CheckSquare },
       { label: 'عامل', href: '/dashboard/construction/workers', icon: HardHat },
       { label: 'مواد', href: '/dashboard/construction/materials', icon: PackageOpen },
-      { label: 'مصروف', href: '/dashboard/construction/expenses', icon: DollarSign },
       { label: 'عميل', href: '/dashboard/customers', icon: User },
     ]
   }

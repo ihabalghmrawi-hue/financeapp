@@ -153,7 +153,7 @@ const ar = {
     constructionTasks: 'المهام',
     constructionExpenses: 'المصروفات',
     constructionMaterials: 'المواد',
-    constructionPayments: 'المدفوعات',
+    constructionPayments: 'التدفقات',
     constructionReports: 'تقارير البناء',
     rentals: 'لوحة التأجير',
     dresses: 'الفساتين',
