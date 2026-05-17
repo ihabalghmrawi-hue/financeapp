@@ -47,8 +47,12 @@ class CrashReporter {
 
   private async initSentry(): Promise<void> {
     try {
+      // Optional peer dep — resolved at runtime only when installed.
+      // The variable indirection prevents the bundler from trying to
+      // resolve the module at build time.
+      const sentryModule = '@sentry/browser'
       // @ts-ignore - optional dependency, caught by try/catch
-      const Sentry: any = await import('@sentry/browser')
+      const Sentry: any = await import(/* webpackIgnore: true */ /* @vite-ignore */ sentryModule)
       Sentry.init({
         dsn: environment.sentryDsn,
         environment: environment.apiUrl,

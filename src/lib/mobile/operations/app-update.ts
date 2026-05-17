@@ -106,10 +106,8 @@ class AppUpdateService {
       return true
     } catch {
       try {
-        if (typeof window !== 'undefined' && (window as any).Capacitor?.isNative) {
-          // @ts-ignore - optional dependency, caught by try/catch
-          const { Browser }: any = await import('@capacitor/browser')
-          await Browser.open({ url: downloadUrl })
+        if (typeof window !== 'undefined') {
+          window.open(downloadUrl, '_blank', 'noopener,noreferrer')
           return true
         }
       } catch {
