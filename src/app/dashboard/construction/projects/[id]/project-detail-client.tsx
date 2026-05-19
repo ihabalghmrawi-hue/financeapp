@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import { RadialProgress } from '@/components/charts/radial-progress'
 import { formatCurrency } from '@/lib/utils'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
 interface Project {
   id: string
@@ -87,7 +88,7 @@ interface ConFile {
   type: string
   size_bytes: number
   notes: string | null
-  uploaded_at: string
+  created_at: string
 }
 
 const STATUS_AR: Record<string, string> = {
@@ -251,11 +252,11 @@ export function ProjectDetailClient({
     reference: '',
   })
   const [fileForm, setFileForm] = useState({
-    name: '',
-    url: '',
     type: 'document',
     notes: '',
   })
+  const [fileToUpload, setFileToUpload] = useState<File | null>(null)
+  const [fileUploadProgress, setFileUploadProgress] = useState(0)
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -488,25 +489,51 @@ export function ProjectDetailClient({
 
   const saveFile = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!fileToUpload) {
+      setError('يرجى اختيار ملف للرفع')
+      return
+    }
     setLoading(true)
+    setFileUploadProgress(0)
     setError('')
     try {
-      const res = await fetch('/api/construction/files', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...fileForm,
-          project_id: project.id,
-          notes: fileForm.notes || null,
-        }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        throw new Error(data.error)
+      const fd = new FormData()
+      fd.append('file', fileToUpload)
+      fd.append('project_id', project.id)
+      fd.append('type', fileForm.type)
+      if (fileForm.notes) {
+        fd.append('notes', fileForm.notes)
       }
+
+      const xhr = new XMLHttpRequest()
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          setFileUploadProgress(Math.round((e.loaded / e.total) * 100))
+        }
+      })
+
+      const data = await new Promise<any>((resolve, reject) => {
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(JSON.parse(xhr.responseText))
+          } else {
+            try {
+              reject(new Error(JSON.parse(xhr.responseText).error))
+            } catch {
+              reject(new Error('فشل رفع الملف'))
+            }
+          }
+        }
+        xhr.onerror = () => reject(new Error('فشل الاتصال'))
+        xhr.open('POST', '/api/construction/files/upload')
+        xhr.send(fd)
+      })
+
       setFiles((prev) => [data, ...prev])
       setShowFileForm(false)
-      setFileForm({ name: '', url: '', type: 'document', notes: '' })
+      setFileForm({ type: 'document', notes: '' })
+      setFileToUpload(null)
+      setFileUploadProgress(0)
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -1021,7 +1048,11 @@ export function ProjectDetailClient({
         <div className="space-y-3">
           <div className="flex justify-end">
             <button
-              onClick={() => setShowFileForm(true)}
+              onClick={() => {
+                setFileToUpload(null)
+                setFileUploadProgress(0)
+                setShowFileForm(true)
+              }}
               className="bg-primary text-primary-foreground px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-primary/90 flex items-center gap-1.5"
             >
               <Upload className="w-3.5 h-3.5" /> إضافة ملف
@@ -1054,7 +1085,7 @@ export function ProjectDetailClient({
                   <ExternalLink className="w-3 h-3" />
                   فتح الملف
                 </a>
-                <p className="text-xs text-muted-foreground">{f.uploaded_at?.slice(0, 10)}</p>
+                <p className="text-xs text-muted-foreground">{f.created_at?.slice(0, 10)}</p>
               </div>
             ))}
             {files.length === 0 && (
@@ -1352,6 +1383,41 @@ export function ProjectDetailClient({
             </div>
           </div>
 
+          {/* Budget vs Actual Chart */}
+          <div className="bg-card border rounded-xl p-4">
+            <h3 className="font-semibold text-sm mb-3">الميزانية مقابل المنصرف</h3>
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart
+                data={[
+                  { name: 'الميزانية', value: Number(project.expected_cost), fill: '#3b82f6' },
+                  { name: 'المنصرف', value: Number(project.actual_cost), fill: overrun ? '#ef4444' : '#22c55e' },
+                  {
+                    name: 'المتبقي',
+                    value: Math.max(0, Number(project.expected_cost) - Number(project.actual_cost)),
+                    fill: '#a855f7',
+                  },
+                ]}
+                barSize={60}
+              >
+                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 11 }} tickFormatter={(v: number) => fmt(v)} />
+                <Tooltip
+                  formatter={(value: number) => [fmt(value), '']}
+                  contentStyle={{
+                    borderRadius: '8px',
+                    border: '1px solid #e2e8f0',
+                    fontSize: '13px',
+                  }}
+                />
+                <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                  {['#3b82f6', overrun ? '#ef4444' : '#22c55e', '#a855f7'].map((color, i) => (
+                    <Cell key={i} fill={color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
           {/* Contract Progress Bar */}
           {contractValue > 0 && (
             <div className="bg-card border rounded-xl p-4">
@@ -1451,18 +1517,27 @@ export function ProjectDetailClient({
             <form onSubmit={saveFile} className="p-4 space-y-3">
               <input
                 required
-                placeholder="اسم الملف *"
-                value={fileForm.name}
-                onChange={(e) => setFileForm((f) => ({ ...f, name: e.target.value }))}
-                className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                type="file"
+                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip"
+                onChange={(e) => setFileToUpload(e.target.files?.[0] || null)}
+                className="w-full border rounded-lg px-3 py-2 text-sm bg-background file:bg-primary file:text-primary-foreground file:border-0 file:rounded file:px-3 file:py-1 file:text-xs file:font-medium hover:file:bg-primary/90 cursor-pointer"
               />
-              <input
-                required
-                placeholder="رابط الملف *"
-                value={fileForm.url}
-                onChange={(e) => setFileForm((f) => ({ ...f, url: e.target.value }))}
-                className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
-              />
+              {fileToUpload && (
+                <p className="text-xs text-muted-foreground">
+                  {fileToUpload.name} ({(fileToUpload.size / 1024).toFixed(1)} KB)
+                </p>
+              )}
+              {fileUploadProgress > 0 && (
+                <div>
+                  <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary rounded-full transition-all"
+                      style={{ width: `${fileUploadProgress}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">{fileUploadProgress}%</p>
+                </div>
+              )}
               <select
                 value={fileForm.type}
                 onChange={(e) => setFileForm((f) => ({ ...f, type: e.target.value }))}

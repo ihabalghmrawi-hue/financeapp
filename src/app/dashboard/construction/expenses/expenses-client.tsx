@@ -51,6 +51,8 @@ export function ExpensesClient({
   const [error, setError] = useState('')
   const [deleting, setDeleting] = useState<string | null>(null)
   const [editing, setEditing] = useState<ConstructionExpense | null>(null)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [bulkLoading, setBulkLoading] = useState(false)
 
   const fmt = (n: number) => formatCurrency(n, currency)
 
@@ -129,6 +131,38 @@ export function ExpensesClient({
     await fetch(`/api/construction/expenses/${id}`, { method: 'DELETE' })
     setExpenses((prev) => prev.filter((e) => e.id !== id))
     setDeleting(null)
+  }
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  const toggleSelectAll = () => {
+    if (selected.size === filtered.length) {
+      setSelected(new Set())
+    } else {
+      setSelected(new Set(filtered.map((e) => e.id)))
+    }
+  }
+
+  const bulkDelete = async () => {
+    if (!confirm(`هل تريد حذف ${selected.size} مصروف؟`)) {
+      return
+    }
+    setBulkLoading(true)
+    const ids = Array.from(selected)
+    await Promise.all(ids.map((id) => fetch(`/api/construction/expenses/${id}`, { method: 'DELETE' })))
+    setExpenses((prev) => prev.filter((e) => !selected.has(e.id)))
+    setSelected(new Set())
+    setBulkLoading(false)
   }
 
   return (
@@ -217,9 +251,35 @@ export function ExpensesClient({
         </div>
 
         <div className="bg-card border rounded-xl overflow-x-auto">
+          {selected.size > 0 && (
+            <div className="flex items-center gap-3 px-4 py-2.5 bg-primary/5 border-b">
+              <span className="text-sm font-medium">{selected.size} مختار</span>
+              <button
+                onClick={bulkDelete}
+                disabled={bulkLoading}
+                className="text-xs bg-red-500 text-white px-3 py-1.5 rounded-lg hover:bg-red-600 disabled:opacity-50 flex items-center gap-1.5"
+              >
+                <Trash2 className="w-3 h-3" /> حذف المحدد
+              </button>
+              <button
+                onClick={() => setSelected(new Set())}
+                className="text-xs border px-3 py-1.5 rounded-lg hover:bg-accent"
+              >
+                إلغاء التحديد
+              </button>
+            </div>
+          )}
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>
+                <th className="px-2 py-3 w-8">
+                  <input
+                    type="checkbox"
+                    checked={selected.size === filtered.length && filtered.length > 0}
+                    onChange={toggleSelectAll}
+                    className="w-4 h-4 rounded border-gray-300 cursor-pointer"
+                  />
+                </th>
                 <th className="text-right px-4 py-3 font-medium text-muted-foreground">التاريخ</th>
                 <th className="text-right px-4 py-3 font-medium text-muted-foreground">الوصف</th>
                 <th className="text-right px-4 py-3 font-medium text-muted-foreground">الفئة</th>
@@ -231,7 +291,18 @@ export function ExpensesClient({
             </thead>
             <tbody>
               {filtered.map((e) => (
-                <tr key={e.id} className="border-t hover:bg-muted/20 transition-colors">
+                <tr
+                  key={e.id}
+                  className={`border-t hover:bg-muted/20 transition-colors ${selected.has(e.id) ? 'bg-primary/5' : ''}`}
+                >
+                  <td className="px-2 py-3">
+                    <input
+                      type="checkbox"
+                      checked={selected.has(e.id)}
+                      onChange={() => toggleSelect(e.id)}
+                      className="w-4 h-4 rounded border-gray-300 cursor-pointer"
+                    />
+                  </td>
                   <td className="px-4 py-3 text-muted-foreground">{e.expense_date}</td>
                   <td className="px-4 py-3">{e.description}</td>
                   <td className="px-4 py-3">
@@ -263,7 +334,7 @@ export function ExpensesClient({
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">
+                  <td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">
                     لا توجد مصروفات
                   </td>
                 </tr>

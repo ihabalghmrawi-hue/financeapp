@@ -22,8 +22,6 @@ const FILE_TYPES: Record<string, string> = {
 
 const emptyForm = {
   project_id: '',
-  name: '',
-  url: '',
   type: 'document',
   notes: '',
 }
@@ -37,6 +35,8 @@ export function FilesClient({ files: init, projects }: { files: ConstructionFile
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [uploadProgress, setUploadProgress] = useState(0)
 
   const filtered = files.filter((f) => {
     const q = search.toLowerCase()
@@ -51,26 +51,51 @@ export function FilesClient({ files: init, projects }: { files: ConstructionFile
 
   const handleSubmit = async (ev: React.FormEvent) => {
     ev.preventDefault()
+    if (!selectedFile) {
+      setError('يرجى اختيار ملف للرفع')
+      return
+    }
     setLoading(true)
+    setUploadProgress(0)
     setError('')
     try {
-      const payload = {
-        ...form,
-        project_id: form.project_id || null,
-        notes: form.notes || null,
+      const fd = new FormData()
+      fd.append('file', selectedFile)
+      fd.append('project_id', form.project_id || '')
+      fd.append('type', form.type)
+      if (form.notes) {
+        fd.append('notes', form.notes)
       }
-      const res = await fetch('/api/construction/files', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+
+      const xhr = new XMLHttpRequest()
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          setUploadProgress(Math.round((e.loaded / e.total) * 100))
+        }
       })
-      const data = await res.json()
-      if (!res.ok) {
-        throw new Error(data.error)
-      }
-      setFiles((prev) => [data, ...prev])
+
+      const result = await new Promise<any>((resolve, reject) => {
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(JSON.parse(xhr.responseText))
+          } else {
+            try {
+              reject(new Error(JSON.parse(xhr.responseText).error))
+            } catch {
+              reject(new Error('فشل رفع الملف'))
+            }
+          }
+        }
+        xhr.onerror = () => reject(new Error('فشل الاتصال'))
+        xhr.open('POST', '/api/construction/files/upload')
+        xhr.send(fd)
+      })
+
+      setFiles((prev) => [result, ...prev])
       setShowForm(false)
       setForm(emptyForm)
+      setSelectedFile(null)
+      setUploadProgress(0)
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -96,6 +121,8 @@ export function FilesClient({ files: init, projects }: { files: ConstructionFile
           <button
             onClick={() => {
               setForm(emptyForm)
+              setSelectedFile(null)
+              setUploadProgress(0)
               setError('')
               setShowForm(true)
             }}
@@ -183,25 +210,31 @@ export function FilesClient({ files: init, projects }: { files: ConstructionFile
                 {error && <p className="text-sm text-red-500 bg-red-50 rounded-lg p-3">{error}</p>}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="col-span-2">
-                    <label className="text-xs text-muted-foreground mb-1 block">اسم الملف *</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">الملف *</label>
                     <input
                       required
-                      value={form.name}
-                      onChange={(e) => setForm((f: any) => ({ ...f, name: e.target.value }))}
-                      className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      type="file"
+                      accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip"
+                      onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                      className="w-full border rounded-lg px-3 py-2 text-sm bg-background file:bg-primary file:text-primary-foreground file:border-0 file:rounded file:px-3 file:py-1 file:text-xs file:font-medium hover:file:bg-primary/90 cursor-pointer"
                     />
+                    {selectedFile && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
+                      </p>
+                    )}
                   </div>
-                  <div className="col-span-2">
-                    <label className="text-xs text-muted-foreground mb-1 block">رابط الملف *</label>
-                    <input
-                      required
-                      type="url"
-                      placeholder="https://..."
-                      value={form.url}
-                      onChange={(e) => setForm((f: any) => ({ ...f, url: e.target.value }))}
-                      className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
-                    />
-                  </div>
+                  {uploadProgress > 0 && (
+                    <div className="col-span-2">
+                      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-primary rounded-full transition-all"
+                          style={{ width: `${uploadProgress}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">{uploadProgress}%</p>
+                    </div>
+                  )}
                   <div>
                     <label className="text-xs text-muted-foreground mb-1 block">نوع الملف</label>
                     <select

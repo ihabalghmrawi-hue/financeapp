@@ -253,6 +253,12 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
           icon: BarChart3,
           show: features.hasConstruction,
         },
+        {
+          label: t('nav.constructionGantt'),
+          href: '/dashboard/construction/gantt',
+          icon: CalendarDays,
+          show: features.hasConstruction,
+        },
       ],
     },
     {

@@ -155,6 +155,7 @@ const ar = {
     constructionMaterials: 'المواد',
     constructionPayments: 'التدفقات',
     constructionReports: 'تقارير البناء',
+    constructionGantt: 'المخطط الزمني',
     constructionFiles: 'الملفات',
     rentals: 'لوحة التأجير',
     dresses: 'الفساتين',

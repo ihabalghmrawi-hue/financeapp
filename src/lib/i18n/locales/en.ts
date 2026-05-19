@@ -155,6 +155,7 @@ const en = {
     constructionMaterials: 'Materials',
     constructionPayments: 'Flows',
     constructionReports: 'Reports',
+    constructionGantt: 'Timeline',
     constructionFiles: 'Files',
     rentals: 'Rentals Dashboard',
     dresses: 'Dresses',
