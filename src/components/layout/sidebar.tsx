@@ -259,6 +259,30 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
           icon: CalendarDays,
           show: features.hasConstruction,
         },
+        {
+          label: t('nav.constructionAttendance'),
+          href: '/dashboard/construction/attendance',
+          icon: Clock,
+          show: features.hasConstruction,
+        },
+        {
+          label: t('nav.constructionPurchaseOrders'),
+          href: '/dashboard/construction/purchase-orders',
+          icon: ShoppingCart,
+          show: features.hasConstruction,
+        },
+        {
+          label: t('nav.constructionDailyLogs'),
+          href: '/dashboard/construction/daily-logs',
+          icon: Calendar,
+          show: features.hasConstruction,
+        },
+        {
+          label: t('nav.constructionChangeOrders'),
+          href: '/dashboard/construction/change-orders',
+          icon: AlertOctagon,
+          show: features.hasConstruction,
+        },
       ],
     },
     {

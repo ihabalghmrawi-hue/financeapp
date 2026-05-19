@@ -124,6 +124,75 @@ export interface ConstructionFile {
   con_projects?: { name: string } | null
 }
 
+export interface ConstructionPurchaseOrder {
+  id: string
+  company_id: string
+  project_id: string | null
+  supplier: string
+  order_date: string
+  status: string
+  total: number
+  notes: string | null
+  created_by: string | null
+  created_at: string
+  con_projects?: { name: string } | null
+  con_purchase_order_items?: ConstructionPurchaseOrderItem[]
+}
+
+export interface ConstructionDailyLog {
+  id: string
+  company_id: string
+  project_id: string
+  log_date: string
+  weather: string | null
+  workers_count: number
+  hours_worked: number
+  notes: string | null
+  photo_urls: string[]
+  created_by: string | null
+  created_at: string
+  con_projects?: { name: string } | null
+}
+
+export interface ConstructionChangeOrder {
+  id: string
+  company_id: string
+  project_id: string
+  title: string
+  description: string | null
+  amount_change: number
+  status: string
+  approved_by: string | null
+  approved_at: string | null
+  created_by: string | null
+  created_at: string
+  con_projects?: { name: string } | null
+}
+
+export interface ConstructionPurchaseOrderItem {
+  id: string
+  order_id: string
+  material_name: string
+  quantity: number
+  unit: string
+  unit_price: number
+  total: number
+}
+
+export interface ConstructionWorkerLog {
+  id: string
+  company_id: string
+  project_id: string | null
+  worker_id: string
+  log_date: string
+  days_worked: number
+  amount_paid: number
+  notes: string | null
+  created_at: string
+  con_workers?: { name: string; daily_rate?: number; job_type?: string } | null
+  con_projects?: { name: string } | null
+}
+
 export interface PaginatedResponse<T> {
   data: T[]
   total: number

@@ -38,6 +38,10 @@ const pageTitles: Record<string, string> = {
   '/dashboard/construction/files': 'nav.constructionFiles',
   '/dashboard/construction/reports': 'nav.constructionReports',
   '/dashboard/construction/gantt': 'nav.constructionGantt',
+  '/dashboard/construction/attendance': 'nav.constructionAttendance',
+  '/dashboard/construction/purchase-orders': 'nav.constructionPurchaseOrders',
+  '/dashboard/construction/daily-logs': 'nav.constructionDailyLogs',
+  '/dashboard/construction/change-orders': 'nav.constructionChangeOrders',
 }
 
 function resolveTitle(pathname: string, t: (k: string) => string): string {
