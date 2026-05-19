@@ -36,6 +36,8 @@ import {
   CreditCard,
   ChevronLeft,
   FileText,
+  Wrench,
+  Handshake,
 } from 'lucide-react'
 import { cn, getInitials } from '@/lib/utils'
 import type { Features } from '@/lib/features'
@@ -281,6 +283,24 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
           label: t('nav.constructionChangeOrders'),
           href: '/dashboard/construction/change-orders',
           icon: AlertOctagon,
+          show: features.hasConstruction,
+        },
+        {
+          label: t('nav.constructionEquipment'),
+          href: '/dashboard/construction/equipment',
+          icon: Wrench,
+          show: features.hasConstruction,
+        },
+        {
+          label: t('nav.constructionSafetyIncidents'),
+          href: '/dashboard/construction/safety-incidents',
+          icon: Shield,
+          show: features.hasConstruction,
+        },
+        {
+          label: t('nav.constructionSubcontractors'),
+          href: '/dashboard/construction/subcontractors',
+          icon: Handshake,
           show: features.hasConstruction,
         },
       ],

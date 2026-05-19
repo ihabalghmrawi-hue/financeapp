@@ -42,6 +42,9 @@ const pageTitles: Record<string, string> = {
   '/dashboard/construction/purchase-orders': 'nav.constructionPurchaseOrders',
   '/dashboard/construction/daily-logs': 'nav.constructionDailyLogs',
   '/dashboard/construction/change-orders': 'nav.constructionChangeOrders',
+  '/dashboard/construction/equipment': 'nav.constructionEquipment',
+  '/dashboard/construction/safety-incidents': 'nav.constructionSafetyIncidents',
+  '/dashboard/construction/subcontractors': 'nav.constructionSubcontractors',
 }
 
 function resolveTitle(pathname: string, t: (k: string) => string): string {

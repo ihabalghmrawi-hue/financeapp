@@ -193,6 +193,58 @@ export interface ConstructionWorkerLog {
   con_projects?: { name: string } | null
 }
 
+export interface ConstructionEquipment {
+  id: string
+  company_id: string
+  name: string
+  type: string
+  model: string | null
+  serial_number: string | null
+  status: string
+  daily_rate: number
+  purchase_date: string | null
+  last_maintenance: string | null
+  next_maintenance: string | null
+  notes: string | null
+  created_by: string | null
+  created_at: string
+}
+
+export interface ConstructionSubcontractor {
+  id: string
+  company_id: string
+  name: string
+  phone: string | null
+  specialty: string
+  contract_value: number
+  start_date: string | null
+  end_date: string | null
+  status: string
+  rating: number | null
+  notes: string | null
+  created_by: string | null
+  created_at: string
+}
+
+export interface ConstructionSafetyIncident {
+  id: string
+  company_id: string
+  project_id: string | null
+  incident_date: string
+  type: string
+  severity: string
+  description: string
+  location: string | null
+  reported_by: string | null
+  actions_taken: string | null
+  status: string
+  resolved_at: string | null
+  notes: string | null
+  created_by: string | null
+  created_at: string
+  con_projects?: { name: string } | null
+}
+
 export interface PaginatedResponse<T> {
   data: T[]
   total: number

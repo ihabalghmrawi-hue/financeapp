@@ -121,6 +121,70 @@ export async function GET() {
     })
   }
 
+  // 6. Construction budget overruns (expenses > budget)
+  if (company_id) {
+    const { data: budgetOverruns } = await supabase
+      .from('con_projects')
+      .select('id, name, budget')
+      .eq('company_id', company_id)
+      .limit(5)
+
+    for (const proj of budgetOverruns || []) {
+      if (!proj.budget) {
+        continue
+      }
+      const { data: expenseSums } = await supabase
+        .from('con_expenses')
+        .select('amount')
+        .eq('project_id', proj.id)
+        .eq('company_id', company_id)
+      const totalExpenses = (expenseSums || []).reduce((s, r) => s + (r.amount || 0), 0)
+
+      const { data: paymentSums } = await supabase
+        .from('con_payments')
+        .select('amount')
+        .eq('project_id', proj.id)
+        .eq('company_id', company_id)
+      const totalPayments = (paymentSums || []).reduce((s, r) => s + (r.amount || 0), 0)
+
+      if (totalExpenses + totalPayments > proj.budget) {
+        notifications.push({
+          id: `budget-${proj.id}`,
+          type: 'budget_overrun',
+          title: 'Budget Overrun',
+          body: `${proj.name} has exceeded its budget`,
+          severity: 'error',
+          created_at: new Date().toISOString(),
+          read: false,
+        })
+      }
+    }
+  }
+
+  // 7. Construction projects nearing deadline (≤ 7 days)
+  if (company_id) {
+    const sevenDaysFromNow = new Date(Date.now() + 7 * 86400_000).toISOString().slice(0, 10)
+    const { data: nearingDeadline } = await supabase
+      .from('con_projects')
+      .select('id, name, end_date')
+      .eq('company_id', company_id)
+      .lte('end_date', sevenDaysFromNow)
+      .gte('end_date', today)
+      .limit(5)
+
+    for (const proj of nearingDeadline || []) {
+      notifications.push({
+        id: `deadline-${proj.id}`,
+        type: 'deadline_approaching',
+        title: 'Approaching Deadline',
+        body: `${proj.name} ends on ${proj.end_date}`,
+        severity: 'warning',
+        created_at: new Date().toISOString(),
+        read: false,
+      })
+    }
+  }
+
   return NextResponse.json({
     notifications,
     unread: notifications.filter((n) => !n.read).length,
