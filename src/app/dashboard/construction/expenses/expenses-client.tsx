@@ -1,9 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Plus, Search, Trash2, Edit, Download } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 import { ErrorBoundary } from '@/components/ui/error-boundary'
+import { Pagination } from '@/components/ui/pagination'
 import { exportCSV } from '@/lib/export-csv'
 import type { ConstructionExpense } from '@/types/construction'
 
@@ -36,11 +38,21 @@ export function ExpensesClient({
   expenses: init,
   projects,
   currency,
+  page,
+  totalPages,
+  totalCount,
+  pageSize,
 }: {
   expenses: ConstructionExpense[]
   projects: Project[]
   currency: string
+  page: number
+  totalPages: number
+  totalCount: number
+  pageSize: number
 }) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [expenses, setExpenses] = useState(init)
   const [search, setSearch] = useState('')
   const [filterProject, setFilterProject] = useState('')
@@ -342,6 +354,18 @@ export function ExpensesClient({
             </tbody>
           </table>
         </div>
+
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          totalCount={totalCount}
+          pageSize={pageSize}
+          onPageChange={(p) => {
+            const params = new URLSearchParams(searchParams.toString())
+            params.set('page', String(p))
+            router.push(`?${params.toString()}`)
+          }}
+        />
 
         {showForm && (
           <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">

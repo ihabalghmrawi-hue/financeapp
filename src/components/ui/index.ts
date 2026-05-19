@@ -126,3 +126,6 @@ export { NetworkStatus } from './network-status'
 
 // Error Boundary
 export { ErrorBoundary } from './error-boundary'
+
+// Pagination
+export { Pagination } from './pagination'
