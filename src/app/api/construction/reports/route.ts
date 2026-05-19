@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   const [projects, expenses, materials, payments, workers] = await Promise.all([
     admin
       .from('con_projects')
-      .select('id, name, status, expected_cost, actual_cost, start_date, end_date')
+      .select('id, name, type, status, expected_cost, actual_cost, start_date, end_date, contract_value')
       .eq('company_id', companyId),
 
     admin
@@ -87,10 +87,12 @@ export async function GET(req: NextRequest) {
   const projectSummary = Object.entries(projectMap).map(([id, v]) => ({
     id,
     name: v.name,
+    type: projectById[id]?.type || 'other',
     status: projectById[id]?.status || 'unknown',
     income: v.income,
     costs: v.expenses + v.materials,
     profit: v.income - v.expenses - v.materials,
+    contract_value: projectById[id]?.contract_value || 0,
   }))
 
   const statusCounts = { planning: 0, active: 0, on_hold: 0, completed: 0, cancelled: 0 }
@@ -99,6 +101,21 @@ export async function GET(req: NextRequest) {
     if (s in statusCounts) {
       statusCounts[s]++
     }
+  }
+
+  const profitabilityByType: Record<
+    string,
+    { count: number; totalIncome: number; totalCosts: number; totalProfit: number }
+  > = {}
+  for (const p of projectSummary) {
+    const t = p.type || 'other'
+    if (!profitabilityByType[t]) {
+      profitabilityByType[t] = { count: 0, totalIncome: 0, totalCosts: 0, totalProfit: 0 }
+    }
+    profitabilityByType[t].count++
+    profitabilityByType[t].totalIncome += p.income
+    profitabilityByType[t].totalCosts += p.costs
+    profitabilityByType[t].totalProfit += p.profit
   }
 
   return NextResponse.json({
@@ -114,6 +131,7 @@ export async function GET(req: NextRequest) {
     },
     projectSummary,
     expensesByCategory,
+    profitabilityByType,
     workers: workers.data || [],
   })
 }

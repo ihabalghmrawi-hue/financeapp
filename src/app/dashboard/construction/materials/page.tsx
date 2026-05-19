@@ -2,7 +2,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getCompanyId, getCurrency } from '@/lib/tenant'
 import { MaterialsClient } from './materials-client'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 const PAGE_SIZE = 25
 

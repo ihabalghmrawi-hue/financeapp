@@ -2,7 +2,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getCompanyId } from '@/lib/tenant'
 import { FilesClient } from './files-client'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 export default async function FilesPage() {
   const admin = createAdminClient()

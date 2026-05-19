@@ -1,7 +1,8 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, use, Suspense } from 'react'
 import Link from 'next/link'
+import useSWR from 'swr'
 import { formatCurrency } from '@/lib/utils'
 import {
   Building2,
@@ -10,11 +11,13 @@ import {
   TrendingUp,
   ArrowUpRight,
   ArrowDownLeft,
-  Clock,
   AlertTriangle,
   DollarSign,
+  RefreshCw,
 } from 'lucide-react'
 import { ErrorBoundary } from '@/components/ui/error-boundary'
+import { PremiumSkeleton, ListSkeleton } from '@/components/ui/premium-skeleton'
+import { LazyLoad } from '@/lib/performance/lazy-load'
 import type {
   ConstructionProject,
   ConstructionWorker,
@@ -22,6 +25,9 @@ import type {
   ConstructionPayment,
   ConstructionExpense,
 } from '@/types/construction'
+import type { DashboardData, MaterialAsExpense } from '@/lib/construction/dashboard-data'
+
+const fetcher = (url: string): Promise<DashboardData> => fetch(url).then((r) => r.json())
 
 const STAGE_AR: Record<string, string> = {
   foundation: 'الأساسات',
@@ -34,11 +40,6 @@ const STAGE_AR: Record<string, string> = {
   painting: 'الدهان',
   finishing: 'التشطيب النهائي',
   handover: 'التسليم',
-}
-interface MaterialAsExpense {
-  amount: number
-  category: string
-  project_id: string | null
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -72,11 +73,11 @@ const PRIORITY_COLORS: Record<string, string> = {
 }
 
 export function ConstructionDashboardClient({
-  projects,
-  workers,
-  tasks,
-  payments,
-  expenses,
+  projects: initialProjects,
+  workers: initialWorkers,
+  tasks: initialTasks,
+  payments: initialPayments,
+  expenses: initialExpenses,
   currency,
 }: {
   projects: ConstructionProject[]
@@ -86,6 +87,17 @@ export function ConstructionDashboardClient({
   expenses: (ConstructionExpense | MaterialAsExpense)[]
   currency: string
 }) {
+  const { data: fresh, isValidating } = useSWR('/api/construction/dashboard', fetcher, {
+    refreshInterval: 30_000,
+    revalidateOnFocus: true,
+  })
+
+  const projects = fresh?.projects ?? initialProjects
+  const workers = fresh?.workers ?? initialWorkers
+  const tasks = fresh?.tasks ?? initialTasks
+  const payments = fresh?.payments ?? initialPayments
+  const expenses = fresh?.expenses ?? initialExpenses
+
   const fmt = (n: number) => formatCurrency(n, currency)
 
   const stats = useMemo(() => {
@@ -122,13 +134,16 @@ export function ConstructionDashboardClient({
             <h1 className="text-2xl font-bold">لوحة التشطيبات والبناء</h1>
             <p className="text-muted-foreground text-sm mt-0.5">نظرة عامة على المشاريع والعمال والمصروفات</p>
           </div>
-          <Link
-            href="/dashboard/construction/projects"
-            className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors flex items-center gap-2"
-          >
-            <Building2 className="w-4 h-4" />
-            إدارة المشاريع
-          </Link>
+          <div className="flex items-center gap-2">
+            {isValidating && <RefreshCw className="w-4 h-4 text-muted-foreground animate-spin" />}
+            <Link
+              href="/dashboard/construction/projects"
+              className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors flex items-center gap-2"
+            >
+              <Building2 className="w-4 h-4" />
+              إدارة المشاريع
+            </Link>
+          </div>
         </div>
 
         {/* KPI Cards */}

@@ -3,7 +3,7 @@ import { getCompanyId } from '@/lib/tenant'
 import { GanttChart } from '@/components/construction/gantt-chart'
 import type { ConstructionTask } from '@/types/construction'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 120
 
 export default async function GanttPage() {
   const admin = createAdminClient()

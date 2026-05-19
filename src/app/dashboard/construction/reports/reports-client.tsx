@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { formatCurrency } from '@/lib/utils'
-import { TrendingUp, TrendingDown, DollarSign, Building2, Printer, FileText } from 'lucide-react'
+import { TrendingUp, TrendingDown, DollarSign, Building2, Printer, FileText, BarChart3 } from 'lucide-react'
+import { LazyLoad } from '@/lib/performance/lazy-load'
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16']
 
@@ -298,6 +299,67 @@ export function ConstructionReportsClient({ currency }: { currency: string }) {
                 <Tooltip formatter={(v: number) => fmt(v)} />
               </PieChart>
             </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* Profitability by Project Type */}
+        {data.profitabilityByType && Object.keys(data.profitabilityByType).length > 0 && (
+          <div className="bg-card border rounded-xl p-4">
+            <h2 className="font-semibold text-sm mb-4">الربحية حسب نوع المشروع</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Object.entries(data.profitabilityByType as Record<string, any>).map(([type, info]: [string, any]) => {
+                const margin = info.totalIncome > 0 ? ((info.totalProfit / info.totalIncome) * 100).toFixed(1) : '0.0'
+                return (
+                  <div
+                    key={type}
+                    className={`border rounded-xl p-4 ${info.totalProfit >= 0 ? 'border-green-200 dark:border-green-800' : 'border-red-200 dark:border-red-800'}`}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm font-bold">
+                        {type === 'apartment'
+                          ? 'شقة'
+                          : type === 'villa'
+                            ? 'فيلا'
+                            : type === 'shop'
+                              ? 'محل'
+                              : type === 'office'
+                                ? 'مكتب'
+                                : type}
+                      </span>
+                      <span className="text-xs bg-muted px-2 py-0.5 rounded-full">{info.count} مشروع</span>
+                    </div>
+                    <div className="space-y-1.5 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">الإيرادات</span>
+                        <span className="text-green-600 font-medium">{fmt(info.totalIncome)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">التكاليف</span>
+                        <span className="text-red-500 font-medium">{fmt(info.totalCosts)}</span>
+                      </div>
+                      <div className="flex justify-between border-t pt-1.5">
+                        <span className="font-medium">صافي الربح</span>
+                        <span className={`font-bold ${info.totalProfit >= 0 ? 'text-blue-600' : 'text-orange-500'}`}>
+                          {fmt(info.totalProfit)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">هامش الربح</span>
+                        <span className={`font-bold ${Number(margin) >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                          {margin}%
+                        </span>
+                      </div>
+                    </div>
+                    <div className="mt-3 w-full bg-secondary rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full transition-all ${Number(margin) >= 0 ? 'bg-green-500' : 'bg-red-500'}`}
+                        style={{ width: `${Math.min(Math.abs(Number(margin)), 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           </div>
         )}
 

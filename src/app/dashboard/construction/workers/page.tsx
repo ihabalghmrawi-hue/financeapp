@@ -2,18 +2,14 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getCompanyId, getCurrency } from '@/lib/tenant'
 import { WorkersClient } from './workers-client'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 120
 
 export default async function WorkersPage() {
-  const admin    = createAdminClient()
-  const COMPANY  = await getCompanyId()
+  const admin = createAdminClient()
+  const COMPANY = await getCompanyId()
   const CURRENCY = await getCurrency()
 
-  const { data: workers } = await admin
-    .from('con_workers')
-    .select('*')
-    .eq('company_id', COMPANY)
-    .order('name')
+  const { data: workers } = await admin.from('con_workers').select('*').eq('company_id', COMPANY).order('name')
 
   return <WorkersClient workers={workers || []} currency={CURRENCY} />
 }
