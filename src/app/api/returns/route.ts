@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { logAudit } from '@/lib/audit'
 import { getCompanyId } from '@/lib/tenant'
+import { headers } from 'next/headers'
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,6 +16,15 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = createClient()
+    const h = await headers()
+    const businessType =
+      (() => {
+        try {
+          return decodeURIComponent(h.get('x-business-type') || '')
+        } catch {
+          return ''
+        }
+      })() || 'retail'
 
     // Fetch original sale
     const { data: sale, error: saleErr } = await supabase
@@ -22,6 +32,7 @@ export async function POST(req: NextRequest) {
       .select('*, customers(id, balance)')
       .eq('id', sale_id)
       .eq('company_id', COMPANY_ID)
+      .eq('business_type', businessType)
       .single()
 
     if (saleErr || !sale) {
@@ -91,6 +102,7 @@ export async function POST(req: NextRequest) {
         } else {
           await supabase.from('inventory').insert({
             company_id: COMPANY_ID,
+            business_type: businessType,
             product_id: item.product_id,
             warehouse_id: wh,
             quantity: item.quantity,

@@ -1,3 +1,16 @@
+export type BusinessType =
+  | 'pharmacy'
+  | 'retail'
+  | 'wholesale'
+  | 'clothing'
+  | 'stationery'
+  | 'tools'
+  | 'dress_rental'
+  | 'construction'
+  | 'atelier'
+  | 'suits'
+  | 'other'
+
 export interface Product {
   id: string
   company_id: string
@@ -9,6 +22,7 @@ export interface Product {
   name_ar: string | null
   description: string | null
   type: 'product' | 'service' | 'bundle'
+  business_type: BusinessType
   cost_price: number
   sale_price: number
   wholesale_price: number
@@ -43,6 +57,7 @@ export interface ProductVariant {
 export interface ProductCategory {
   id: string
   company_id: string
+  business_type: BusinessType
   name: string
   name_ar: string | null
   parent_id: string | null
@@ -76,6 +91,7 @@ export interface Inventory {
   variant_id: string | null
   warehouse_id: string
   company_id: string
+  business_type: BusinessType
   quantity: number
   reserved_quantity: number
   updated_at: string
@@ -88,7 +104,15 @@ export interface InventoryMovement {
   product_id: string
   variant_id: string | null
   warehouse_id: string
-  type: 'purchase' | 'sale' | 'return_sale' | 'return_purchase' | 'adjustment' | 'transfer_in' | 'transfer_out' | 'opening'
+  type:
+    | 'purchase'
+    | 'sale'
+    | 'return_sale'
+    | 'return_purchase'
+    | 'adjustment'
+    | 'transfer_in'
+    | 'transfer_out'
+    | 'opening'
   quantity: number
   quantity_before: number
   quantity_after: number

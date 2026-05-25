@@ -40,6 +40,7 @@ export async function GET(req: NextRequest) {
   const supabase = createClient()
   const issues: IntegrityIssue[] = []
   const COMPANY_ID = await getCompanyId()
+  const btFilter = req.nextUrl.searchParams.get('business_type')
 
   // ── 1. Wallet balance integrity ────────────────────────────────────────────
   const { data: wallets } = await supabase
@@ -82,12 +83,16 @@ export async function GET(req: NextRequest) {
   }
 
   // ── 2. Sales missing journal entries ──────────────────────────────────────
-  const { data: recentSales } = await supabase
+  let recentSalesQuery = supabase
     .from('sales')
     .select('id, invoice_number, total')
     .eq('company_id', COMPANY_ID)
     .eq('status', 'completed')
     .gte('created_at', new Date(Date.now() - 7 * 86400000).toISOString())
+  if (btFilter) {
+    recentSalesQuery = recentSalesQuery.eq('business_type', btFilter)
+  }
+  const { data: recentSales } = await recentSalesQuery
 
   for (const sale of recentSales || []) {
     const { data: journalEntry } = await supabase
@@ -164,12 +169,16 @@ export async function GET(req: NextRequest) {
 
   // ── 5. Report vs raw data verification ────────────────────────────────────
   const since30 = new Date(Date.now() - 30 * 86400000).toISOString()
-  const { data: salesAgg } = await supabase
+  let salesAggQuery = supabase
     .from('sales')
     .select('total')
     .eq('company_id', COMPANY_ID)
     .eq('status', 'completed')
     .gte('created_at', since30)
+  if (btFilter) {
+    salesAggQuery = salesAggQuery.eq('business_type', btFilter)
+  }
+  const { data: salesAgg } = await salesAggQuery
 
   const rawRevenue = (salesAgg || []).reduce((s, x) => s + Number(x.total), 0)
 

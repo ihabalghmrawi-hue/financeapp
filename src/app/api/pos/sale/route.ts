@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { logAudit } from '@/lib/audit'
 import { postSaleJournal as postSaleEntry, updateWallet } from '@/lib/accounting'
 import { recordInventoryMovement } from '@/lib/inventory'
+import type { BusinessType } from '@/types/erp'
 
 export async function POST(req: NextRequest) {
   const supabase = createClient()
@@ -37,6 +38,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invoice total must be greater than zero' }, { status: 400 })
     }
 
+    // ── Resolve business_type for this company ────────────────────────────────
+    const { data: settings } = await supabase
+      .from('company_settings')
+      .select('business_type')
+      .eq('company_id', company_id)
+      .maybeSingle()
+
+    const businessType: BusinessType = (settings?.business_type as BusinessType) || 'retail'
+
+    // ── Validate that all products belong to this business_type ────────────────
+    const productIds = [...new Set(items.map((i: any) => i.product_id))]
+    const { data: validProducts } = await supabase.from('products').select('id, business_type').in('id', productIds)
+
+    const validMap = new Map((validProducts || []).map((p: any) => [p.id, p.business_type]))
+    const mismatched = productIds.filter((id: string) => validMap.get(id) !== businessType)
+
+    if (mismatched.length > 0) {
+      return NextResponse.json(
+        { error: `المنتجات التالية لا تنتمي إلى هذا النشاط التجاري: ${mismatched.join(', ')}` },
+        { status: 403 },
+      )
+    }
+
     // ── Generate invoice number ────────────────────────────────────────────────
     const { data: invoiceData } = await supabase.rpc('generate_invoice_number', {
       p_company_id: company_id,
@@ -53,6 +77,7 @@ export async function POST(req: NextRequest) {
       .from('sales')
       .insert({
         company_id,
+        business_type: businessType,
         invoice_number,
         customer_id: customer_id || null,
         warehouse_id: warehouse_id || null,

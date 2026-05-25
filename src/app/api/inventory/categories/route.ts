@@ -87,13 +87,46 @@ const CATEGORY_SEEDS: Record<string, { name: string; name_ar: string; color: str
 // Retail seeds also apply to some similar types
 CATEGORY_SEEDS.dress_rental = CATEGORY_SEEDS.clothing
 
+// Atelier / boutique categories
+CATEGORY_SEEDS.atelier = [
+  { name: 'abaya', name_ar: 'عباءات', color: '#7c3aed', icon: 'package' },
+  { name: 'evening_dresses', name_ar: 'فساتين سهرة', color: '#ec4899', icon: 'star' },
+  { name: 'jewelry', name_ar: 'إكسسوارات ومجوهرات', color: '#f59e0b', icon: 'star' },
+  { name: 'fabric', name_ar: 'أقمشة', color: '#6366f1', icon: 'package' },
+  { name: 'tailoring', name_ar: 'خياطة وتفصيل', color: '#3b82f6', icon: 'tool' },
+  { name: 'handicrafts', name_ar: 'مشغولات يدوية', color: '#10b981', icon: 'heart' },
+  { name: 'perfumes', name_ar: 'عطور', color: '#8b5cf6', icon: 'heart' },
+]
+
+// Men's suits categories
+CATEGORY_SEEDS.suits = [
+  { name: 'suits', name_ar: 'بدل رسمية', color: '#3b82f6', icon: 'briefcase' },
+  { name: 'shirts', name_ar: 'قمصان', color: '#6366f1', icon: 'package' },
+  { name: 'ties_accessories', name_ar: 'ربطات عنق وإكسسوارات', color: '#f59e0b', icon: 'star' },
+  { name: 'trousers', name_ar: 'بناطيل', color: '#78716c', icon: 'package' },
+  { name: 'jackets', name_ar: 'جواكيت وجاكيتات', color: '#d97706', icon: 'package' },
+  { name: 'traditional', name_ar: 'ملابس تقليدية (ثوب، بشت)', color: '#7c3aed', icon: 'package' },
+  { name: 'tailoring', name_ar: 'تفصيل حسب الطلب', color: '#10b981', icon: 'tool' },
+  { name: 'footwear', name_ar: 'أحذية رسمية', color: '#8b5cf6', icon: 'package' },
+]
+
 export async function GET() {
   const supabase = createClient()
   const companyId = await getCompanyId()
+  const h = await headers()
+  const businessType =
+    (() => {
+      try {
+        return decodeURIComponent(h.get('x-business-type') || '')
+      } catch {
+        return ''
+      }
+    })() || 'retail'
   const { data, error } = await supabase
     .from('product_categories')
     .select('*')
     .eq('company_id', companyId)
+    .eq('business_type', businessType)
     .eq('is_active', true)
     .order('name_ar')
   if (error) {
@@ -113,7 +146,7 @@ export async function POST(req: NextRequest) {
     const seeds = CATEGORY_SEEDS[bt] || CATEGORY_SEEDS.other
     const { error } = await admin
       .from('product_categories')
-      .insert(seeds.map((s) => ({ ...s, company_id: companyId, is_active: true })))
+      .insert(seeds.map((s) => ({ ...s, company_id: companyId, business_type: bt, is_active: true })))
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
@@ -125,10 +158,20 @@ export async function POST(req: NextRequest) {
   if (!name && !name_ar) {
     return NextResponse.json({ error: 'Name is required' }, { status: 400 })
   }
+  const h = await headers()
+  const businessType =
+    (() => {
+      try {
+        return decodeURIComponent(h.get('x-business-type') || '')
+      } catch {
+        return ''
+      }
+    })() || 'retail'
   const { data, error } = await admin
     .from('product_categories')
     .insert({
       company_id: companyId,
+      business_type: businessType,
       name: name || name_ar,
       name_ar: name_ar || name,
       color: color || '#78716c',

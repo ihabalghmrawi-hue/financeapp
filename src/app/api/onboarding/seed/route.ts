@@ -557,6 +557,7 @@ export async function POST(req: NextRequest) {
 
       const insertPayload: Record<string, unknown> = {
         company_id: COMPANY_ID,
+        business_type,
         name: cat.name,
         name_ar: cat.name_ar,
         color: cat.color,
@@ -590,6 +591,7 @@ export async function POST(req: NextRequest) {
 
       const productPayload: Record<string, unknown> = {
         company_id: COMPANY_ID,
+        business_type,
         name: prod.name,
         name_ar: prod.name_ar,
         price: prod.price,

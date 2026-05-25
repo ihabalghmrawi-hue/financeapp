@@ -8,6 +8,7 @@ export async function GET(req: NextRequest) {
   const COMPANY_ID = await getCompanyId()
   const supabase = createClient()
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
+  const businessType = req.nextUrl.searchParams.get('business_type') || 'retail'
 
   const [{ data: sales }, { data: saleItems }, { data: customers }, { data: products }, { data: expenses }] =
     await Promise.all([
@@ -16,6 +17,7 @@ export async function GET(req: NextRequest) {
         .from('sales')
         .select('id, total, discount_amount, created_at, payment_status, customer_id')
         .eq('company_id', COMPANY_ID)
+        .eq('business_type', businessType)
         .neq('status', 'cancelled')
         .gte('created_at', since)
         .order('created_at'),
@@ -28,6 +30,7 @@ export async function GET(req: NextRequest) {
           'product_id, quantity, unit_price, cost_price, total, products(name, name_ar, category_id), sales!inner(company_id)',
         )
         .eq('sales.company_id', COMPANY_ID)
+        .eq('sales.business_type', businessType)
         .gte('sales.created_at', since),
 
       supabase.from('customers').select('id, name, balance').eq('company_id', COMPANY_ID).eq('is_active', true),
@@ -36,6 +39,7 @@ export async function GET(req: NextRequest) {
         .from('products')
         .select('id, name, name_ar, cost_price, sale_price, category_id, is_active, inventory(quantity)')
         .eq('company_id', COMPANY_ID)
+        .eq('business_type', businessType)
         .eq('is_active', true),
 
       supabase.from('expenses').select('amount, created_at').eq('company_id', COMPANY_ID).gte('created_at', since),

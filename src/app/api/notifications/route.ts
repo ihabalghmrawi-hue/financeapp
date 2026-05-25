@@ -1,12 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCompanyId } from '@/lib/tenant'
+import { headers } from 'next/headers'
 
 export async function GET() {
   const supabase = createClient()
   const company_id = await getCompanyId()
   const today = new Date().toISOString().slice(0, 10)
   const sevenDays = new Date(Date.now() - 7 * 86400_000).toISOString().slice(0, 10)
+  const h = await headers()
+  const businessType = (() => {
+    try {
+      return decodeURIComponent(h.get('x-business-type') || 'retail')
+    } catch {
+      return 'retail'
+    }
+  })()
 
   const notifications: Array<{
     id: string
@@ -23,6 +32,7 @@ export async function GET() {
     .from('inventory')
     .select('quantity, products(name)')
     .eq('company_id', company_id)
+    .eq('business_type', businessType)
     .lt('quantity', 5)
     .gt('quantity', 0)
     .limit(5)
@@ -45,6 +55,7 @@ export async function GET() {
     .from('inventory')
     .select('products(name)')
     .eq('company_id', company_id)
+    .eq('business_type', businessType)
     .lte('quantity', 0)
     .limit(3)
 
@@ -66,6 +77,7 @@ export async function GET() {
     .from('sales')
     .select('id', { count: 'exact', head: true })
     .eq('company_id', company_id)
+    .eq('business_type', businessType)
     .eq('payment_status', 'unpaid')
     .gte('created_at', sevenDays)
 
@@ -86,6 +98,7 @@ export async function GET() {
     .from('sales')
     .select('total')
     .eq('company_id', company_id)
+    .eq('business_type', businessType)
     .gte('created_at', today)
 
   const todayTotal = (todaySales || []).reduce((s, r) => s + (r.total || 0), 0)

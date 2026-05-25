@@ -42,7 +42,8 @@ export default async function DashboardPage() {
       return v || fb
     }
   }
-  const features = getFeatures(dec(h.get('x-business-type'), 'retail'))
+  const rawBusinessType = dec(h.get('x-business-type'), 'retail')
+  const features = getFeatures(rawBusinessType)
   const staffName = dec(h.get('x-staff-name'), 'المدير')
 
   const today = new Date().toISOString().slice(0, 10)
@@ -299,12 +300,14 @@ export default async function DashboardPage() {
       .from('sales')
       .select('total')
       .eq('company_id', COMPANY_ID)
+      .eq('business_type', rawBusinessType)
       .gte('sale_date', today)
       .eq('status', 'completed'),
     supabase
       .from('sales')
       .select('total')
       .eq('company_id', COMPANY_ID)
+      .eq('business_type', rawBusinessType)
       .gte('sale_date', monthStart)
       .eq('status', 'completed'),
     supabase.from('purchases').select('total').eq('company_id', COMPANY_ID).gte('purchase_date', monthStart),
@@ -313,12 +316,14 @@ export default async function DashboardPage() {
       .from('products')
       .select('id, name, name_ar, min_stock_level, inventory(quantity)')
       .eq('company_id', COMPANY_ID)
+      .eq('business_type', rawBusinessType)
       .eq('track_inventory', true)
       .eq('is_active', true),
     supabase
       .from('sales')
       .select('invoice_number, total, sale_date, customers(name), payment_status')
       .eq('company_id', COMPANY_ID)
+      .eq('business_type', rawBusinessType)
       .order('sale_date', { ascending: false })
       .limit(5),
     supabase
@@ -330,6 +335,7 @@ export default async function DashboardPage() {
       .from('products')
       .select('id', { count: 'exact', head: true })
       .eq('company_id', COMPANY_ID)
+      .eq('business_type', rawBusinessType)
       .eq('is_active', true),
   ])
 

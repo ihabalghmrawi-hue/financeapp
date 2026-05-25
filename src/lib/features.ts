@@ -7,6 +7,8 @@ export type BusinessType =
   | 'tools'
   | 'dress_rental'
   | 'construction'
+  | 'atelier'
+  | 'suits'
   | 'other'
 
 export interface Features {
@@ -200,6 +202,46 @@ const FEATURE_MAP: Record<BusinessType, Omit<Features, 'businessType'>> = {
     label: 'Construction & Finishing',
     icon: '🏗️',
   },
+  atelier: {
+    hasExpiry: false,
+    hasBatch: false,
+    hasVariants: true,
+    hasBulkPricing: false,
+    hasMinQty: false,
+    hasWholesalePrice: false,
+    fastPOS: false,
+    barcodeFirst: false,
+    showReturns: true,
+    showShifts: true,
+    showPurchases: true,
+    showPOS: true,
+    showInventory: true,
+    hasRental: false,
+    hasConstruction: false,
+    medicineCategories: false,
+    label: 'Dress Atelier & Boutique',
+    icon: '👗',
+  },
+  suits: {
+    hasExpiry: false,
+    hasBatch: false,
+    hasVariants: true,
+    hasBulkPricing: false,
+    hasMinQty: false,
+    hasWholesalePrice: false,
+    fastPOS: false,
+    barcodeFirst: false,
+    showReturns: true,
+    showShifts: true,
+    showPurchases: true,
+    showPOS: true,
+    showInventory: true,
+    hasRental: false,
+    hasConstruction: false,
+    medicineCategories: false,
+    label: "Men's Suits & Tailoring",
+    icon: '🤵',
+  },
   other: {
     hasExpiry: false,
     hasBatch: false,
@@ -231,6 +273,8 @@ export const BUSINESS_TYPES: BusinessType[] = [
   'tools',
   'dress_rental',
   'construction',
+  'atelier',
+  'suits',
   'other',
 ]
 

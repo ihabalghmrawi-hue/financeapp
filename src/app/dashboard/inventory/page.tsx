@@ -15,10 +15,19 @@ export default async function InventoryPage() {
   const [{ data: products }, { data: categories }, { data: units }, { data: warehouses }] = await Promise.all([
     supabase
       .from('products')
-      .select('*, product_categories(name, name_ar, color), units(name, name_ar, abbreviation), inventory(quantity, warehouse_id, warehouses(name))')
+      .select(
+        '*, product_categories(name, name_ar, color), units(name, name_ar, abbreviation), inventory(quantity, warehouse_id, warehouses(name))',
+      )
       .eq('company_id', COMPANY_ID)
+      .eq('business_type', businessType)
       .order('created_at', { ascending: false }),
-    supabase.from('product_categories').select('*').eq('company_id', COMPANY_ID).eq('is_active', true).order('name'),
+    supabase
+      .from('product_categories')
+      .select('*')
+      .eq('company_id', COMPANY_ID)
+      .eq('business_type', businessType)
+      .eq('is_active', true)
+      .order('name'),
     supabase.from('units').select('*').eq('company_id', COMPANY_ID).order('name'),
     supabase.from('warehouses').select('*').eq('company_id', COMPANY_ID).eq('is_active', true),
   ])

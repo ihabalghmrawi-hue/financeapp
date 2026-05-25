@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCompanyId } from '@/lib/tenant'
+import { headers } from 'next/headers'
 
 export async function GET() {
   const COMPANY_ID = await getCompanyId()
@@ -72,10 +73,19 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Calculate sales in this shift period
+    const h = await headers()
+    const bt = (() => {
+      try {
+        return decodeURIComponent(h.get('x-business-type') || '')
+      } catch {
+        return ''
+      }
+    })()
     const { data: sales } = await supabase
       .from('sales')
       .select('total, payment_status')
       .eq('company_id', COMPANY_ID)
+      .eq('business_type', bt)
       .eq('status', 'completed')
       .gte('created_at', shift.opened_at)
 
