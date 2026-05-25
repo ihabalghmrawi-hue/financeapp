@@ -19,6 +19,7 @@ import {
 import { formatDate } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/language-provider'
+import { localizedName } from '@/lib/i18n'
 
 interface StaffMember {
   id: string
@@ -192,7 +193,7 @@ const emptyForm = {
 }
 
 export function StaffManagementClient({ staff: initialStaff, companyId }: Props) {
-  const { t, formatDate } = useT()
+  const { t, formatDate, lang } = useT()
   const [staff, setStaff] = useState(initialStaff)
   const [showForm, setShowForm] = useState(false)
   const [editTarget, setEditTarget] = useState<StaffMember | null>(null)
@@ -381,7 +382,7 @@ export function StaffManagementClient({ staff: initialStaff, companyId }: Props)
                     <td className="px-4 py-3 text-muted-foreground text-xs dir-ltr">{s.email || '—'}</td>
                     <td className="px-4 py-3">
                       <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', getRoleColor(role?.name))}>
-                        {role?.name_ar || role?.name || '—'}
+                        {localizedName(role || ({} as any), lang) || '—'}
                       </span>
                     </td>
                     <td className="px-4 py-3">

@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { useT } from '@/lib/i18n/language-provider'
+import { localizedName } from '@/lib/i18n'
 import { Upload, Loader2, Check, Palette, Building2, Image, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -34,7 +35,7 @@ interface Props {
 }
 
 export function BrandingSettings({ initialData }: Props) {
-  const { t } = useT()
+  const { t, lang } = useT()
   const [form, setForm] = useState<BrandingData>({
     name_ar: '',
     name: '',
@@ -281,7 +282,9 @@ export function BrandingSettings({ initialData }: Props) {
         {/* Receipt preview */}
         <div className="mt-3 border rounded-xl p-4 bg-white dark:bg-card text-center text-xs space-y-1 font-mono">
           {form.logo_url && <img src={form.logo_url} alt="logo" className="w-10 h-10 object-contain mx-auto mb-1" />}
-          <p className="font-bold text-sm">{form.name_ar || t('branding.storeName')}</p>
+          <p className="font-bold text-sm">
+            {localizedName({ name: form.name || '', name_ar: form.name_ar || '' }, lang) || t('branding.storeName')}
+          </p>
           {form.phone && <p className="text-muted-foreground">{form.phone}</p>}
           {form.receipt_header && <p className="text-muted-foreground italic">{form.receipt_header}</p>}
           <div className="border-t border-dashed my-2" />

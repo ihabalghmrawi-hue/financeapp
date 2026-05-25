@@ -4,11 +4,20 @@ import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
-  Plus, Search, Filter, ArrowUpRight, ArrowDownRight,
-  Pencil, Trash2, ChevronLeft, ChevronRight
+  Plus,
+  Search,
+  Filter,
+  ArrowUpRight,
+  ArrowDownRight,
+  Pencil,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 import { formatCurrency, formatDate, cn } from '@/lib/utils'
 import type { Transaction, Category } from '@/types/database'
+import { useT } from '@/lib/i18n/language-provider'
+import { localizedName } from '@/lib/i18n'
 import { createClient } from '@/lib/supabase/client'
 
 interface TransactionsClientProps {
@@ -44,6 +53,7 @@ export function TransactionsClient({
   currentPage,
   limit,
 }: TransactionsClientProps) {
+  const { t, lang } = useT()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
@@ -64,7 +74,9 @@ export function TransactionsClient({
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('هل تريد حذف هذه المعاملة؟')) return
+    if (!confirm('هل تريد حذف هذه المعاملة؟')) {
+      return
+    }
     setDeleteId(id)
     const supabase = createClient()
     await supabase.from('transactions').delete().eq('id', id)
@@ -73,8 +85,8 @@ export function TransactionsClient({
   }
 
   // Summary stats
-  const totalIncome = transactions.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0)
-  const totalExpense = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0)
+  const totalIncome = transactions.filter((t) => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0)
+  const totalExpense = transactions.filter((t) => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0)
 
   return (
     <div className="space-y-5">
@@ -103,13 +115,20 @@ export function TransactionsClient({
           <p className="text-xs text-red-600 font-medium mb-1">إجمالي المصروفات</p>
           <p className="text-lg font-bold text-red-700">{formatCurrency(totalExpense, currency)}</p>
         </div>
-        <div className={cn(
-          'rounded-xl p-4 border',
-          totalIncome - totalExpense >= 0
-            ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800'
-            : 'bg-orange-50 dark:bg-orange-900/20 border-orange-100 dark:border-orange-800'
-        )}>
-          <p className={cn('text-xs font-medium mb-1', totalIncome - totalExpense >= 0 ? 'text-blue-600' : 'text-orange-600')}>
+        <div
+          className={cn(
+            'rounded-xl p-4 border',
+            totalIncome - totalExpense >= 0
+              ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800'
+              : 'bg-orange-50 dark:bg-orange-900/20 border-orange-100 dark:border-orange-800',
+          )}
+        >
+          <p
+            className={cn(
+              'text-xs font-medium mb-1',
+              totalIncome - totalExpense >= 0 ? 'text-blue-600' : 'text-orange-600',
+            )}
+          >
             صافي الفترة
           </p>
           <p className={cn('text-lg font-bold', totalIncome - totalExpense >= 0 ? 'text-blue-700' : 'text-orange-700')}>
@@ -131,7 +150,7 @@ export function TransactionsClient({
                   'px-3 py-1.5 rounded-md text-xs font-medium transition-colors',
                   currentType === key || (key === 'all' && !searchParams.get('type'))
                     ? 'bg-background shadow-sm text-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
+                    : 'text-muted-foreground hover:text-foreground',
                 )}
               >
                 {label}
@@ -148,7 +167,7 @@ export function TransactionsClient({
             <option value="">جميع الفئات</option>
             {categories.map((cat) => (
               <option key={cat.id} value={cat.id}>
-                {cat.name_ar || cat.name}
+                {localizedName(cat, lang)}
               </option>
             ))}
           </select>
@@ -200,23 +219,25 @@ export function TransactionsClient({
                   <th className="text-right py-3 px-4 font-medium text-muted-foreground">النوع</th>
                   <th className="text-right py-3 px-4 font-medium text-muted-foreground">المبلغ</th>
                   <th className="text-right py-3 px-4 font-medium text-muted-foreground">الحالة</th>
-                  <th className="py-3 px-4"></th>
+                  <th className="py-3 px-4" />
                 </tr>
               </thead>
               <tbody>
                 {transactions.map((txn) => (
                   <tr key={txn.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                    <td className="py-3.5 px-4 text-muted-foreground text-xs">
-                      {formatDate(txn.transaction_date)}
-                    </td>
+                    <td className="py-3.5 px-4 text-muted-foreground text-xs">{formatDate(txn.transaction_date)}</td>
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-2">
-                        <div className={cn(
-                          'w-7 h-7 rounded-lg flex items-center justify-center shrink-0',
-                          txn.type === 'income' ? 'bg-emerald-100 dark:bg-emerald-900/30' :
-                          txn.type === 'expense' ? 'bg-red-100 dark:bg-red-900/30' :
-                          'bg-blue-100 dark:bg-blue-900/30'
-                        )}>
+                        <div
+                          className={cn(
+                            'w-7 h-7 rounded-lg flex items-center justify-center shrink-0',
+                            txn.type === 'income'
+                              ? 'bg-emerald-100 dark:bg-emerald-900/30'
+                              : txn.type === 'expense'
+                                ? 'bg-red-100 dark:bg-red-900/30'
+                                : 'bg-blue-100 dark:bg-blue-900/30',
+                          )}
+                        >
                           {txn.type === 'income' ? (
                             <ArrowUpRight className="w-3.5 h-3.5 text-emerald-600" />
                           ) : (
@@ -231,36 +252,46 @@ export function TransactionsClient({
                     <td className="py-3.5 px-4">
                       {txn.category ? (
                         <span className="text-xs bg-muted px-2 py-1 rounded-full text-muted-foreground">
-                          {(txn.category as any).name_ar || (txn.category as any).name}
+                          {localizedName(txn.category as any, lang)}
                         </span>
                       ) : (
                         <span className="text-xs text-muted-foreground/50">-</span>
                       )}
                     </td>
                     <td className="py-3.5 px-4">
-                      <span className={cn(
-                        'text-xs px-2 py-1 rounded-full font-medium',
-                        txn.type === 'income' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
-                        txn.type === 'expense' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                        'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                      )}>
+                      <span
+                        className={cn(
+                          'text-xs px-2 py-1 rounded-full font-medium',
+                          txn.type === 'income'
+                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                            : txn.type === 'expense'
+                              ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                              : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+                        )}
+                      >
                         {txn.type === 'income' ? 'دخل' : txn.type === 'expense' ? 'مصروف' : 'تحويل'}
                       </span>
                     </td>
-                    <td className={cn(
-                      'py-3.5 px-4 font-semibold',
-                      txn.type === 'income' ? 'text-emerald-600' : 'text-red-600'
-                    )}>
+                    <td
+                      className={cn(
+                        'py-3.5 px-4 font-semibold',
+                        txn.type === 'income' ? 'text-emerald-600' : 'text-red-600',
+                      )}
+                    >
                       {txn.type === 'expense' ? '-' : '+'}
                       {formatCurrency(txn.amount, currency)}
                     </td>
                     <td className="py-3.5 px-4">
-                      <span className={cn(
-                        'text-xs px-2 py-1 rounded-full font-medium',
-                        txn.status === 'completed' ? 'bg-green-100 text-green-700' :
-                        txn.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-gray-100 text-gray-700'
-                      )}>
+                      <span
+                        className={cn(
+                          'text-xs px-2 py-1 rounded-full font-medium',
+                          txn.status === 'completed'
+                            ? 'bg-green-100 text-green-700'
+                            : txn.status === 'pending'
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : 'bg-gray-100 text-gray-700',
+                        )}
+                      >
                         {statusLabels[txn.status] || txn.status}
                       </span>
                     </td>
@@ -292,7 +323,7 @@ export function TransactionsClient({
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t">
             <p className="text-xs text-muted-foreground">
-              عرض {((currentPage - 1) * limit) + 1} - {Math.min(currentPage * limit, totalCount)} من {totalCount}
+              عرض {(currentPage - 1) * limit + 1} - {Math.min(currentPage * limit, totalCount)} من {totalCount}
             </p>
             <div className="flex items-center gap-1">
               <button
@@ -308,9 +339,7 @@ export function TransactionsClient({
                   onClick={() => updateFilter('page', String(p))}
                   className={cn(
                     'w-8 h-8 rounded-md text-xs font-medium transition-colors',
-                    currentPage === p
-                      ? 'bg-primary text-primary-foreground'
-                      : 'hover:bg-accent text-muted-foreground'
+                    currentPage === p ? 'bg-primary text-primary-foreground' : 'hover:bg-accent text-muted-foreground',
                   )}
                 >
                   {p}

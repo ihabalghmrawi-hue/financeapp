@@ -4,6 +4,8 @@ import { useState, useMemo } from 'react'
 import { Plus, Search, ShoppingBag, X, Check, Loader2, Trash2, Eye } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/language-provider'
+import { localizedName } from '@/lib/i18n'
 import type { Purchase, Supplier } from '@/types/erp'
 
 interface PurchasesClientProps {
@@ -29,6 +31,7 @@ export function PurchasesClient({
   companyId,
   currency,
 }: PurchasesClientProps) {
+  const { t, lang } = useT()
   const [purchases, setPurchases] = useState(initial)
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
@@ -233,7 +236,7 @@ export function PurchasesClient({
                     <option value="">اختر المورد</option>
                     {suppliers.map((s) => (
                       <option key={s.id} value={s.id}>
-                        {s.name_ar || s.name}
+                        {localizedName(s, lang)}
                       </option>
                     ))}
                   </select>
@@ -247,7 +250,7 @@ export function PurchasesClient({
                   >
                     {warehouses.map((w) => (
                       <option key={w.id} value={w.id}>
-                        {w.name_ar || w.name}
+                        {localizedName(w, lang)}
                       </option>
                     ))}
                   </select>
@@ -288,7 +291,7 @@ export function PurchasesClient({
                           <option value="">اختر المنتج</option>
                           {products.map((p) => (
                             <option key={p.id} value={p.id}>
-                              {p.name_ar || p.name}
+                              {localizedName(p, lang)}
                             </option>
                           ))}
                         </select>

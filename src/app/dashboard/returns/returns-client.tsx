@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { Search, RotateCcw, Package, Check, X, AlertCircle, Loader2, Plus, ArrowRight } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/language-provider'
+import { localizedName } from '@/lib/i18n'
 
 interface Props {
   returns: any[]
@@ -19,6 +21,7 @@ const REFUND_METHODS = [
 ]
 
 export function ReturnsClient({ returns: initialReturns, warehouses, companyId, currency }: Props) {
+  const { t, lang } = useT()
   const [returns, setReturns] = useState(initialReturns)
   const [view, setView] = useState<'list' | 'new'>('list')
   const [invoiceSearch, setInvoiceSearch] = useState('')
@@ -248,7 +251,7 @@ export function ReturnsClient({ returns: initialReturns, warehouses, companyId, 
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">
-                            {item.products?.name_ar || item.products?.name || 'منتج'}
+                            {localizedName(item.products || ({} as any), lang) || 'منتج'}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {item.quantity} × {formatCurrency(item.unit_price, currency)}
@@ -322,7 +325,7 @@ export function ReturnsClient({ returns: initialReturns, warehouses, companyId, 
                     >
                       {warehouses.map((w) => (
                         <option key={w.id} value={w.id}>
-                          {w.name_ar || w.name}
+                          {localizedName(w, lang)}
                         </option>
                       ))}
                     </select>

@@ -4,6 +4,8 @@ import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, Trash2, BookOpen, CheckCircle2, XCircle, BarChart3, Scale, TrendingUp } from 'lucide-react'
 import { formatCurrency, formatDate, cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/language-provider'
+import { localizedName } from '@/lib/i18n'
 import { createClient } from '@/lib/supabase/client'
 import type { JournalEntry, Account } from '@/types/database'
 
@@ -24,6 +26,7 @@ interface EntryLine {
 type Tab = 'journal' | 'income' | 'balance'
 
 export function JournalClient({ entries, accounts, companyId, currency }: JournalClientProps) {
+  const { t, lang } = useT()
   const router = useRouter()
   const [tab, setTab] = useState<Tab>('journal')
   const [showForm, setShowForm] = useState(false)
@@ -263,7 +266,7 @@ export function JournalClient({ entries, accounts, companyId, currency }: Journa
                 ) : (
                   revenueAccounts.map((a) => (
                     <div key={a.id} className="flex items-center justify-between pr-4 text-sm">
-                      <span className="text-muted-foreground">{a.name_ar || a.name}</span>
+                      <span className="text-muted-foreground">{localizedName(a, lang)}</span>
                       <span className="font-medium">{formatCurrency(netBalance(a), currency)}</span>
                     </div>
                   ))
@@ -287,7 +290,7 @@ export function JournalClient({ entries, accounts, companyId, currency }: Journa
                 ) : (
                   expenseAccounts.map((a) => (
                     <div key={a.id} className="flex items-center justify-between pr-4 text-sm">
-                      <span className="text-muted-foreground">{a.name_ar || a.name}</span>
+                      <span className="text-muted-foreground">{localizedName(a, lang)}</span>
                       <span className="font-medium">{formatCurrency(netBalance(a), currency)}</span>
                     </div>
                   ))
@@ -329,7 +332,7 @@ export function JournalClient({ entries, accounts, companyId, currency }: Journa
               ) : (
                 assetAccounts.map((a) => (
                   <div key={a.id} className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">{a.name_ar || a.name}</span>
+                    <span className="text-muted-foreground">{localizedName(a, lang)}</span>
                     <span className="font-medium">{formatCurrency(netBalance(a), currency)}</span>
                   </div>
                 ))
@@ -353,7 +356,7 @@ export function JournalClient({ entries, accounts, companyId, currency }: Journa
                 ) : (
                   liabAccounts.map((a) => (
                     <div key={a.id} className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">{a.name_ar || a.name}</span>
+                      <span className="text-muted-foreground">{localizedName(a, lang)}</span>
                       <span className="font-medium">{formatCurrency(netBalance(a), currency)}</span>
                     </div>
                   ))
@@ -371,7 +374,7 @@ export function JournalClient({ entries, accounts, companyId, currency }: Journa
               <div className="p-4 space-y-1.5">
                 {equityAccounts.map((a) => (
                   <div key={a.id} className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">{a.name_ar || a.name}</span>
+                    <span className="text-muted-foreground">{localizedName(a, lang)}</span>
                     <span className="font-medium">{formatCurrency(netBalance(a), currency)}</span>
                   </div>
                 ))}
@@ -505,7 +508,7 @@ export function JournalClient({ entries, accounts, companyId, currency }: Journa
                                         .filter((a) => a.type === type)
                                         .map((a) => (
                                           <option key={a.id} value={a.id}>
-                                            {a.code} - {a.name_ar || a.name}
+                                            {a.code} - {localizedName(a, lang)}
                                           </option>
                                         ))}
                                     </optgroup>
@@ -664,7 +667,7 @@ export function JournalClient({ entries, accounts, companyId, currency }: Journa
                               {lines.slice(0, 3).map((line: any, i: number) => (
                                 <div key={i} className="flex items-center gap-4 text-xs">
                                   <span className="text-muted-foreground w-32 truncate font-mono">
-                                    {line.accounts?.code} - {line.accounts?.name_ar || line.accounts?.name}
+                                    {line.accounts?.code} - {localizedName(line.accounts || ({} as any), lang)}
                                   </span>
                                   {line.debit > 0 && (
                                     <span className="text-blue-600 font-medium">

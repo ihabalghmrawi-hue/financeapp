@@ -4,6 +4,8 @@ import { useState, useMemo } from 'react'
 import { Plus, Search, DollarSign, Edit, Trash2, X, Check, Loader2, Tag, Sparkles } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/language-provider'
+import { localizedName } from '@/lib/i18n'
 import type { Expense, ExpenseCategory } from '@/types/erp'
 
 interface ExpensesClientProps {
@@ -28,6 +30,7 @@ export function ExpensesClient({
   companyId,
   currency,
 }: ExpensesClientProps) {
+  const { t, lang } = useT()
   const [categories, setCategories] = useState<ExpenseCategory[]>(initialCats)
   const [expenses, setExpenses] = useState(initial)
   const [search, setSearch] = useState('')
@@ -186,7 +189,7 @@ export function ExpensesClient({
           const total = expenses.filter((e) => e.category_id === cat.id).reduce((s, e) => s + e.amount, 0)
           return (
             <div key={cat.id} className="bg-accent rounded-xl p-3">
-              <p className="text-xs text-muted-foreground">{cat.name_ar || cat.name}</p>
+              <p className="text-xs text-muted-foreground">{localizedName(cat, lang)}</p>
               <p className="text-lg font-bold">{formatCurrency(total, currency)}</p>
             </div>
           )
@@ -212,7 +215,7 @@ export function ExpensesClient({
           <option value="">كل الفئات</option>
           {categories.map((c) => (
             <option key={c.id} value={c.id}>
-              {c.name_ar || c.name}
+              {localizedName(c, lang)}
             </option>
           ))}
         </select>
@@ -243,7 +246,7 @@ export function ExpensesClient({
                   <td className="px-4 py-3">
                     {(expense.expense_categories as any) && (
                       <span className="text-xs bg-accent px-2 py-0.5 rounded-full">
-                        {(expense.expense_categories as any).name_ar || (expense.expense_categories as any).name}
+                        {localizedName(expense.expense_categories as any, lang)}
                       </span>
                     )}
                   </td>
@@ -326,7 +329,7 @@ export function ExpensesClient({
                     <option value="">بدون فئة</option>
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.name_ar || c.name}
+                        {localizedName(c, lang)}
                       </option>
                     ))}
                   </select>

@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, Users, Building2, User, Loader2, Trash2, Pencil, Phone, Mail } from 'lucide-react'
 import { formatCurrency, cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/language-provider'
+import { localizedName } from '@/lib/i18n'
 import { createClient } from '@/lib/supabase/client'
 import type { Party } from '@/types/database'
 
@@ -21,16 +23,22 @@ const typeConfig = {
 }
 
 export function PartiesClient({ parties, companyId, currency }: PartiesClientProps) {
+  const { t, lang } = useT()
   const router = useRouter()
   const [showForm, setShowForm] = useState(false)
   const [loading, setLoading] = useState(false)
   const [filterType, setFilterType] = useState('all')
   const [form, setForm] = useState({
-    name: '', name_ar: '', type: 'customer' as Party['type'],
-    email: '', phone: '', address: '', notes: ''
+    name: '',
+    name_ar: '',
+    type: 'customer' as Party['type'],
+    email: '',
+    phone: '',
+    address: '',
+    notes: '',
   })
 
-  const filtered = filterType === 'all' ? parties : parties.filter(p => p.type === filterType)
+  const filtered = filterType === 'all' ? parties : parties.filter((p) => p.type === filterType)
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -53,7 +61,9 @@ export function PartiesClient({ parties, companyId, currency }: PartiesClientPro
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('هل تريد حذف هذا الطرف؟')) return
+    if (!confirm('هل تريد حذف هذا الطرف؟')) {
+      return
+    }
     const supabase = createClient()
     await supabase.from('parties').update({ is_active: false }).eq('id', id)
     router.refresh()
@@ -61,8 +71,8 @@ export function PartiesClient({ parties, companyId, currency }: PartiesClientPro
 
   const stats = {
     total: parties.length,
-    customers: parties.filter(p => p.type === 'customer').length,
-    suppliers: parties.filter(p => p.type === 'supplier').length,
+    customers: parties.filter((p) => p.type === 'customer').length,
+    suppliers: parties.filter((p) => p.type === 'supplier').length,
   }
 
   return (
@@ -72,9 +82,12 @@ export function PartiesClient({ parties, companyId, currency }: PartiesClientPro
           <h2 className="text-xl font-bold text-foreground">الأطراف</h2>
           <p className="text-sm text-muted-foreground">العملاء والموردون والموظفون</p>
         </div>
-        <button onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm">
-          <Plus className="w-4 h-4" />إضافة طرف
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm"
+        >
+          <Plus className="w-4 h-4" />
+          إضافة طرف
         </button>
       </div>
 
@@ -99,24 +112,37 @@ export function PartiesClient({ parties, companyId, currency }: PartiesClientPro
           <form onSubmit={handleSave} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="form-label">الاسم (عربي) <span className="text-red-500">*</span></label>
-                <input value={form.name_ar} onChange={e => setForm({...form, name_ar: e.target.value})}
-                  placeholder="اسم الطرف" required
-                  className="w-full border border-input bg-background rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+                <label className="form-label">
+                  الاسم (عربي) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  value={form.name_ar}
+                  onChange={(e) => setForm({ ...form, name_ar: e.target.value })}
+                  placeholder="اسم الطرف"
+                  required
+                  className="w-full border border-input bg-background rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                />
               </div>
               <div>
                 <label className="form-label">Name (English)</label>
-                <input value={form.name} onChange={e => setForm({...form, name: e.target.value})}
+                <input
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder="Party Name"
-                  className="w-full border border-input bg-background rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary" dir="ltr" />
+                  className="w-full border border-input bg-background rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                  dir="ltr"
+                />
               </div>
             </div>
 
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <label className="form-label">النوع</label>
-                <select value={form.type} onChange={e => setForm({...form, type: e.target.value as any})}
-                  className="w-full border border-input bg-background rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary">
+                <select
+                  value={form.type}
+                  onChange={(e) => setForm({ ...form, type: e.target.value as any })}
+                  className="w-full border border-input bg-background rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                >
                   <option value="customer">عميل</option>
                   <option value="supplier">مورد</option>
                   <option value="employee">موظف</option>
@@ -125,31 +151,58 @@ export function PartiesClient({ parties, companyId, currency }: PartiesClientPro
               </div>
               <div>
                 <label className="form-label">البريد الإلكتروني</label>
-                <input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})}
+                <input
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
                   placeholder="email@example.com"
-                  className="w-full border border-input bg-background rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary" dir="ltr" />
+                  className="w-full border border-input bg-background rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                  dir="ltr"
+                />
               </div>
               <div>
                 <label className="form-label">الهاتف</label>
-                <input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})}
+                <input
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
                   placeholder="+966XXXXXXXXX"
-                  className="w-full border border-input bg-background rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary" dir="ltr" />
+                  className="w-full border border-input bg-background rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                  dir="ltr"
+                />
               </div>
             </div>
 
             <div>
               <label className="form-label">ملاحظات</label>
-              <input value={form.notes} onChange={e => setForm({...form, notes: e.target.value})}
+              <input
+                value={form.notes}
+                onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 placeholder="ملاحظات اختيارية..."
-                className="w-full border border-input bg-background rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+                className="w-full border border-input bg-background rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+              />
             </div>
 
             <div className="flex gap-3">
-              <button type="button" onClick={() => setShowForm(false)}
-                className="flex-1 border border-input bg-background rounded-lg py-2.5 text-sm font-medium hover:bg-accent transition-colors">إلغاء</button>
-              <button type="submit" disabled={loading}
-                className="flex-1 bg-primary text-primary-foreground rounded-lg py-2.5 text-sm font-medium hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors">
-                {loading ? <><Loader2 className="w-4 h-4 animate-spin" />جاري الحفظ...</> : 'حفظ'}
+              <button
+                type="button"
+                onClick={() => setShowForm(false)}
+                className="flex-1 border border-input bg-background rounded-lg py-2.5 text-sm font-medium hover:bg-accent transition-colors"
+              >
+                إلغاء
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-1 bg-primary text-primary-foreground rounded-lg py-2.5 text-sm font-medium hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    جاري الحفظ...
+                  </>
+                ) : (
+                  'حفظ'
+                )}
               </button>
             </div>
           </form>
@@ -158,10 +211,22 @@ export function PartiesClient({ parties, companyId, currency }: PartiesClientPro
 
       {/* Filter */}
       <div className="flex items-center gap-1 bg-muted rounded-lg p-1 w-fit">
-        {[{ key: 'all', label: 'الكل' }, { key: 'customer', label: 'العملاء' }, { key: 'supplier', label: 'الموردون' }, { key: 'employee', label: 'الموظفون' }].map(f => (
-          <button key={f.key} onClick={() => setFilterType(f.key)}
-            className={cn('px-4 py-1.5 rounded-md text-sm font-medium transition-colors',
-              filterType === f.key ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground')}>
+        {[
+          { key: 'all', label: 'الكل' },
+          { key: 'customer', label: 'العملاء' },
+          { key: 'supplier', label: 'الموردون' },
+          { key: 'employee', label: 'الموظفون' },
+        ].map((f) => (
+          <button
+            key={f.key}
+            onClick={() => setFilterType(f.key)}
+            className={cn(
+              'px-4 py-1.5 rounded-md text-sm font-medium transition-colors',
+              filterType === f.key
+                ? 'bg-background shadow-sm text-foreground'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
             {f.label}
           </button>
         ))}
@@ -176,7 +241,7 @@ export function PartiesClient({ parties, companyId, currency }: PartiesClientPro
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map(party => {
+          {filtered.map((party) => {
             const config = typeConfig[party.type] || typeConfig.other
             const Icon = config.icon
             return (
@@ -187,15 +252,17 @@ export function PartiesClient({ parties, companyId, currency }: PartiesClientPro
                       <Icon className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="font-semibold text-foreground">{party.name_ar || party.name}</p>
+                      <p className="font-semibold text-foreground">{localizedName(party, lang)}</p>
                       <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', config.color)}>
                         {config.label}
                       </span>
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
-                    <button onClick={() => handleDelete(party.id)}
-                      className="p-1.5 hover:bg-red-50 rounded-md text-muted-foreground hover:text-red-600 transition-colors">
+                    <button
+                      onClick={() => handleDelete(party.id)}
+                      className="p-1.5 hover:bg-red-50 rounded-md text-muted-foreground hover:text-red-600 transition-colors"
+                    >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -205,7 +272,9 @@ export function PartiesClient({ parties, companyId, currency }: PartiesClientPro
                   {party.email && (
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Mail className="w-3.5 h-3.5 shrink-0" />
-                      <span dir="ltr" className="truncate">{party.email}</span>
+                      <span dir="ltr" className="truncate">
+                        {party.email}
+                      </span>
                     </div>
                   )}
                   {party.phone && (
@@ -218,7 +287,12 @@ export function PartiesClient({ parties, companyId, currency }: PartiesClientPro
 
                 <div className="mt-3 pt-3 border-t flex justify-between">
                   <span className="text-xs text-muted-foreground">الرصيد</span>
-                  <span className={cn('text-sm font-semibold', Number(party.current_balance) >= 0 ? 'text-emerald-600' : 'text-red-600')}>
+                  <span
+                    className={cn(
+                      'text-sm font-semibold',
+                      Number(party.current_balance) >= 0 ? 'text-emerald-600' : 'text-red-600',
+                    )}
+                  >
                     {formatCurrency(party.current_balance, currency)}
                   </span>
                 </div>

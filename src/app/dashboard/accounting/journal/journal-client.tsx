@@ -16,6 +16,8 @@ import {
   Loader2,
   AlertCircle,
 } from 'lucide-react'
+import { useT } from '@/lib/i18n/language-provider'
+import { localizedName } from '@/lib/i18n'
 
 interface Account {
   id: string
@@ -109,6 +111,7 @@ export function JournalClient({
   company_id: string
   currency: string
 }) {
+  const { t, lang } = useT()
   const [entries, setEntries] = useState<JournalEntry[]>(initialEntries)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [showModal, setShowModal] = useState(false)
@@ -559,7 +562,7 @@ export function JournalClient({
                                     <td className="px-3 py-2 text-gray-400">{line.line_number}</td>
                                     <td className="px-3 py-2 font-mono text-blue-700">{line.accounts?.code || '—'}</td>
                                     <td className="px-3 py-2 text-gray-900">
-                                      {line.accounts?.name_ar || line.accounts?.name || '—'}
+                                      {localizedName(line.accounts || ({} as any), lang) || '—'}
                                     </td>
                                     <td className="px-3 py-2 text-gray-500">{line.description || '—'}</td>
                                     <td className="px-3 py-2 text-left text-blue-700 font-medium">

@@ -3,6 +3,8 @@
 import { useState, useMemo } from 'react'
 import { Plus, Search, User, Edit, Trash2, Phone, Mail, Check, Loader2, Eye } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
+import { useT } from '@/lib/i18n/language-provider'
+import { localizedName } from '@/lib/i18n'
 import Link from 'next/link'
 import type { Customer } from '@/types/erp'
 import { BottomSheet } from '@/components/mobile/BottomSheet'
@@ -27,6 +29,7 @@ const emptyForm = {
 }
 
 export function CustomersClient({ customers: initial, companyId, currency }: CustomersClientProps) {
+  const { t, lang } = useT()
   const [customers, setCustomers] = useState(initial)
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
@@ -169,7 +172,7 @@ export function CustomersClient({ customers: initial, companyId, currency }: Cus
                   <User className="w-5 h-5 text-primary" />
                 </div>
                 <div className="min-w-0">
-                  <p className="font-semibold text-sm truncate">{customer.name_ar || customer.name}</p>
+                  <p className="font-semibold text-sm truncate">{localizedName(customer, lang)}</p>
                   {customer.code && <p className="text-xs text-muted-foreground">{customer.code}</p>}
                 </div>
               </div>

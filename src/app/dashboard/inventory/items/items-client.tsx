@@ -4,6 +4,8 @@ import { useState, useMemo, useCallback } from 'react'
 import { Search, Package, Plus, Loader2, Check, X, AlertTriangle, Camera } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/language-provider'
+import { localizedName } from '@/lib/i18n'
 import { useBarcode } from '@/lib/native/react/use-barcode'
 import { ScanFeedback } from '@/components/native/ScanFeedback'
 
@@ -28,6 +30,7 @@ const emptyItem = {
 }
 
 export function ItemsClient({ items: initialItems, warehouses, companyId, currency }: ItemsClientProps) {
+  const { t, lang } = useT()
   const [items, setItems] = useState(initialItems)
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
@@ -185,7 +188,7 @@ export function ItemsClient({ items: initialItems, warehouses, companyId, curren
                       <div className="flex items-center gap-2">
                         <Package className="w-4 h-4 text-muted-foreground shrink-0" />
                         <div>
-                          <p className="font-medium">{item.name_ar || item.name || '—'}</p>
+                          <p className="font-medium">{localizedName(item, lang) || '—'}</p>
                           {(item.sku || item.barcode) && (
                             <p className="text-xs text-muted-foreground">{item.sku || item.barcode}</p>
                           )}

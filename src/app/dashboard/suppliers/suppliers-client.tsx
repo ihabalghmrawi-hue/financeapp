@@ -3,6 +3,8 @@
 import { useState, useMemo } from 'react'
 import { Plus, Search, Truck, Edit, Trash2, Phone, X, Check, Loader2 } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
+import { useT } from '@/lib/i18n/language-provider'
+import { localizedName } from '@/lib/i18n'
 import type { Supplier } from '@/types/erp'
 
 interface SuppliersClientProps {
@@ -24,6 +26,7 @@ const emptyForm = {
 }
 
 export function SuppliersClient({ suppliers: initial, companyId, currency }: SuppliersClientProps) {
+  const { t, lang } = useT()
   const [suppliers, setSuppliers] = useState(initial)
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
@@ -144,7 +147,7 @@ export function SuppliersClient({ suppliers: initial, companyId, currency }: Sup
                   <Truck className="w-5 h-5 text-orange-600" />
                 </div>
                 <div>
-                  <p className="font-semibold text-sm">{supplier.name_ar || supplier.name}</p>
+                  <p className="font-semibold text-sm">{localizedName(supplier, lang)}</p>
                   {supplier.phone && (
                     <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
                       <Phone className="w-3 h-3" />

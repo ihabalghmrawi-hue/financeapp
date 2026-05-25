@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Loader2, CheckCircle } from 'lucide-react'
+import { useT } from '@/lib/i18n/language-provider'
+import { localizedName } from '@/lib/i18n'
 import type { Category, Party, Wallet, Transaction } from '@/types/database'
 
 interface TransactionFormProps {
@@ -24,6 +26,7 @@ export function TransactionForm({
   initialData,
 }: TransactionFormProps) {
   const router = useRouter()
+  const { t, lang } = useT()
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
@@ -31,7 +34,7 @@ export function TransactionForm({
   const today = new Date().toISOString().split('T')[0]
 
   const [form, setForm] = useState({
-    type: initialData?.type || 'expense' as 'income' | 'expense' | 'transfer',
+    type: initialData?.type || ('expense' as 'income' | 'expense' | 'transfer'),
     amount: initialData?.amount?.toString() || '',
     description: initialData?.description || '',
     description_ar: initialData?.description_ar || '',
@@ -44,12 +47,9 @@ export function TransactionForm({
     reference_number: initialData?.reference_number || '',
   })
 
-  const filteredCategories = categories.filter(c =>
-    c.type === form.type || c.type === 'both'
-  )
+  const filteredCategories = categories.filter((c) => c.type === form.type || c.type === 'both')
 
-  const update = (field: string, value: string) =>
-    setForm(prev => ({ ...prev, [field]: value }))
+  const update = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -80,10 +80,7 @@ export function TransactionForm({
 
     let result
     if (initialData) {
-      result = await supabase
-        .from('transactions')
-        .update(payload)
-        .eq('id', initialData.id)
+      result = await supabase.from('transactions').update(payload).eq('id', initialData.id)
     } else {
       result = await supabase.from('transactions').insert(payload)
     }
@@ -115,11 +112,7 @@ export function TransactionForm({
 
   return (
     <form onSubmit={handleSubmit} className="bg-card rounded-xl border shadow-sm p-6 space-y-5">
-      {error && (
-        <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg border border-red-200">
-          {error}
-        </div>
-      )}
+      {error && <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg border border-red-200">{error}</div>}
 
       {/* Transaction Type */}
       <div>
@@ -135,7 +128,7 @@ export function TransactionForm({
               type="button"
               onClick={() => update('type', value)}
               className={`p-3 rounded-lg border-2 text-sm font-medium transition-all ${
-                form.type === value ? color + ' border-opacity-100' : 'border-input bg-background text-muted-foreground'
+                form.type === value ? `${color} border-opacity-100` : 'border-input bg-background text-muted-foreground'
               }`}
             >
               {label}
@@ -146,7 +139,9 @@ export function TransactionForm({
 
       {/* Amount */}
       <div>
-        <label className="form-label">المبلغ <span className="text-red-500">*</span></label>
+        <label className="form-label">
+          المبلغ <span className="text-red-500">*</span>
+        </label>
         <div className="relative">
           <input
             type="number"
@@ -202,7 +197,7 @@ export function TransactionForm({
             <option value="">اختر الفئة</option>
             {filteredCategories.map((cat) => (
               <option key={cat.id} value={cat.id}>
-                {cat.name_ar || cat.name}
+                {localizedName(cat, lang)}
               </option>
             ))}
           </select>
@@ -217,7 +212,7 @@ export function TransactionForm({
             <option value="">اختر الطرف</option>
             {parties.map((p) => (
               <option key={p.id} value={p.id}>
-                {p.name_ar || p.name} ({p.type === 'customer' ? 'عميل' : 'مورد'})
+                {localizedName(p, lang)} ({p.type === 'customer' ? 'عميل' : 'مورد'})
               </option>
             ))}
           </select>
@@ -297,8 +292,10 @@ export function TransactionForm({
               <Loader2 className="w-4 h-4 animate-spin" />
               جاري الحفظ...
             </>
+          ) : initialData ? (
+            'تحديث القيد'
           ) : (
-            initialData ? 'تحديث القيد' : 'حفظ القيد'
+            'حفظ القيد'
           )}
         </button>
       </div>

@@ -13,6 +13,8 @@ import {
   ToggleLeft,
   ToggleRight,
 } from 'lucide-react'
+import { useT } from '@/lib/i18n/language-provider'
+import { localizedName } from '@/lib/i18n'
 
 interface Account {
   id: string
@@ -100,6 +102,7 @@ export function PostingRulesClient({
   accounts: Account[]
   company_id: string
 }) {
+  const { t, lang } = useT()
   const [rules, setRules] = useState(initialRules)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -294,7 +297,7 @@ export function PostingRulesClient({
               <div className="px-5 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div>
-                    <h3 className="font-semibold text-gray-900">{rule.name_ar || rule.name}</h3>
+                    <h3 className="font-semibold text-gray-900">{localizedName(rule, lang)}</h3>
                     <p className="text-xs text-gray-500">
                       {EVENT_LABELS[rule.event_type] || rule.event_type}
                       {rule.description && ` — ${rule.description}`}
