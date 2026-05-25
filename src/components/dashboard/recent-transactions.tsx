@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ArrowUpRight, ArrowDownRight, ArrowLeftRight, ExternalLink } from 'lucide-react'
 import { formatCurrency, formatDate, cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/language-provider'
+import { localizedName } from '@/lib/i18n'
 import type { Transaction } from '@/types/database'
 
 interface RecentTransactionsProps {
@@ -50,7 +51,7 @@ export function RecentTransactions({ transactions, currency }: RecentTransaction
 }
 
 function TransactionRow({ transaction, currency }: { transaction: Transaction; currency: string }) {
-  const { t } = useT()
+  const { t, lang } = useT()
   const icons = {
     income: <ArrowUpRight className="w-4 h-4 text-emerald-600" />,
     expense: <ArrowDownRight className="w-4 h-4 text-red-600" />,
@@ -85,10 +86,12 @@ function TransactionRow({ transaction, currency }: { transaction: Transaction; c
       {/* Description */}
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-foreground truncate">
-          {transaction.description_ar || transaction.description || typeLabels[transaction.type]}
+          {lang === 'ar'
+            ? transaction.description_ar || transaction.description
+            : transaction.description || transaction.description_ar || typeLabels[transaction.type]}
         </p>
         <p className="text-xs text-muted-foreground mt-0.5">
-          {(transaction.category as any)?.name_ar || typeLabels[transaction.type]} •{' '}
+          {localizedName((transaction.category as any) || {}, lang) || typeLabels[transaction.type]} •{' '}
           {formatDate(transaction.transaction_date)}
         </p>
       </div>

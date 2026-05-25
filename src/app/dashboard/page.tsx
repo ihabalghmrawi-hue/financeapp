@@ -2,7 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { formatCurrency } from '@/lib/utils'
 import { t } from '@/lib/i18n/server'
 import Link from 'next/link'
-import { headers } from 'next/headers'
+import { cookies, headers } from 'next/headers'
+import type { Lang } from '@/lib/i18n'
 import { getFeatures } from '@/lib/features'
 import {
   ShoppingCart,
@@ -45,6 +46,8 @@ export default async function DashboardPage() {
   const rawBusinessType = dec(h.get('x-business-type'), 'retail')
   const features = getFeatures(rawBusinessType)
   const staffName = dec(h.get('x-staff-name'), 'المدير')
+  const cookieStore = await cookies()
+  const lang: Lang = (cookieStore.get('lang')?.value as Lang) || 'ar'
 
   const today = new Date().toISOString().slice(0, 10)
   const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10)
@@ -485,7 +488,7 @@ export default async function DashboardPage() {
             </div>
 
             <div className="space-y-4">
-              <LowStockCard lowStock={lowStock} />
+              <LowStockCard lowStock={lowStock} lang={lang} />
               <QuickStatsCard
                 customersCount={(customersCount as any)?.length || 0}
                 productsCount={(productsCount as any)?.length || 0}
@@ -688,7 +691,7 @@ function QuickLink({
   )
 }
 
-function LowStockCard({ lowStock }: { lowStock: any[] }) {
+function LowStockCard({ lowStock, lang }: { lowStock: any[]; lang: Lang }) {
   return (
     <div className="premium-card overflow-hidden">
       <div
@@ -710,7 +713,9 @@ function LowStockCard({ lowStock }: { lowStock: any[] }) {
             const qty = (p.inventory as any[])?.reduce((s: number, i: any) => s + i.quantity, 0) || 0
             return (
               <div key={p.id} className="flex justify-between items-center px-4 py-2.5 text-sm hover:bg-secondary/30">
-                <span className="text-muted-foreground truncate">{p.name_ar || p.name}</span>
+                <span className="text-muted-foreground truncate">
+                  {lang === 'ar' ? p.name_ar || p.name : p.name || p.name_ar}
+                </span>
                 <span
                   className={`text-xs font-medium px-2 py-0.5 rounded-full ${qty <= 0 ? 'bg-destructive/10 text-destructive' : 'bg-warning/10 text-warning'}`}
                 >

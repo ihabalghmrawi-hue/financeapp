@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Wallet, Building2, Smartphone, Plus } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 import { useT } from '@/lib/i18n/language-provider'
+import { localizedName } from '@/lib/i18n'
 import type { Wallet as WalletType } from '@/types/database'
 
 interface WalletSummaryProps {
@@ -24,7 +25,7 @@ const walletColors = {
 }
 
 export function WalletSummary({ wallets, currency }: WalletSummaryProps) {
-  const { t } = useT()
+  const { t, lang } = useT()
   const totalBalance = wallets.reduce((s, w) => s + Number(w.current_balance), 0)
 
   return (
@@ -61,7 +62,7 @@ export function WalletSummary({ wallets, currency }: WalletSummaryProps) {
                   <Icon className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{wallet.name_ar || wallet.name}</p>
+                  <p className="text-sm font-medium text-foreground truncate">{localizedName(wallet, lang)}</p>
                   <p className="text-xs text-muted-foreground capitalize">
                     {wallet.type === 'cash'
                       ? t('wallet.types.cash')

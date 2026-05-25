@@ -1,15 +1,16 @@
 import { createClient } from '@/lib/supabase/server'
-import { headers } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { getFeatures } from '@/lib/features'
 import { getDefaultReportMode, getAvailableModes } from '@/lib/report-engine'
 import { UnifiedReportsClient } from './unified-reports-client'
 import type { SalesReportData, RentalReportData, ReportInsight } from '@/lib/report-engine'
 import { getCompanyId, getCurrency } from '@/lib/tenant'
+import type { Lang } from '@/lib/i18n'
 
 export const dynamic = 'force-dynamic'
 
 // ── Sales data fetcher ────────────────────────────────────────────────────────
-async function fetchSalesData(days: number, businessType?: string): Promise<SalesReportData> {
+async function fetchSalesData(days: number, businessType?: string, lang?: Lang): Promise<SalesReportData> {
   const COMPANY_ID = await getCompanyId()
   const supabase = createClient()
   const since = new Date(Date.now() - days * 86400000).toISOString()
@@ -58,7 +59,7 @@ async function fetchSalesData(days: number, businessType?: string): Promise<Sale
   ;(saleItems || []).forEach((item: any) => {
     const p = item.products
     if (!productMap[item.product_id]) {
-      productMap[item.product_id] = { name: p?.name_ar || p?.name || '؟', qty: 0, revenue: 0, cost: 0 }
+      productMap[item.product_id] = { name: (lang === 'ar' ? p?.name_ar : p?.name) || '؟', qty: 0, revenue: 0, cost: 0 }
     }
     productMap[item.product_id].qty += Number(item.quantity)
     productMap[item.product_id].revenue += Number(item.total)
@@ -81,7 +82,7 @@ async function fetchSalesData(days: number, businessType?: string): Promise<Sale
     })
     .slice(0, 10)
     .map((p) => ({
-      name: (p as any).name_ar || p.name,
+      name: lang === 'ar' ? (p as any).name_ar || p.name : p.name || (p as any).name_ar,
       stock: (p.inventory as any[])?.reduce((n: number, i: any) => n + Number(i.quantity || 0), 0) || 0,
       value:
         ((p.inventory as any[])?.reduce((n: number, i: any) => n + Number(i.quantity || 0), 0) || 0) *
@@ -90,7 +91,7 @@ async function fetchSalesData(days: number, businessType?: string): Promise<Sale
 
   const lowStock = (products || [])
     .map((p) => ({
-      name: (p as any).name_ar || p.name,
+      name: lang === 'ar' ? (p as any).name_ar || p.name : p.name || (p as any).name_ar,
       stock: (p.inventory as any[])?.reduce((n: number, i: any) => n + Number(i.quantity || 0), 0) || 0,
     }))
     .filter((p) => p.stock <= 5)
@@ -357,8 +358,11 @@ export default async function ReportsPage() {
   const defaultMode = getDefaultReportMode(features.businessType)
   const modes = getAvailableModes(features.businessType)
 
+  const cookieStore = await cookies()
+  const lang: Lang = (cookieStore.get('lang')?.value as Lang) || 'ar'
+
   const [salesData, rentalData] = await Promise.all([
-    modes.includes('sales') ? fetchSalesData(30, features.businessType) : Promise.resolve(null),
+    modes.includes('sales') ? fetchSalesData(30, features.businessType, lang) : Promise.resolve(null),
     modes.includes('rental') ? fetchRentalData(30) : Promise.resolve(null),
   ])
 

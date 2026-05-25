@@ -27,6 +27,7 @@ import {
 import { formatCurrency } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/language-provider'
+import { localizedName } from '@/lib/i18n'
 
 interface CartItem {
   product: any
@@ -98,7 +99,7 @@ export function POSClient({
   currency,
   company,
 }: POSClientProps) {
-  const { t } = useT()
+  const { t, lang } = useT()
   const [cart, setCart] = useState<CartItem[]>([])
   const [mobileCartOpen, setMobileCartOpen] = useState(false)
   const [search, setSearch] = useState('')
@@ -119,7 +120,7 @@ export function POSClient({
   const [warehouseId] = useState(defaultWarehouseId)
   const [showShortcuts, setShowShortcuts] = useState(false)
   const companyName =
-    company?.name_ar || company?.name || process.env.NEXT_PUBLIC_COMPANY_NAME || t('common.companyDefault')
+    localizedName(company || {}, lang) || process.env.NEXT_PUBLIC_COMPANY_NAME || t('common.companyDefault')
   const companyPhone = company?.phone || ''
   const companyAddress = company?.address || ''
   const companyTax = company?.tax_number || ''
@@ -158,6 +159,7 @@ export function POSClient({
       const matchSearch =
         !search ||
         (p.name || '').toLowerCase().includes(search.toLowerCase()) ||
+        (p.name || '').includes(search) ||
         (p.name_ar || '').includes(search) ||
         (p.barcode || '').includes(search) ||
         (p.sku || '').toLowerCase().includes(search.toLowerCase())
@@ -463,7 +465,7 @@ export function POSClient({
                     : 'bg-background border border-border hover:border-primary/50',
                 )}
               >
-                {cat.name_ar || cat.name}
+                {localizedName(cat, lang)}
               </button>
             ))}
           </div>
@@ -513,7 +515,7 @@ export function POSClient({
                     </div>
 
                     <p className="text-xs font-semibold text-foreground line-clamp-2 mb-1 leading-tight">
-                      {product.name_ar || product.name}
+                      {localizedName(product, lang)}
                     </p>
 
                     <p className="text-sm font-bold text-primary mt-auto">
@@ -691,7 +693,7 @@ export function POSClient({
               <div key={item.product.id} className="bg-background rounded-xl p-2.5 border border-border/60">
                 <div className="flex items-start justify-between gap-1 mb-2">
                   <p className="text-xs font-semibold text-foreground leading-tight flex-1 line-clamp-2">
-                    {item.product.name_ar || item.product.name}
+                    {localizedName(item.product, lang)}
                   </p>
                   <button
                     onClick={() => removeItem(item.product.id)}
@@ -996,7 +998,7 @@ export function POSClient({
                       {receipt.items.map((item, i) => (
                         <tr key={i} className="border-b border-gray-100 last:border-0">
                           <td className="py-1.5 pr-0 font-medium max-w-[120px]">
-                            <span className="block truncate">{item.product.name_ar || item.product.name}</span>
+                            <span className="block truncate">{localizedName(item.product, lang)}</span>
                             {item.discount_percent > 0 && (
                               <span className="text-gray-400 text-[10px]">
                                 {t('pos.receipt.discount')} {item.discount_percent}%

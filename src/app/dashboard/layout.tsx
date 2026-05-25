@@ -84,7 +84,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
     settings: null,
   }
 
-  const companyDisplayName = branding?.name_ar || company.name || 'شركتي'
+  const companyDisplayName =
+    lang === 'ar' ? branding?.name_ar || company.name : company.name || branding?.name_ar || 'شركتي'
 
   return (
     <DashboardMobileLayout

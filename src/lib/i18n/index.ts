@@ -58,6 +58,16 @@ function interpolate(template: string, params?: TranslationParams): string {
   )
 }
 
+export function localizedName<T extends { name?: string | null; name_ar?: string | null }>(
+  entity: T,
+  lang: Lang,
+): string {
+  if (lang === 'ar') {
+    return entity.name_ar || entity.name || ''
+  }
+  return entity.name || entity.name_ar || ''
+}
+
 export function resolveTranslation(lang: Lang, key: string, params?: TranslationParams): string {
   const primary = getNestedValue(resources[lang], key)
   if (typeof primary === 'string') {

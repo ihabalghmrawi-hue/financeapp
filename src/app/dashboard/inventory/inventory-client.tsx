@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useMemo, useCallback } from 'react'
+import { localizedName } from '@/lib/i18n'
+import { useT } from '@/lib/i18n/language-provider'
 import {
   Plus,
   Search,
@@ -147,6 +149,7 @@ export function InventoryClient({
   const [seedingUnits, setSeedingUnits] = useState(false)
   const [activeSizeGroup, setActiveSizeGroup] = useState(0)
   const { scan, scanning } = useBarcode()
+  const { lang } = useT()
   const [scanFeed, setScanFeed] = useState<{
     visible: boolean
     type: 'success' | 'error' | 'scanning'
@@ -417,7 +420,7 @@ export function InventoryClient({
           <option value="">كل الفئات</option>
           {categories.map((c) => (
             <option key={c.id} value={c.id}>
-              {c.name_ar || c.name}
+              {localizedName(c, lang)}
             </option>
           ))}
         </select>
@@ -445,7 +448,7 @@ export function InventoryClient({
               <div key={product.id} className="bg-card border rounded-xl p-3">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm truncate">{product.name_ar || product.name}</p>
+                    <p className="font-semibold text-sm truncate">{localizedName(product, lang)}</p>
                     {(product.sku || product.barcode) && (
                       <p className="text-xs text-muted-foreground truncate" dir="ltr">
                         {product.sku || product.barcode}
@@ -573,7 +576,7 @@ export function InventoryClient({
                     <tr key={product.id} className="hover:bg-muted/30 transition-colors">
                       <td className="px-4 py-3">
                         <div>
-                          <p className="font-medium">{product.name_ar || product.name}</p>
+                          <p className="font-medium">{localizedName(product, lang)}</p>
                           {(product.sku || product.barcode) && (
                             <p className="text-xs text-muted-foreground">{product.sku || product.barcode}</p>
                           )}
@@ -608,7 +611,7 @@ export function InventoryClient({
                       <td className="px-4 py-3">
                         {product.product_categories && (
                           <span className="text-xs bg-accent px-2 py-0.5 rounded-full">
-                            {product.product_categories.name_ar || product.product_categories.name}
+                            {localizedName(product.product_categories, lang)}
                           </span>
                         )}
                       </td>
@@ -849,7 +852,7 @@ export function InventoryClient({
                     <option value="">بدون فئة</option>
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.name_ar || c.name}
+                        {localizedName(c, lang)}
                       </option>
                     ))}
                   </select>
@@ -886,7 +889,7 @@ export function InventoryClient({
                     <option value="">اختر الوحدة</option>
                     {units.map((u) => (
                       <option key={u.id} value={u.id}>
-                        {u.name_ar || u.name}
+                        {localizedName(u, lang)}
                       </option>
                     ))}
                   </select>

@@ -45,6 +45,7 @@ import type { Branding } from '@/lib/branding'
 import type { Company } from '@/types/database'
 import { motion } from 'framer-motion'
 import { useT } from '@/lib/i18n/language-provider'
+import { localizedName } from '@/lib/i18n'
 
 interface StaffInfo {
   name: string
@@ -76,7 +77,7 @@ function can(staff: StaffInfo | undefined, perm: string): boolean {
 export function Sidebar({ company, user, staff, features, branding }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const { t } = useT()
+  const { t, lang } = useT()
 
   const isActive = (href: string) => {
     if (href === '/dashboard') {
@@ -386,12 +387,12 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
             />
           ) : (
             <div className="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold text-sm shadow-sm shrink-0">
-              {getInitials(branding?.name_ar || company?.name || 'ش')}
+              {getInitials(localizedName(branding || company || {}, lang) || 'ش')}
             </div>
           )}
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-sm text-foreground truncate">
-              {branding?.name_ar || company?.name || 'شركتي'}
+              {localizedName(branding || company || {}, lang) || 'شركتي'}
             </p>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
               <span>{features.icon}</span>
