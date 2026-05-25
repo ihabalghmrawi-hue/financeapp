@@ -9,7 +9,14 @@ export const dynamic = 'force-dynamic'
 export default async function InventoryPage() {
   const COMPANY_ID = await getCompanyId()
   const supabase = createClient()
-  const businessType = (await headers()).get('x-business-type') || 'retail'
+  const dec = (v: string | null, fallback = 'retail') => {
+    try {
+      return decodeURIComponent(v || fallback)
+    } catch {
+      return v || fallback
+    }
+  }
+  const businessType = dec((await headers()).get('x-business-type'))
   const features = getFeatures(businessType)
 
   const [{ data: products }, { data: categories }, { data: units }, { data: warehouses }] = await Promise.all([
