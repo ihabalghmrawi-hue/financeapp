@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     const businessType: BusinessType = (settings?.business_type as BusinessType) || 'retail'
 
     // ── Validate that all products belong to this business_type ────────────────
-    const productIds = [...new Set(items.map((i: any) => i.product_id))]
+    const productIds = [...new Set(items.map((i: any) => i.product_id as string))] as string[]
     const { data: validProducts } = await supabase.from('products').select('id, business_type').in('id', productIds)
 
     const validMap = new Map((validProducts || []).map((p: any) => [p.id, p.business_type]))

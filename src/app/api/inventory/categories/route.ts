@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { getCompanyId } from '@/lib/tenant'
 import type { BusinessType } from '@/lib/features'
+import { headers } from 'next/headers'
 
 // Default product categories per business domain
 const CATEGORY_SEEDS: Record<string, { name: string; name_ar: string; color: string; icon: string }[]> = {
