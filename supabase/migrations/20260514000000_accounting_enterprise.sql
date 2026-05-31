@@ -6,6 +6,7 @@
 -- ── 1. ENHANCE EXISTING TABLES ──────────────────────────────
 
 -- journal_entries: add approval workflow columns
+ALTER TABLE journal_entries ADD COLUMN IF NOT EXISTS entry_number       TEXT;
 ALTER TABLE journal_entries ADD COLUMN IF NOT EXISTS approval_status    TEXT DEFAULT 'approved' CHECK (approval_status IN ('pending','approved','rejected'));
 ALTER TABLE journal_entries ADD COLUMN IF NOT EXISTS approved_by_id     UUID;
 ALTER TABLE journal_entries ADD COLUMN IF NOT EXISTS approved_at        TIMESTAMPTZ;
@@ -286,6 +287,14 @@ ALTER TABLE approval_workflows           ENABLE ROW LEVEL SECURITY;
 ALTER TABLE journal_approvals            ENABLE ROW LEVEL SECURITY;
 ALTER TABLE journal_audit_trail          ENABLE ROW LEVEL SECURITY;
 ALTER TABLE integrity_checks             ENABLE ROW LEVEL SECURITY;
+
+-- Add company_id to detail tables that reference parent via FK
+ALTER TABLE posting_rule_lines    ADD COLUMN IF NOT EXISTS company_id UUID NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000';
+ALTER TABLE reconciliation_lines  ADD COLUMN IF NOT EXISTS company_id UUID NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000';
+ALTER TABLE recurring_journal_log ADD COLUMN IF NOT EXISTS company_id UUID NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000';
+ALTER TABLE posting_rule_lines    ALTER COLUMN company_id DROP DEFAULT;
+ALTER TABLE reconciliation_lines  ALTER COLUMN company_id DROP DEFAULT;
+ALTER TABLE recurring_journal_log ALTER COLUMN company_id DROP DEFAULT;
 
 -- ── 14. RLS POLICIES (company-scoped) ────────────────────────
 DO $$

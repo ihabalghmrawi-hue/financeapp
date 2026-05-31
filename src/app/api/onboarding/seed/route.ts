@@ -1,7 +1,8 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { BUSINESS_TYPES, type BusinessType } from '@/lib/features'
+import { BUSINESS_TYPES } from '@/lib/features'
+import type { BusinessType } from '@/types/erp'
 import { getCompanyId } from '@/lib/tenant'
 
 // ── Seed templates per business type ─────────────────────────────────────────

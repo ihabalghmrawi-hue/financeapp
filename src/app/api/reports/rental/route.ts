@@ -1,12 +1,15 @@
 import type { NextRequest } from 'next/server'
-import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import type { RentalReportData, ReportInsight } from '@/lib/report-engine'
-import { getCompanyId } from '@/lib/tenant'
+import { requireCompany, isAuthError } from '@/lib/auth-guard'
+import { ok, Errors } from '@/lib/api-response'
 
 export async function GET(req: NextRequest) {
-  const COMPANY_ID = await getCompanyId()
-  const days = parseInt(req.nextUrl.searchParams.get('days') || '30')
+  const ctx = requireCompany(req)
+  if (isAuthError(ctx)) {
+    return ctx
+  }
+
+  const days = parseInt(req.nextUrl.searchParams.get('days') || '30', 10)
   const supabase = createClient()
 
   const since = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10)
@@ -19,25 +22,25 @@ export async function GET(req: NextRequest) {
       .select(
         'id, dress_id, customer_name, start_date, end_date, days, total_price, amount_paid, status, created_at, dresses(name, code)',
       )
-      .eq('company_id', COMPANY_ID)
+      .eq('company_id', ctx.companyId)
       .neq('status', 'cancelled')
       .gte('start_date', since)
       .order('start_date'),
     supabase
       .from('dresses')
       .select('id, name, code, status, rental_price')
-      .eq('company_id', COMPANY_ID)
+      .eq('company_id', ctx.companyId)
       .neq('status', 'retired'),
     supabase
       .from('rental_orders')
       .select('id, customer_name, end_date, total_price, amount_paid, dresses(name)')
-      .eq('company_id', COMPANY_ID)
+      .eq('company_id', ctx.companyId)
       .eq('status', 'active')
       .lt('end_date', today),
     supabase
       .from('rental_orders')
       .select('id, customer_name, end_date, dresses(name)')
-      .eq('company_id', COMPANY_ID)
+      .eq('company_id', ctx.companyId)
       .eq('status', 'active')
       .gte('end_date', today)
       .lte('end_date', in7Days)
@@ -47,7 +50,6 @@ export async function GET(req: NextRequest) {
   const allOrders = orders || []
   const allDresses = dresses || []
 
-  // ── Totals ──────────────────────────────────────────────────────────────────
   const revenue = allOrders.reduce((s, o) => s + Number(o.total_price), 0)
   const pending = allOrders
     .filter((o) => ['booked', 'active'].includes(o.status))
@@ -55,25 +57,22 @@ export async function GET(req: NextRequest) {
   const activeNow = allDresses.filter((d) => d.status === 'rented').length
   const totalDresses = allDresses.length
   const availableDresses = allDresses.filter((d) => d.status === 'available').length
-
   const utilizationRate = totalDresses > 0 ? Math.round((activeNow / totalDresses) * 100) : 0
-
   const totalDaysBooked = allOrders.reduce((s, o) => s + Number(o.days || 1), 0)
   const avgBookingDays = allOrders.length > 0 ? Math.round((totalDaysBooked / allOrders.length) * 10) / 10 : 0
 
-  // ── Daily revenue ────────────────────────────────────────────────────────────
   const dayMap: Record<string, { revenue: number; bookings: number }> = {}
-  allOrders.forEach((o) => {
+  for (const o of allOrders) {
     const day = o.start_date || o.created_at?.slice(0, 10) || ''
     if (!day) {
-      return
+      continue
     }
     if (!dayMap[day]) {
       dayMap[day] = { revenue: 0, bookings: 0 }
     }
     dayMap[day].revenue += Number(o.total_price)
     dayMap[day].bookings += 1
-  })
+  }
   const dailyRevenue = Object.entries(dayMap)
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([day, v]) => ({
@@ -81,15 +80,14 @@ export async function GET(req: NextRequest) {
       ...v,
     }))
 
-  // ── Top dresses ──────────────────────────────────────────────────────────────
   const dressMap: Record<
     string,
     { name: string; code: string; bookings: number; revenue: number; daysBooked: number }
   > = {}
-  allOrders.forEach((o) => {
-    const d = o.dresses as any
+  for (const o of allOrders) {
+    const d = (o as any).dresses
     if (!d) {
-      return
+      continue
     }
     if (!dressMap[o.dress_id]) {
       dressMap[o.dress_id] = { name: d.name, code: d.code || '', bookings: 0, revenue: 0, daysBooked: 0 }
@@ -97,67 +95,58 @@ export async function GET(req: NextRequest) {
     dressMap[o.dress_id].bookings += 1
     dressMap[o.dress_id].revenue += Number(o.total_price)
     dressMap[o.dress_id].daysBooked += Number(o.days || 1)
-  })
+  }
   const topDresses = Object.values(dressMap)
     .sort((a, b) => b.revenue - a.revenue)
     .slice(0, 10)
-    .map((d) => ({
-      ...d,
-      utilization: Math.min(100, Math.round((d.daysBooked / days) * 100)),
-    }))
+    .map((d) => ({ ...d, utilization: Math.min(100, Math.round((d.daysBooked / days) * 100)) }))
 
-  // ── Late orders ──────────────────────────────────────────────────────────────
   const lateOrders = (lateRaw || [])
     .map((o) => {
       const daysLate = Math.floor((Date.now() - new Date(o.end_date).getTime()) / 86400000)
       return {
         customer_name: o.customer_name,
-        dress_name: (o.dresses as any)?.name || '—',
+        dress_name: (o as any).dresses?.name || '—',
         days_late: daysLate,
         amount_owed: Number(o.total_price) - Number(o.amount_paid),
       }
     })
     .sort((a, b) => b.days_late - a.days_late)
 
-  // ── Upcoming returns ─────────────────────────────────────────────────────────
   const upcomingEnds = (upcoming || []).map((o) => {
     const daysLeft = Math.ceil((new Date(o.end_date).getTime() - Date.now()) / 86400000)
     return {
       customer_name: o.customer_name,
-      dress_name: (o.dresses as any)?.name || '—',
+      dress_name: (o as any).dresses?.name || '—',
       end_date: o.end_date,
       days_left: daysLeft,
     }
   })
 
-  // ── Insights ─────────────────────────────────────────────────────────────────
-  const insights: ReportInsight[] = []
+  const insights: { type: 'danger' | 'success' | 'warning' | 'info'; message: string }[] = []
   if (lateOrders.length > 0) {
-    insights.push({ type: 'danger', message: `${lateOrders.length} overdue return(s) — contact customers` })
+    insights.push({ type: 'danger', message: `${lateOrders.length} overdue return(s)` })
   }
   if (utilizationRate >= 80) {
-    insights.push({ type: 'success', message: `Utilization rate ${utilizationRate}% — excellent!` })
+    insights.push({ type: 'success', message: `Utilization rate ${utilizationRate}%` })
   }
   if (utilizationRate < 30 && totalDresses > 0) {
-    insights.push({ type: 'warning', message: `Low utilization rate (${utilizationRate}%) — consider promotions` })
+    insights.push({ type: 'warning', message: `Low utilization rate (${utilizationRate}%)` })
   }
   if (pending > 0) {
-    insights.push({ type: 'warning', message: `${pending.toFixed(0)} uncollected — follow up on pending payments` })
+    insights.push({ type: 'warning', message: `${pending.toFixed(0)} uncollected` })
   }
   if (upcomingEnds.length > 0) {
-    insights.push({
-      type: 'info',
-      message: `${upcomingEnds.length} dress(es) to return within 7 days — ensure communication`,
-    })
+    insights.push({ type: 'info', message: `${upcomingEnds.length} dress(es) to return within 7 days` })
   }
   if (topDresses[0]) {
     insights.push({
       type: 'info',
-      message: `"${topDresses[0].name}" most booked with revenue ${topDresses[0].revenue.toFixed(0)}`,
+      message: `"${topDresses[0].name}" most booked (${topDresses[0].revenue.toFixed(0)})`,
     })
   }
 
-  const data: RentalReportData = {
+  return ok({
     mode: 'rental',
     days,
     period: { from: since, to: today },
@@ -177,7 +166,5 @@ export async function GET(req: NextRequest) {
     lateOrders,
     upcomingEnds,
     insights,
-  }
-
-  return NextResponse.json(data)
+  })
 }

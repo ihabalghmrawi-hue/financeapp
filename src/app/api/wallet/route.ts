@@ -1,189 +1,132 @@
 import type { NextRequest } from 'next/server'
-import { NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
-import { getCompanyId } from '@/lib/tenant'
-import { logAudit } from '@/lib/audit'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { requireCompany, requireRole, isAuthError } from '@/lib/auth-guard'
+import { ok, Errors } from '@/lib/api-response'
+import { TreasuryService } from '@/services/treasury.service'
 
-export async function GET() {
-  const supabase = createClient()
-  const companyId = await getCompanyId()
-  const { data, error } = await supabase
-    .from('wallets')
-    .select('*')
-    .eq('company_id', companyId)
-    .eq('is_active', true)
-    .order('is_default', { ascending: false })
-    .order('created_at')
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+export async function GET(req: NextRequest) {
+  const ctx = requireCompany(req)
+  if (isAuthError(ctx)) {
+    return ctx
   }
-  return NextResponse.json(data || [])
+
+  const supabase = createClient()
+  const service = new TreasuryService(supabase, ctx.companyId)
+
+  const result = await service.listWallets()
+  if (!result.ok) {
+    return Errors.serverError(result.error)
+  }
+  return ok(result.data)
 }
 
 export async function POST(req: NextRequest) {
-  const admin = createAdminClient()
-  const companyId = await getCompanyId()
-  const body = await req.json()
-  const { action } = body
+  const ctx = requireRole(req, 'treasury:transfer')
+  if (isAuthError(ctx)) {
+    return ctx
+  }
 
-  // ── Create a new wallet ────────────────────────────────────────────────────
+  const supabase = createClient()
+  const service = new TreasuryService(supabase, ctx.companyId)
+
+  let body: unknown
+  try {
+    body = await req.json()
+  } catch {
+    return Errors.badRequest('Invalid JSON body')
+  }
+
+  const input = body as any
+  const { action } = input
+
   if (!action || action === 'create') {
-    const { name, name_ar, type = 'cash', initial_balance = 0, bank_name, account_number } = body
-    if (!name && !name_ar) {
-      return NextResponse.json({ error: 'Wallet name is required' }, { status: 400 })
+    const result = await service.createWallet(input)
+    if (!result.ok) {
+      return Errors.badRequest(result.error)
     }
-
-    const balance = parseFloat(initial_balance) || 0
-
-    // If this is the first wallet, make it default
-    const { count } = await admin
-      .from('wallets')
-      .select('id', { count: 'exact', head: true })
-      .eq('company_id', companyId)
-      .eq('is_active', true)
-    const is_default = (count ?? 0) === 0
-
-    const { data: wallet, error: wErr } = await admin
-      .from('wallets')
-      .insert({
-        company_id: companyId,
-        name: name || name_ar,
-        name_ar: name_ar || name,
-        type,
-        current_balance: balance,
-        initial_balance: balance,
-        is_default,
-        is_active: true,
-        bank_name: bank_name || null,
-        account_number: account_number || null,
-      })
-      .select()
-      .single()
-
-    if (wErr) {
-      return NextResponse.json({ error: wErr.message }, { status: 500 })
-    }
-
-    // Record initial balance as opening transaction
-    if (balance > 0) {
-      await admin.from('transactions').insert({
-        company_id: companyId,
-        wallet_id: wallet.id,
-        type: 'income',
-        amount: balance,
-        description: 'Opening balance',
-        description_ar: 'رصيد افتتاحي',
-        reference_type: 'opening',
-        transaction_date: new Date().toISOString().slice(0, 10),
-        status: 'completed',
-      })
-    }
-
-    await logAudit({
-      action: 'wallet.created',
-      entityType: 'wallet',
-      entityId: wallet.id,
-      newValue: { name: wallet.name_ar, balance },
-    })
-    return NextResponse.json(wallet, { status: 201 })
+    return ok(result.data, undefined, 201)
   }
 
-  // ── Deposit / Withdrawal ───────────────────────────────────────────────────
-  if (action === 'deposit' || action === 'withdrawal') {
-    const { wallet_id, amount, description, payment_method = 'cash' } = body
-    if (!wallet_id) {
-      return NextResponse.json({ error: 'wallet_id is required' }, { status: 400 })
+  if (action === 'deposit') {
+    if (!input.wallet_id) {
+      return Errors.badRequest('wallet_id is required')
     }
-    const amt = parseFloat(amount)
+    const amt = parseFloat(input.amount)
     if (!amt || amt <= 0) {
-      return NextResponse.json({ error: 'Amount must be greater than zero' }, { status: 400 })
+      return Errors.badRequest('Amount must be greater than zero')
     }
-
-    const { data: wallet, error: wErr } = await admin
-      .from('wallets')
-      .select('id, current_balance, name_ar, name')
-      .eq('id', wallet_id)
-      .eq('company_id', companyId)
-      .single()
-    if (wErr || !wallet) {
-      return NextResponse.json({ error: 'Wallet not found' }, { status: 404 })
-    }
-
-    const delta = action === 'deposit' ? amt : -amt
-    const new_balance = Number(wallet.current_balance || 0) + delta
-
-    if (action === 'withdrawal' && new_balance < 0) {
-      return NextResponse.json({ error: 'Insufficient balance for withdrawal' }, { status: 400 })
-    }
-
-    const { error: updateErr } = await admin
-      .from('wallets')
-      .update({ current_balance: new_balance, updated_at: new Date().toISOString() })
-      .eq('id', wallet_id)
-    if (updateErr) {
-      return NextResponse.json({ error: updateErr.message }, { status: 500 })
-    }
-
-    const desc = description || (action === 'deposit' ? 'Deposit' : 'Withdrawal')
-    await admin.from('transactions').insert({
-      company_id: companyId,
-      wallet_id,
-      type: action === 'deposit' ? 'income' : 'expense',
+    const result = await service.recordIncome({
+      wallet_id: input.wallet_id,
       amount: amt,
-      description: desc,
-      description_ar: desc,
-      reference_type: action,
-      payment_method,
-      transaction_date: new Date().toISOString().slice(0, 10),
-      status: 'completed',
+      description: input.description || 'Deposit',
     })
-
-    const auditAction = action === 'deposit' ? 'wallet.deposit' : 'wallet.withdrawal'
-    await logAudit({
-      action: auditAction,
-      entityType: 'wallet',
-      entityId: wallet_id,
-      newValue: { amount: amt, new_balance, description: desc },
-    })
-    return NextResponse.json({ ok: true, new_balance })
-  }
-
-  // ── Set default wallet ─────────────────────────────────────────────────────
-  if (action === 'set_default') {
-    const { wallet_id } = body
-    if (!wallet_id) {
-      return NextResponse.json({ error: 'wallet_id is required' }, { status: 400 })
+    if (!result.ok) {
+      return Errors.serverError(result.error)
     }
-    await admin.from('wallets').update({ is_default: false }).eq('company_id', companyId)
-    await admin.from('wallets').update({ is_default: true }).eq('id', wallet_id).eq('company_id', companyId)
-    return NextResponse.json({ ok: true })
+    return ok({ ok: true })
   }
 
-  return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
+  if (action === 'withdrawal') {
+    if (!input.wallet_id) {
+      return Errors.badRequest('wallet_id is required')
+    }
+    const amt = parseFloat(input.amount)
+    if (!amt || amt <= 0) {
+      return Errors.badRequest('Amount must be greater than zero')
+    }
+    const result = await service.recordExpense({
+      wallet_id: input.wallet_id,
+      amount: amt,
+      description: input.description || 'Withdrawal',
+    })
+    if (!result.ok) {
+      return Errors.serverError(result.error)
+    }
+    return ok({ ok: true })
+  }
+
+  if (action === 'set_default') {
+    if (!input.wallet_id) {
+      return Errors.badRequest('wallet_id is required')
+    }
+    const admin = createAdminClient()
+    await admin.from('wallets').update({ is_default: false }).eq('company_id', ctx.companyId)
+    await admin.from('wallets').update({ is_default: true }).eq('id', input.wallet_id).eq('company_id', ctx.companyId)
+    return ok({ ok: true })
+  }
+
+  return Errors.badRequest('Unknown action')
 }
 
 export async function DELETE(req: NextRequest) {
-  const admin = createAdminClient()
-  const companyId = await getCompanyId()
-  const { id } = await req.json()
-  if (!id) {
-    return NextResponse.json({ error: 'ID is required' }, { status: 400 })
+  const ctx = requireRole(req, 'treasury:transfer')
+  if (isAuthError(ctx)) {
+    return ctx
   }
 
-  // Check it's not the last active wallet
+  const admin = createAdminClient()
+  const { id } = await req.json()
+  if (!id) {
+    return Errors.badRequest('ID is required')
+  }
+
   const { count } = await admin
     .from('wallets')
     .select('id', { count: 'exact', head: true })
-    .eq('company_id', companyId)
+    .eq('company_id', ctx.companyId)
     .eq('is_active', true)
   if ((count ?? 0) <= 1) {
-    return NextResponse.json({ error: 'Cannot delete the only wallet' }, { status: 400 })
+    return Errors.badRequest('Cannot delete the only wallet')
   }
 
-  const { error } = await admin.from('wallets').update({ is_active: false }).eq('id', id).eq('company_id', companyId)
+  const { error } = await admin
+    .from('wallets')
+    .update({ is_active: false })
+    .eq('id', id)
+    .eq('company_id', ctx.companyId)
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return Errors.serverError(error.message)
   }
-  return NextResponse.json({ ok: true })
+  return ok({ ok: true })
 }

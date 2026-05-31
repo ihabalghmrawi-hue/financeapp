@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { BUSINESS_TYPE_COOKIE } from '@/lib/features'
 import { isSuperAdmin, loadRolePermissions } from '@/lib/rbac'
-import { computeLifecycle } from '@/lib/subscription'
+import { computeLifecycle, type SubscriptionRow } from '@/lib/subscription'
 import { checkRateLimit, getClientIp, rateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit'
 import { trackSessionInMiddleware } from '@/lib/auth-tracking'
 import { DEFAULT_LANG, LANG_COOKIE, LANG_COOKIE_MAX_AGE, SUPPORTED_LANGS, isLang, type Lang } from '@/lib/i18n'
@@ -164,7 +164,7 @@ export async function proxy(request: NextRequest) {
         .eq('company_id', tenantId)
         .maybeSingle()
 
-      const lifecycle = computeLifecycle(sub as any)
+      const lifecycle = computeLifecycle(sub as unknown as SubscriptionRow)
 
       // Suspended/Cancelled → hard block
       if (lifecycle.isBlocked && isDashboard) {

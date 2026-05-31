@@ -74,10 +74,19 @@ export function NotificationsPanel() {
     }
   }
 
-  const markAllRead = () => {
+  const markAllRead = async () => {
     const allIds = new Set(notifications.map((n) => n.id))
     setReadIds(allIds)
     setUnread(0)
+    try {
+      await fetch('/api/notifications', {
+        method: 'PATCH',
+        body: '{}',
+        headers: { 'Content-Type': 'application/json' },
+      })
+    } catch {
+      /* ignore */
+    }
   }
 
   const markRead = (id: string) => {

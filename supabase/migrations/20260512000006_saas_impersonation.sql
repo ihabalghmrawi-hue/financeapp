@@ -1,3 +1,14 @@
+-- Create super_admins table if not exists (required by impersonation RLS)
+CREATE TABLE IF NOT EXISTS super_admins (
+  email TEXT PRIMARY KEY,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE super_admins ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "super_admins_select_self" ON super_admins
+  FOR SELECT USING (auth.jwt() ->> 'email' = email);
+
 CREATE TABLE IF NOT EXISTS impersonation_sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   admin_id UUID NOT NULL,

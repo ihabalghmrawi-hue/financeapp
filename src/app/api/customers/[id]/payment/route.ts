@@ -1,56 +1,36 @@
 import type { NextRequest } from 'next/server'
-import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { getCompanyId } from '@/lib/tenant'
+import { requireCompany, requireRole, isAuthError } from '@/lib/auth-guard'
+import { ok, Errors } from '@/lib/api-response'
+import { CustomerService } from '@/services/customer.service'
 
-// POST /api/customers/[id]/payment — record a debt payment
-export async function POST(req: NextRequest, context: { params: Promise<{ id: string }> }) {
-  const { id } = await context.params
-
-  const COMPANY_ID = await getCompanyId()
-
-  try {
-    const { amount, method, notes } = await req.json()
-
-    if (!amount || amount <= 0) {
-      return NextResponse.json({ error: 'Invalid amount' }, { status: 400 })
-    }
-
-    const supabase = createClient()
-
-    const { data: customer, error: custErr } = await supabase
-      .from('customers')
-      .select('id, name, balance')
-      .eq('id', id)
-      .eq('company_id', COMPANY_ID)
-      .single()
-
-    if (custErr || !customer) {
-      return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
-    }
-
-    const paid = Math.min(amount, customer.balance)
-    const newBalance = Math.max(0, customer.balance - paid)
-
-    // Update customer balance
-    await supabase.from('customers').update({ balance: newBalance }).eq('id', id)
-
-    // Record transaction
-    await supabase.from('customer_transactions').insert({
-      company_id: COMPANY_ID,
-      customer_id: id,
-      type: 'payment',
-      amount: -paid,
-      balance_after: newBalance,
-      notes: notes || `Payment via ${method || 'Cash'}`,
-    })
-
-    return NextResponse.json({
-      success: true,
-      paid,
-      new_balance: newBalance,
-    })
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const ctx = requireRole(req, 'customers:update')
+  if (isAuthError(ctx)) {
+    return ctx
   }
+
+  const { id } = await params
+  const supabase = createClient()
+  const service = new CustomerService(supabase, ctx.companyId)
+
+  let body: unknown
+  try {
+    body = await req.json()
+  } catch {
+    return Errors.badRequest('Invalid JSON body')
+  }
+
+  if (!body || (body as any).amount <= 0) {
+    return Errors.badRequest('Invalid amount')
+  }
+
+  const result = await service.recordPayment(id, body as any)
+  if (!result.ok) {
+    if (result.code === 'NOT_FOUND') {
+      return Errors.notFound('العميل')
+    }
+    return Errors.badRequest(result.error)
+  }
+  return ok(result.data)
 }

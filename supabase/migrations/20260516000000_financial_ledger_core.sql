@@ -157,24 +157,24 @@ BEGIN
 
     EXECUTE format(
       'CREATE POLICY "%1$s_tenant_select" ON %1$s FOR SELECT TO authenticated USING (
-        company_id IN (SELECT company_id FROM memberships WHERE user_id = auth.uid() AND is_active = true)
+        company_id::text IN (SELECT company_id::text FROM memberships WHERE user_id::text = auth.uid()::text AND is_active = true)
       )', t
     );
     EXECUTE format(
       'CREATE POLICY "%1$s_tenant_insert" ON %1$s FOR INSERT TO authenticated WITH CHECK (
-        company_id IN (SELECT company_id FROM memberships WHERE user_id = auth.uid() AND is_active = true)
+        company_id::text IN (SELECT company_id::text FROM memberships WHERE user_id::text = auth.uid()::text AND is_active = true)
       )', t
     );
     EXECUTE format(
       'CREATE POLICY "%1$s_tenant_update" ON %1$s FOR UPDATE TO authenticated USING (
-        company_id IN (SELECT company_id FROM memberships WHERE user_id = auth.uid() AND is_active = true)
+        company_id::text IN (SELECT company_id::text FROM memberships WHERE user_id::text = auth.uid()::text AND is_active = true)
       ) WITH CHECK (
-        company_id IN (SELECT company_id FROM memberships WHERE user_id = auth.uid() AND is_active = true)
+        company_id::text IN (SELECT company_id::text FROM memberships WHERE user_id::text = auth.uid()::text AND is_active = true)
       )', t
     );
     EXECUTE format(
       'CREATE POLICY "%1$s_tenant_delete" ON %1$s FOR DELETE TO authenticated USING (
-        company_id IN (SELECT company_id FROM memberships WHERE user_id = auth.uid() AND is_active = true)
+        company_id::text IN (SELECT company_id::text FROM memberships WHERE user_id::text = auth.uid()::text AND is_active = true)
       )', t
     );
   END LOOP;
@@ -184,10 +184,10 @@ END $$;
 DROP POLICY IF EXISTS "Users can update journal entries" ON journal_entries;
 DROP POLICY IF EXISTS "Users can delete journal entries" ON journal_entries;
 CREATE POLICY "journal_entries_tenant_update" ON journal_entries FOR UPDATE TO authenticated
-  USING (company_id IN (SELECT company_id FROM memberships WHERE user_id = auth.uid() AND is_active = true))
-  WITH CHECK (company_id IN (SELECT company_id FROM memberships WHERE user_id = auth.uid() AND is_active = true));
+  USING (company_id::text IN (SELECT company_id::text FROM memberships WHERE user_id::text = auth.uid()::text AND is_active = true))
+  WITH CHECK (company_id::text IN (SELECT company_id::text FROM memberships WHERE user_id::text = auth.uid()::text AND is_active = true));
 CREATE POLICY "journal_entries_tenant_delete" ON journal_entries FOR DELETE TO authenticated
-  USING (company_id IN (SELECT company_id FROM memberships WHERE user_id = auth.uid() AND is_active = true));
+  USING (company_id::text IN (SELECT company_id::text FROM memberships WHERE user_id::text = auth.uid()::text AND is_active = true));
 
 -- ── 9. LEDGER BALANCE FUNCTIONS ────────────────────────────
 -- Core function: derive balance from journal lines (never mutate)

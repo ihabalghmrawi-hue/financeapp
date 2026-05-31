@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Check, Loader2, Sparkles } from 'lucide-react'
-import type { BusinessType } from '@/lib/features'
+import type { BusinessType } from '@/types/erp'
 import { BUSINESS_TYPES, getFeatures } from '@/lib/features'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/language-provider'

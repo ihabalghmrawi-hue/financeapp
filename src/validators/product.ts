@@ -1,8 +1,8 @@
 import { z } from 'zod'
 import { MoneySchema, OptionalString, UUIDSchema } from './common'
+import type { BusinessType } from '@/types/erp'
 
-// Valid business types — must match DB CHECK constraint + features.ts
-export const BUSINESS_TYPE_VALUES = [
+const BUSINESS_TYPE_VALUES = [
   'pharmacy',
   'retail',
   'wholesale',
@@ -14,7 +14,7 @@ export const BUSINESS_TYPE_VALUES = [
   'atelier',
   'suits',
   'other',
-] as const
+] as const satisfies readonly BusinessType[]
 
 // ── Base ──────────────────────────────────────────────────────────────────────
 

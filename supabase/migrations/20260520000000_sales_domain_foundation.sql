@@ -523,6 +523,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trg_invoice_immutable ON invoices;
 CREATE TRIGGER trg_invoice_immutable
   BEFORE UPDATE OR DELETE ON invoices
   FOR EACH ROW EXECUTE FUNCTION fn_invoice_immutable();
@@ -550,6 +551,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trg_invoice_idempotent ON invoices;
 CREATE TRIGGER trg_invoice_idempotent
   BEFORE INSERT OR UPDATE ON invoices
   FOR EACH ROW EXECUTE FUNCTION fn_sales_idempotent();
@@ -557,17 +559,29 @@ CREATE TRIGGER trg_invoice_idempotent
 -- ============================================================
 -- AUDIT TRIGGERS (auto updated_at)
 -- ============================================================
+DROP TRIGGER IF EXISTS trg_quotations_updated_at ON quotations;
 CREATE TRIGGER trg_quotations_updated_at BEFORE UPDATE ON quotations FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_sales_orders_updated_at ON sales_orders;
 CREATE TRIGGER trg_sales_orders_updated_at BEFORE UPDATE ON sales_orders FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_sales_order_lines_updated_at ON sales_order_lines;
 CREATE TRIGGER trg_sales_order_lines_updated_at BEFORE UPDATE ON sales_order_lines FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_invoices_updated_at ON invoices;
 CREATE TRIGGER trg_invoices_updated_at BEFORE UPDATE ON invoices FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_credit_notes_updated_at ON credit_notes;
 CREATE TRIGGER trg_credit_notes_updated_at BEFORE UPDATE ON credit_notes FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_customer_payments_updated_at ON customer_payments;
 CREATE TRIGGER trg_customer_payments_updated_at BEFORE UPDATE ON customer_payments FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_customer_wallets_updated_at ON customer_wallets;
 CREATE TRIGGER trg_customer_wallets_updated_at BEFORE UPDATE ON customer_wallets FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_customer_credit_limits_updated_at ON customer_credit_limits;
 CREATE TRIGGER trg_customer_credit_limits_updated_at BEFORE UPDATE ON customer_credit_limits FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_sales_shipments_updated_at ON sales_shipments;
 CREATE TRIGGER trg_sales_shipments_updated_at BEFORE UPDATE ON sales_shipments FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_shipment_lines_updated_at ON shipment_lines;
 CREATE TRIGGER trg_shipment_lines_updated_at BEFORE UPDATE ON shipment_lines FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_sales_returns_updated_at ON sales_returns;
 CREATE TRIGGER trg_sales_returns_updated_at BEFORE UPDATE ON sales_returns FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_sales_pricing_rules_updated_at ON sales_pricing_rules;
 CREATE TRIGGER trg_sales_pricing_rules_updated_at BEFORE UPDATE ON sales_pricing_rules FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
 
 -- ============================================================

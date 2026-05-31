@@ -72,6 +72,7 @@ DROP FUNCTION IF EXISTS _get_company_business_type;
 
 -- Validate business_type values against the known set
 -- These must match the BusinessType union in src/lib/features.ts
+ALTER TABLE products          DROP CONSTRAINT IF EXISTS chk_products_business_type;
 ALTER TABLE products          ADD CONSTRAINT chk_products_business_type
   CHECK (business_type IN (
     'pharmacy', 'retail', 'wholesale', 'clothing',
@@ -79,6 +80,7 @@ ALTER TABLE products          ADD CONSTRAINT chk_products_business_type
     'atelier', 'suits', 'other'
   ));
 
+ALTER TABLE product_categories DROP CONSTRAINT IF EXISTS chk_product_categories_business_type;
 ALTER TABLE product_categories ADD CONSTRAINT chk_product_categories_business_type
   CHECK (business_type IN (
     'pharmacy', 'retail', 'wholesale', 'clothing',
@@ -86,21 +88,24 @@ ALTER TABLE product_categories ADD CONSTRAINT chk_product_categories_business_ty
     'atelier', 'suits', 'other'
   ));
 
-ALTER TABLE inventory ADD CONSTRAINT chk_inventory_business_type
+ALTER TABLE inventory          DROP CONSTRAINT IF EXISTS chk_inventory_business_type;
+ALTER TABLE inventory          ADD CONSTRAINT chk_inventory_business_type
   CHECK (business_type IN (
     'pharmacy', 'retail', 'wholesale', 'clothing',
     'stationery', 'tools', 'dress_rental', 'construction',
     'atelier', 'suits', 'other'
   ));
 
-ALTER TABLE customers ADD CONSTRAINT chk_customers_business_type
+ALTER TABLE customers          DROP CONSTRAINT IF EXISTS chk_customers_business_type;
+ALTER TABLE customers          ADD CONSTRAINT chk_customers_business_type
   CHECK (business_type IN (
     'pharmacy', 'retail', 'wholesale', 'clothing',
     'stationery', 'tools', 'dress_rental', 'construction',
     'atelier', 'suits', 'other'
   ));
 
-ALTER TABLE sales ADD CONSTRAINT chk_sales_business_type
+ALTER TABLE sales              DROP CONSTRAINT IF EXISTS chk_sales_business_type;
+ALTER TABLE sales              ADD CONSTRAINT chk_sales_business_type
   CHECK (business_type IN (
     'pharmacy', 'retail', 'wholesale', 'clothing',
     'stationery', 'tools', 'dress_rental', 'construction',

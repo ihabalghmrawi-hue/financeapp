@@ -154,6 +154,13 @@ CREATE POLICY "jel_insert" ON journal_entry_lines FOR INSERT
     WHERE je.id = journal_entry_id
       AND je.company_id = get_user_company_id()
   ));
+DROP POLICY IF EXISTS "jel_update" ON journal_entry_lines;
+CREATE POLICY "jel_update" ON journal_entry_lines FOR UPDATE
+  USING (EXISTS (
+    SELECT 1 FROM journal_entries je
+    WHERE je.id = journal_entry_id
+      AND je.company_id = get_user_company_id()
+  ));
 DROP POLICY IF EXISTS "jel_delete" ON journal_entry_lines;
 CREATE POLICY "jel_delete" ON journal_entry_lines FOR DELETE
   USING (EXISTS (
@@ -173,6 +180,11 @@ CREATE POLICY "sale_items_insert" ON sale_items FOR INSERT
   WITH CHECK (EXISTS (
     SELECT 1 FROM sales s WHERE s.id = sale_id AND s.company_id = get_user_company_id()
   ));
+DROP POLICY IF EXISTS "sale_items_update" ON sale_items;
+CREATE POLICY "sale_items_update" ON sale_items FOR UPDATE
+  USING (EXISTS (
+    SELECT 1 FROM sales s WHERE s.id = sale_id AND s.company_id = get_user_company_id()
+  ));
 DROP POLICY IF EXISTS "sale_items_delete" ON sale_items;
 CREATE POLICY "sale_items_delete" ON sale_items FOR DELETE
   USING (EXISTS (
@@ -188,6 +200,11 @@ CREATE POLICY "purchase_items_select" ON purchase_items FOR SELECT
 DROP POLICY IF EXISTS "purchase_items_insert" ON purchase_items;
 CREATE POLICY "purchase_items_insert" ON purchase_items FOR INSERT
   WITH CHECK (EXISTS (
+    SELECT 1 FROM purchases p WHERE p.id = purchase_id AND p.company_id = get_user_company_id()
+  ));
+DROP POLICY IF EXISTS "purchase_items_update" ON purchase_items;
+CREATE POLICY "purchase_items_update" ON purchase_items FOR UPDATE
+  USING (EXISTS (
     SELECT 1 FROM purchases p WHERE p.id = purchase_id AND p.company_id = get_user_company_id()
   ));
 DROP POLICY IF EXISTS "purchase_items_delete" ON purchase_items;
@@ -217,6 +234,11 @@ CREATE POLICY "product_variants_select" ON product_variants FOR SELECT
 DROP POLICY IF EXISTS "product_variants_insert" ON product_variants;
 CREATE POLICY "product_variants_insert" ON product_variants FOR INSERT
   WITH CHECK (EXISTS (
+    SELECT 1 FROM products p WHERE p.id = product_id AND p.company_id = get_user_company_id()
+  ));
+DROP POLICY IF EXISTS "product_variants_update" ON product_variants;
+CREATE POLICY "product_variants_update" ON product_variants FOR UPDATE
+  USING (EXISTS (
     SELECT 1 FROM products p WHERE p.id = product_id AND p.company_id = get_user_company_id()
   ));
 DROP POLICY IF EXISTS "product_variants_delete" ON product_variants;

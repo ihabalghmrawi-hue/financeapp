@@ -5,8 +5,7 @@ import { logAudit } from '@/lib/audit'
 import type { CreateProductInput, UpdateProductInput, ProductResponse } from '@/validators/product'
 import type { Plan } from '@/validators/subscription'
 import type { BusinessType } from '@/types/erp'
-
-export type ServiceResult<T> = { ok: true; data: T } | { ok: false; error: string; code?: string }
+import type { ServiceResult } from '@/types/service'
 
 export class ProductService {
   private readonly repo: ProductRepository

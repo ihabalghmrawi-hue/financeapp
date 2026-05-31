@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import type { BusinessType } from '@/lib/features'
+import type { BusinessType } from '@/types/erp'
 import { BUSINESS_TYPE_COOKIE, BUSINESS_TYPES } from '@/lib/features'
 
 async function getAuthCompanyId(supabase: ReturnType<typeof createClient>): Promise<string | null> {

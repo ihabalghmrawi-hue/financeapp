@@ -10,6 +10,7 @@ import { DashboardMobileLayout } from '@/components/layout/dashboard-mobile-layo
 import { MobileTopBar } from '@/components/layout/mobile-topbar'
 import { PageTransitionWrapper } from '@/components/layout/page-transition-wrapper'
 import { CommandBar } from '@/components/command-center'
+import { PageErrorBoundary } from '@/components/layout/page-error-boundary'
 import type { Lang } from '@/lib/i18n'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -111,7 +112,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <MobileTopBar />
           </div>
           <main className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">
-            <PageTransitionWrapper>{children}</PageTransitionWrapper>
+            <PageTransitionWrapper>
+              <PageErrorBoundary>{children}</PageErrorBoundary>
+            </PageTransitionWrapper>
           </main>
         </div>
       </div>

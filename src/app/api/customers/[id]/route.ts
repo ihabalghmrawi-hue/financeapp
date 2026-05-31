@@ -1,94 +1,52 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { getCompanyId } from '@/lib/tenant'
+import { requireCompany, requireRole, isAuthError } from '@/lib/auth-guard'
+import { ok, Errors } from '@/lib/api-response'
+import { CustomerService } from '@/services/customer.service'
 
-export async function PUT(
-  req: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
-  const { id } = await context.params
-
-  try {
-    const body = await req.json()
-
-    const COMPANY_ID = await getCompanyId()
-    const supabase = createClient()
-
-    const allowed: Record<string, unknown> = {}
-
-    if ('name' in body) {
-      allowed.name = String(body.name || '')
-    }
-
-    if ('phone' in body) {
-      allowed.phone = body.phone || null
-    }
-
-    if ('email' in body) {
-      allowed.email = body.email || null
-    }
-
-    if ('address' in body) {
-      allowed.address = body.address || null
-    }
-
-    if ('credit_limit' in body) {
-      allowed.credit_limit = Number(body.credit_limit) || 0
-    }
-
-    if ('is_active' in body) {
-      allowed.is_active = Boolean(body.is_active)
-    }
-
-    const { data: customer, error } = await supabase
-      .from('customers')
-      .update({
-        ...allowed,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', id)
-      .eq('company_id', COMPANY_ID)
-      .select()
-      .single()
-
-    if (error) {
-      throw new Error(error.message)
-    }
-
-    return NextResponse.json({ customer })
-  } catch (e: any) {
-    return NextResponse.json(
-      { error: e.message },
-      { status: 500 }
-    )
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const ctx = requireRole(req, 'customers:update')
+  if (isAuthError(ctx)) {
+    return ctx
   }
+
+  const { id } = await params
+  const supabase = createClient()
+  const service = new CustomerService(supabase, ctx.companyId)
+
+  let body: unknown
+  try {
+    body = await req.json()
+  } catch {
+    return Errors.badRequest('Invalid JSON body')
+  }
+
+  const result = await service.update(id, body as any)
+  if (!result.ok) {
+    if (result.code === 'NOT_FOUND') {
+      return Errors.notFound('العميل')
+    }
+    return Errors.badRequest(result.error)
+  }
+  return ok(result.data)
 }
 
-export async function DELETE(
-  req: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
-  const { id } = await context.params
-
-  try {
-    const COMPANY_ID = await getCompanyId()
-    const supabase = createClient()
-
-    const { error } = await supabase
-      .from('customers')
-      .update({ is_active: false })
-      .eq('id', id)
-      .eq('company_id', COMPANY_ID)
-
-    if (error) {
-      throw new Error(error.message)
-    }
-
-    return NextResponse.json({ success: true })
-  } catch (e: any) {
-    return NextResponse.json(
-      { error: e.message },
-      { status: 500 }
-    )
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const ctx = requireRole(_req, 'customers:delete')
+  if (isAuthError(ctx)) {
+    return ctx
   }
+
+  const { id } = await params
+  const supabase = createClient()
+  const service = new CustomerService(supabase, ctx.companyId)
+
+  const result = await service.delete(id)
+  if (!result.ok) {
+    if (result.code === 'NOT_FOUND') {
+      return Errors.notFound('العميل')
+    }
+    return Errors.serverError(result.error)
+  }
+  return ok({ success: true })
 }

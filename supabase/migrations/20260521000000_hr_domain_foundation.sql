@@ -5,7 +5,7 @@
 -- ============================================================
 
 -- 1. DEPARTMENTS
-CREATE TABLE departments (
+CREATE TABLE IF NOT EXISTS departments (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id  uuid NOT NULL REFERENCES companies(id),
   name        text NOT NULL,
@@ -21,7 +21,7 @@ CREATE INDEX idx_departments_company ON departments(company_id);
 CREATE UNIQUE INDEX idx_departments_code_company ON departments(company_id, code);
 
 -- 2. POSITIONS
-CREATE TABLE positions (
+CREATE TABLE IF NOT EXISTS positions (
   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id    uuid NOT NULL REFERENCES companies(id),
   department_id uuid NOT NULL REFERENCES departments(id),
@@ -40,7 +40,7 @@ CREATE INDEX idx_positions_department ON positions(department_id);
 CREATE UNIQUE INDEX idx_positions_code_company ON positions(company_id, code);
 
 -- 3. EMPLOYEES
-CREATE TABLE employees (
+CREATE TABLE IF NOT EXISTS employees (
   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id    uuid NOT NULL REFERENCES companies(id),
   employee_no   text NOT NULL,
@@ -73,7 +73,7 @@ CREATE INDEX idx_employees_status ON employees(company_id, status);
 CREATE UNIQUE INDEX idx_employees_no_company ON employees(company_id, employee_no);
 
 -- 4. EMPLOYEE_CONTRACTS
-CREATE TABLE employee_contracts (
+CREATE TABLE IF NOT EXISTS employee_contracts (
   id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id uuid NOT NULL REFERENCES companies(id),
   employee_id uuid NOT NULL REFERENCES employees(id),
@@ -103,7 +103,7 @@ CREATE INDEX idx_emp_contracts_employee ON employee_contracts(employee_id);
 CREATE INDEX idx_emp_contracts_active ON employee_contracts(employee_id) WHERE is_active = true;
 
 -- 5. EMPLOYEE_DOCUMENTS
-CREATE TABLE employee_documents (
+CREATE TABLE IF NOT EXISTS employee_documents (
   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id    uuid NOT NULL REFERENCES companies(id),
   employee_id   uuid NOT NULL REFERENCES employees(id),
@@ -117,7 +117,7 @@ CREATE TABLE employee_documents (
 CREATE INDEX idx_emp_docs_employee ON employee_documents(employee_id);
 
 -- 6. SHIFTS
-CREATE TABLE shifts (
+CREATE TABLE IF NOT EXISTS shifts (
   id                      uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id              uuid NOT NULL REFERENCES companies(id),
   name                    text NOT NULL,
@@ -147,7 +147,7 @@ CREATE TABLE shifts (
 CREATE INDEX idx_shifts_company ON shifts(company_id);
 
 -- 7. SHIFT_ASSIGNMENTS
-CREATE TABLE shift_assignments (
+CREATE TABLE IF NOT EXISTS shift_assignments (
   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id    uuid NOT NULL REFERENCES companies(id),
   employee_id   uuid NOT NULL REFERENCES employees(id),
@@ -160,7 +160,7 @@ CREATE TABLE shift_assignments (
 CREATE INDEX idx_shift_assignments_emp ON shift_assignments(employee_id, effective_from);
 
 -- 8. HOLIDAY_CALENDARS
-CREATE TABLE holiday_calendars (
+CREATE TABLE IF NOT EXISTS holiday_calendars (
   id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id uuid NOT NULL REFERENCES companies(id),
   name       text NOT NULL,
@@ -172,7 +172,7 @@ CREATE TABLE holiday_calendars (
 CREATE UNIQUE INDEX idx_holiday_cal_year_company ON holiday_calendars(company_id, year);
 
 -- 9. ATTENDANCE_LOGS
-CREATE TABLE attendance_logs (
+CREATE TABLE IF NOT EXISTS attendance_logs (
   id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id        uuid NOT NULL REFERENCES companies(id),
   employee_id       uuid NOT NULL REFERENCES employees(id),
@@ -196,7 +196,7 @@ CREATE UNIQUE INDEX idx_attendance_emp_date ON attendance_logs(company_id, emplo
 CREATE INDEX idx_attendance_date_range ON attendance_logs(company_id, date);
 
 -- 10. ATTENDANCE_SESSIONS
-CREATE TABLE attendance_sessions (
+CREATE TABLE IF NOT EXISTS attendance_sessions (
   id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id        uuid NOT NULL REFERENCES companies(id),
   employee_id       uuid NOT NULL REFERENCES employees(id),
@@ -213,7 +213,7 @@ CREATE TABLE attendance_sessions (
 CREATE INDEX idx_att_sessions_log ON attendance_sessions(attendance_log_id);
 
 -- 11. LEAVE_TYPES
-CREATE TABLE leave_types (
+CREATE TABLE IF NOT EXISTS leave_types (
   id                    uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id            uuid NOT NULL REFERENCES companies(id),
   name                  text NOT NULL,
@@ -234,7 +234,7 @@ CREATE TABLE leave_types (
 CREATE INDEX idx_leave_types_company ON leave_types(company_id);
 
 -- 12. LEAVE_REQUESTS
-CREATE TABLE leave_requests (
+CREATE TABLE IF NOT EXISTS leave_requests (
   id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id      uuid NOT NULL REFERENCES companies(id),
   employee_id     uuid NOT NULL REFERENCES employees(id),
@@ -257,7 +257,7 @@ CREATE INDEX idx_leave_requests_emp ON leave_requests(employee_id, status);
 CREATE INDEX idx_leave_requests_dates ON leave_requests(company_id, start_date, end_date);
 
 -- 13. LEAVE_BALANCES
-CREATE TABLE leave_balances (
+CREATE TABLE IF NOT EXISTS leave_balances (
   id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id      uuid NOT NULL REFERENCES companies(id),
   employee_id     uuid NOT NULL REFERENCES employees(id),
@@ -275,7 +275,7 @@ CREATE TABLE leave_balances (
 CREATE UNIQUE INDEX idx_leave_balance_unique ON leave_balances(company_id, employee_id, leave_type_id, year);
 
 -- 14. PAYROLL_CYCLES
-CREATE TABLE payroll_cycles (
+CREATE TABLE IF NOT EXISTS payroll_cycles (
   id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id   uuid NOT NULL REFERENCES companies(id),
   name         text NOT NULL,
@@ -291,7 +291,7 @@ CREATE TABLE payroll_cycles (
 CREATE UNIQUE INDEX idx_payroll_cycle_unique ON payroll_cycles(company_id, year, month, cycle_type);
 
 -- 15. PAYROLL_RUNS (immutable after locking)
-CREATE TABLE payroll_runs (
+CREATE TABLE IF NOT EXISTS payroll_runs (
   id                      uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id              uuid NOT NULL REFERENCES companies(id),
   cycle_id                uuid NOT NULL REFERENCES payroll_cycles(id),
@@ -321,7 +321,7 @@ CREATE INDEX idx_payroll_runs_cycle ON payroll_runs(cycle_id);
 CREATE INDEX idx_payroll_runs_company ON payroll_runs(company_id, status);
 
 -- 16. PAYROLL_LINES
-CREATE TABLE payroll_lines (
+CREATE TABLE IF NOT EXISTS payroll_lines (
   id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id      uuid NOT NULL REFERENCES companies(id),
   run_id          uuid NOT NULL REFERENCES payroll_runs(id),
@@ -342,7 +342,7 @@ CREATE INDEX idx_payroll_lines_run ON payroll_lines(run_id);
 CREATE INDEX idx_payroll_lines_employee ON payroll_lines(run_id, employee_id);
 
 -- 17. PAYROLL_SUMMARIES
-CREATE TABLE payroll_summaries (
+CREATE TABLE IF NOT EXISTS payroll_summaries (
   id                        uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id                uuid NOT NULL REFERENCES companies(id),
   run_id                    uuid NOT NULL REFERENCES payroll_runs(id),
@@ -369,7 +369,7 @@ CREATE TABLE payroll_summaries (
 CREATE UNIQUE INDEX idx_payroll_summary_unique ON payroll_summaries(run_id, employee_id);
 
 -- 18. PAYROLL_ADJUSTMENTS
-CREATE TABLE payroll_adjustments (
+CREATE TABLE IF NOT EXISTS payroll_adjustments (
   id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id      uuid NOT NULL REFERENCES companies(id),
   run_id          uuid REFERENCES payroll_runs(id),
@@ -389,7 +389,7 @@ CREATE TABLE payroll_adjustments (
 CREATE INDEX idx_payroll_adjustments_emp ON payroll_adjustments(employee_id);
 
 -- 19. PAYROLL_DEDUCTIONS (standing)
-CREATE TABLE payroll_deductions (
+CREATE TABLE IF NOT EXISTS payroll_deductions (
   id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id        uuid NOT NULL REFERENCES companies(id),
   name              text NOT NULL,
@@ -405,7 +405,7 @@ CREATE TABLE payroll_deductions (
 CREATE INDEX idx_payroll_deductions_company ON payroll_deductions(company_id);
 
 -- 20. PAYROLL_BENEFITS
-CREATE TABLE payroll_benefits (
+CREATE TABLE IF NOT EXISTS payroll_benefits (
   id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id        uuid NOT NULL REFERENCES companies(id),
   name              text NOT NULL,
@@ -422,7 +422,7 @@ CREATE TABLE payroll_benefits (
 CREATE INDEX idx_payroll_benefits_company ON payroll_benefits(company_id);
 
 -- 21. EMPLOYEE_LOANS
-CREATE TABLE employee_loans (
+CREATE TABLE IF NOT EXISTS employee_loans (
   id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id          uuid NOT NULL REFERENCES companies(id),
   employee_id         uuid NOT NULL REFERENCES employees(id),
@@ -442,7 +442,7 @@ CREATE TABLE employee_loans (
 CREATE INDEX idx_emp_loans_employee ON employee_loans(employee_id, status);
 
 -- 22. LOAN_PAYMENTS
-CREATE TABLE loan_payments (
+CREATE TABLE IF NOT EXISTS loan_payments (
   id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id        uuid NOT NULL REFERENCES companies(id),
   loan_id           uuid NOT NULL REFERENCES employee_loans(id),
@@ -456,7 +456,7 @@ CREATE TABLE loan_payments (
 CREATE INDEX idx_loan_payments_loan ON loan_payments(loan_id);
 
 -- 23. OVERTIME_ENTRIES
-CREATE TABLE overtime_entries (
+CREATE TABLE IF NOT EXISTS overtime_entries (
   id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id      uuid NOT NULL REFERENCES companies(id),
   employee_id     uuid NOT NULL REFERENCES employees(id),
@@ -476,7 +476,7 @@ CREATE TABLE overtime_entries (
 CREATE INDEX idx_overtime_emp_date ON overtime_entries(employee_id, date);
 
 -- 24. PAYROLL_ACCOUNTING_LINKS
-CREATE TABLE payroll_accounting_links (
+CREATE TABLE IF NOT EXISTS payroll_accounting_links (
   id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id      uuid NOT NULL REFERENCES companies(id),
   run_id          uuid NOT NULL REFERENCES payroll_runs(id),
@@ -491,7 +491,7 @@ CREATE INDEX idx_payroll_acct_links_run ON payroll_accounting_links(run_id);
 CREATE UNIQUE INDEX idx_payroll_acct_links_unique ON payroll_accounting_links(run_id);
 
 -- 25. HR_INTEGRITY_LOGS
-CREATE TABLE hr_integrity_logs (
+CREATE TABLE IF NOT EXISTS hr_integrity_logs (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id  uuid NOT NULL REFERENCES companies(id),
   entity_type text NOT NULL,
@@ -514,10 +514,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trg_employees_audit ON employees;
 CREATE TRIGGER trg_employees_audit BEFORE UPDATE ON employees
   FOR EACH ROW EXECUTE FUNCTION hr_audit_trigger();
+DROP TRIGGER IF EXISTS trg_employee_contracts_audit ON employee_contracts;
 CREATE TRIGGER trg_employee_contracts_audit BEFORE UPDATE ON employee_contracts
   FOR EACH ROW EXECUTE FUNCTION hr_audit_trigger();
+DROP TRIGGER IF EXISTS trg_leave_balances_audit ON leave_balances;
 CREATE TRIGGER trg_leave_balances_audit BEFORE UPDATE ON leave_balances
   FOR EACH ROW EXECUTE FUNCTION hr_audit_trigger();
 
@@ -537,6 +540,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trg_payroll_runs_immutable ON payroll_runs;
 CREATE TRIGGER trg_payroll_runs_immutable BEFORE UPDATE ON payroll_runs
   FOR EACH ROW EXECUTE FUNCTION prevent_payroll_run_modification();
 

@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { getCompanyId } from '@/lib/tenant'
-import type { BusinessType } from '@/lib/features'
+import type { BusinessType } from '@/types/erp'
 import { headers } from 'next/headers'
 
 // Default product categories per business domain

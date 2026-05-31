@@ -1,6 +1,4 @@
-export type ServiceResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; error: string; code?: string }
+export type { ServiceResult } from '@/types/service'
 
 export type QuotationStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired'
 export type OrderStatus = 'draft' | 'approved' | 'partially_fulfilled' | 'fulfilled' | 'cancelled'

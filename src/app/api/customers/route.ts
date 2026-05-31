@@ -1,44 +1,31 @@
 import type { NextRequest } from 'next/server'
-import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { getCompanyId } from '@/lib/tenant'
-import { headers } from 'next/headers'
+import { requireCompany, requireRole, isAuthError } from '@/lib/auth-guard'
+import { ok, Errors } from '@/lib/api-response'
+import { CustomerService } from '@/services/customer.service'
 
 export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json()
-    const COMPANY_ID = await getCompanyId()
-    const supabase = createClient()
-    const h = await headers()
-    const businessType =
-      (() => {
-        try {
-          return decodeURIComponent(h.get('x-business-type') || '')
-        } catch {
-          return ''
-        }
-      })() || 'retail'
-
-    const { data: customer, error } = await supabase
-      .from('customers')
-      .insert({
-        company_id: COMPANY_ID,
-        business_type: businessType,
-        name: String(body.name || ''),
-        phone: body.phone || null,
-        email: body.email || null,
-        address: body.address || null,
-        credit_limit: Number(body.credit_limit) || 0,
-        is_active: true,
-      })
-      .select()
-      .single()
-
-    if (error) {
-      throw new Error(error.message)
-    }
-    return NextResponse.json({ customer })
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+  const ctx = requireRole(req, 'customers:create')
+  if (isAuthError(ctx)) {
+    return ctx
   }
+
+  const supabase = createClient()
+  const service = new CustomerService(supabase, ctx.companyId)
+
+  let body: unknown
+  try {
+    body = await req.json()
+  } catch {
+    return Errors.badRequest('Invalid JSON body')
+  }
+
+  const result = await service.create(body as any)
+  if (!result.ok) {
+    if (result.code === 'CONFLICT') {
+      return Errors.conflict(result.error)
+    }
+    return Errors.badRequest(result.error)
+  }
+  return ok(result.data, undefined, 201)
 }

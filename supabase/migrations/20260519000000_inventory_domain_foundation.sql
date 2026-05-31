@@ -489,6 +489,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trg_stock_movement_immutable ON stock_movements;
 CREATE TRIGGER trg_stock_movement_immutable
   BEFORE UPDATE OR DELETE ON stock_movements
   FOR EACH ROW EXECUTE FUNCTION fn_stock_movement_immutable();
@@ -506,18 +507,31 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trg_warehouses_updated_at ON warehouses;
 CREATE TRIGGER trg_warehouses_updated_at BEFORE UPDATE ON warehouses FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_warehouse_locations_updated_at ON warehouse_locations;
 CREATE TRIGGER trg_warehouse_locations_updated_at BEFORE UPDATE ON warehouse_locations FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_inventory_items_updated_at ON inventory_items;
 CREATE TRIGGER trg_inventory_items_updated_at BEFORE UPDATE ON inventory_items FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_inventory_variants_updated_at ON inventory_variants;
 CREATE TRIGGER trg_inventory_variants_updated_at BEFORE UPDATE ON inventory_variants FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_inventory_batches_updated_at ON inventory_batches;
 CREATE TRIGGER trg_inventory_batches_updated_at BEFORE UPDATE ON inventory_batches FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_inventory_transfers_updated_at ON inventory_transfers;
 CREATE TRIGGER trg_inventory_transfers_updated_at BEFORE UPDATE ON inventory_transfers FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_transfer_lines_updated_at ON transfer_lines;
 CREATE TRIGGER trg_transfer_lines_updated_at BEFORE UPDATE ON transfer_lines FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_inventory_adjustments_updated_at ON inventory_adjustments;
 CREATE TRIGGER trg_inventory_adjustments_updated_at BEFORE UPDATE ON inventory_adjustments FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_inventory_reservations_updated_at ON inventory_reservations;
 CREATE TRIGGER trg_inventory_reservations_updated_at BEFORE UPDATE ON inventory_reservations FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_inventory_allocations_updated_at ON inventory_allocations;
 CREATE TRIGGER trg_inventory_allocations_updated_at BEFORE UPDATE ON inventory_allocations FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_reorder_rules_updated_at ON reorder_rules;
 CREATE TRIGGER trg_reorder_rules_updated_at BEFORE UPDATE ON reorder_rules FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_count_sessions_updated_at ON inventory_count_sessions;
 CREATE TRIGGER trg_count_sessions_updated_at BEFORE UPDATE ON inventory_count_sessions FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_count_lines_updated_at ON inventory_count_lines;
 CREATE TRIGGER trg_count_lines_updated_at BEFORE UPDATE ON inventory_count_lines FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
 
 -- ============================================================
@@ -543,6 +557,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trg_stock_movement_idempotent ON stock_movements;
 CREATE TRIGGER trg_stock_movement_idempotent
   BEFORE INSERT OR UPDATE ON stock_movements
   FOR EACH ROW EXECUTE FUNCTION fn_stock_movement_idempotent();
