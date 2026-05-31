@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Plus, Search, ShoppingBag, X, Check, Loader2, Trash2, Eye } from 'lucide-react'
+import { Plus, Search, ShoppingBag, X, Check, Loader2, Trash2, Eye, Pencil } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/language-provider'
@@ -35,6 +35,7 @@ export function PurchasesClient({
   const [purchases, setPurchases] = useState(initial)
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
+  const [editingPurchase, setEditingPurchase] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [items, setItems] = useState<any[]>([{ product_id: '', quantity: 1, unit_cost: 0, total: 0 }])
@@ -109,8 +110,10 @@ export function PurchasesClient({
         paid_amount: form.payment_status === 'paid' ? subtotal : 0,
         due_amount: form.payment_status === 'paid' ? 0 : subtotal,
       }
-      const res = await fetch('/api/purchases', {
-        method: 'POST',
+      const method = editingPurchase ? 'PUT' : 'POST'
+      const url = editingPurchase ? `/api/purchases/${editingPurchase.id}` : '/api/purchases'
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
@@ -118,14 +121,52 @@ export function PurchasesClient({
       if (!res.ok) {
         throw new Error(data.error || 'حدث خطأ')
       }
-      setPurchases((prev) => [data.purchase, ...prev])
-      setShowForm(false)
-      setItems([{ product_id: '', quantity: 1, unit_cost: 0, total: 0 }])
+      if (editingPurchase) {
+        setPurchases((prev) => prev.map((p) => (p.id === editingPurchase.id ? { ...p, ...data.purchase } : p)))
+      } else {
+        setPurchases((prev) => [data.purchase, ...prev])
+      }
+      closeForm()
     } catch (e: any) {
       setError(e.message)
     } finally {
       setLoading(false)
     }
+  }
+
+  const openEdit = (p: any) => {
+    setEditingPurchase(p)
+    setForm({
+      supplier_id: p.supplier_id || '',
+      warehouse_id: p.warehouse_id || warehouses[0]?.id || '',
+      purchase_date: p.purchase_date?.split('T')[0] || new Date().toISOString().split('T')[0],
+      notes: p.notes || '',
+      payment_status: p.payment_status || 'paid',
+    })
+    if (p.purchase_items?.length) {
+      setItems(
+        p.purchase_items.map((i: any) => ({
+          product_id: i.product_id,
+          quantity: i.quantity,
+          unit_cost: i.unit_cost,
+          total: i.total,
+        })),
+      )
+    }
+    setShowForm(true)
+  }
+
+  const closeForm = () => {
+    setShowForm(false)
+    setEditingPurchase(null)
+    setItems([{ product_id: '', quantity: 1, unit_cost: 0, total: 0 }])
+    setForm({
+      supplier_id: '',
+      warehouse_id: warehouses[0]?.id || '',
+      purchase_date: new Date().toISOString().split('T')[0],
+      notes: '',
+      payment_status: 'paid',
+    })
   }
 
   return (
@@ -180,12 +221,13 @@ export function PurchasesClient({
                 <th className="text-right px-4 py-3 font-medium text-muted-foreground">التاريخ</th>
                 <th className="text-right px-4 py-3 font-medium text-muted-foreground">الإجمالي</th>
                 <th className="text-right px-4 py-3 font-medium text-muted-foreground">الدفع</th>
+                <th className="text-center px-4 py-3 font-medium text-muted-foreground w-16" />
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-12 text-muted-foreground">
+                  <td colSpan={6} className="text-center py-12 text-muted-foreground">
                     لا توجد فواتير شراء
                   </td>
                 </tr>
@@ -203,6 +245,15 @@ export function PurchasesClient({
                         {PAYMENT_STATUS[p.payment_status]?.label}
                       </span>
                     </td>
+                    <td className="px-4 py-3 text-center">
+                      <button
+                        onClick={() => openEdit(p)}
+                        className="p-1.5 hover:bg-accent rounded-lg transition-colors"
+                        title="تعديل"
+                      >
+                        <Pencil className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
@@ -215,12 +266,12 @@ export function PurchasesClient({
       {showForm && (
         <div
           className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-          onClick={(e) => e.target === e.currentTarget && setShowForm(false)}
+          onClick={(e) => e.target === e.currentTarget && closeForm()}
         >
           <div className="bg-card rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl">
             <div className="flex items-center justify-between p-5 border-b">
-              <h2 className="font-bold text-lg">فاتورة شراء جديدة</h2>
-              <button onClick={() => setShowForm(false)} className="p-2 hover:bg-accent rounded-lg">
+              <h2 className="font-bold text-lg">{editingPurchase ? 'تعديل فاتورة شراء' : 'فاتورة شراء جديدة'}</h2>
+              <button onClick={closeForm} className="p-2 hover:bg-accent rounded-lg">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -373,11 +424,11 @@ export function PurchasesClient({
                   className="flex-1 bg-primary text-primary-foreground py-2.5 rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                  حفظ فاتورة الشراء
+                  {editingPurchase ? 'حفظ التعديلات' : 'حفظ فاتورة الشراء'}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowForm(false)}
+                  onClick={closeForm}
                   className="px-4 border border-input rounded-lg text-sm hover:bg-accent"
                 >
                   إلغاء
