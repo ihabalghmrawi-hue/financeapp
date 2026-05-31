@@ -1,7 +1,8 @@
+import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireRole, isAuthError } from '@/lib/auth-guard'
-import { ok, Errors } from '@/lib/api-response'
+import { Errors } from '@/lib/api-response'
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const ctx = requireRole(req, 'purchases:create')
@@ -69,5 +70,5 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     return Errors.badRequest(error.message)
   }
 
-  return ok({ purchase })
+  return NextResponse.json({ success: true, purchase })
 }

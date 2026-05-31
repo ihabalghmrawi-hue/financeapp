@@ -1,8 +1,9 @@
+import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireCompany, requireRole, isAuthError } from '@/lib/auth-guard'
-import { ok, Errors } from '@/lib/api-response'
+import { Errors } from '@/lib/api-response'
 import { PurchaseService } from '@/services/purchase.service'
 import { postPurchaseJournal, updateWallet } from '@/lib/accounting'
 import { recordInventoryMovement } from '@/lib/inventory'
@@ -123,7 +124,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  return ok(
+  return NextResponse.json(
     {
       success: true,
       purchase,
@@ -131,7 +132,6 @@ export async function POST(req: NextRequest) {
       inventory_warnings:
         inventoryErrors.length > 0 ? `Failed to update inventory for ${inventoryErrors.length} product(s)` : undefined,
     },
-    undefined,
-    201,
+    { status: 201 },
   )
 }
