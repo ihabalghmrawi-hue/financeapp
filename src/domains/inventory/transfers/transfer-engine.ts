@@ -44,7 +44,7 @@ export class TransferEngine {
         metadata: input.metadata,
       } as any)
 
-      const lines = input.lines.map(l => ({
+      const lines = input.lines.map((l) => ({
         transfer_id: transfer.id,
         company_id: this.companyId,
         item_id: l.item_id,
@@ -70,8 +70,12 @@ export class TransferEngine {
   async approve(transferId: string, approvedBy?: string): Promise<ServiceResult<InventoryTransferEntity>> {
     try {
       const transfer = await this.transferRepo.findById(transferId)
-      if (!transfer) return { ok: false, error: 'التحويل غير موجود', code: 'NOT_FOUND' }
-      if (transfer.status !== 'draft') return { ok: false, error: 'يمكن اعتماد المسودات فقط', code: 'INVALID_STATUS' }
+      if (!transfer) {
+        return { ok: false, error: 'التحويل غير موجود', code: 'NOT_FOUND' }
+      }
+      if (transfer.status !== 'draft') {
+        return { ok: false, error: 'يمكن اعتماد المسودات فقط', code: 'INVALID_STATUS' }
+      }
 
       const lines = await this.lineRepo.findByTransfer(transferId)
       for (const line of lines) {
@@ -153,7 +157,11 @@ export class TransferEngine {
         qty: lines.reduce((s, l) => s + l.qty, 0),
         description: `تحويل مخزون: ${transfer.transfer_no}`,
         reference: transfer.transfer_no,
-        metadata: { from_warehouse_id: transfer.from_warehouse_id, to_warehouse_id: transfer.to_warehouse_id, line_count: lines.length },
+        metadata: {
+          from_warehouse_id: transfer.from_warehouse_id,
+          to_warehouse_id: transfer.to_warehouse_id,
+          line_count: lines.length,
+        },
         performedBy: approvedBy,
         timestamp: new Date().toISOString(),
       })
@@ -167,13 +175,17 @@ export class TransferEngine {
   async receive(transferId: string, receivedBy?: string): Promise<ServiceResult<InventoryTransferEntity>> {
     try {
       const transfer = await this.transferRepo.findById(transferId)
-      if (!transfer) return { ok: false, error: 'التحويل غير موجود', code: 'NOT_FOUND' }
+      if (!transfer) {
+        return { ok: false, error: 'التحويل غير موجود', code: 'NOT_FOUND' }
+      }
 
       const lines = await this.lineRepo.findByTransfer(transferId)
 
       for (const line of lines) {
         const qtyToReceive = line.qty - line.qty_received
-        if (qtyToReceive <= 0) continue
+        if (qtyToReceive <= 0) {
+          continue
+        }
 
         await this.lineRepo.update(line.id, { qty_received: line.qty } as any)
       }
@@ -199,6 +211,64 @@ export class TransferEngine {
       return { ok: true, data: updated }
     } catch (e: any) {
       return { ok: false, error: e.message, code: 'RECEIVE_TRANSFER_FAILED' }
+    }
+  }
+
+  async delete(transferId: string): Promise<ServiceResult<void>> {
+    try {
+      const transfer = await this.transferRepo.findById(transferId)
+      if (!transfer) {
+        return { ok: false, error: 'التحويل غير موجود', code: 'NOT_FOUND' }
+      }
+      if (transfer.status !== 'draft') {
+        return { ok: false, error: 'يمكن حذف المسودات فقط', code: 'INVALID_STATUS' }
+      }
+
+      await this.transferRepo.hardDelete(transferId)
+      return { ok: true, data: undefined as any }
+    } catch (e: any) {
+      return { ok: false, error: e.message, code: 'DELETE_FAILED' }
+    }
+  }
+
+  async reverse(transferId: string, reason?: string): Promise<ServiceResult<InventoryTransferEntity>> {
+    try {
+      const transfer = await this.transferRepo.findById(transferId)
+      if (!transfer) {
+        return { ok: false, error: 'التحويل غير موجود', code: 'NOT_FOUND' }
+      }
+      if (transfer.status !== 'completed' && transfer.status !== 'received') {
+        return { ok: false, error: 'يمكن عكس التحويلات المكتملة فقط', code: 'INVALID_STATUS' }
+      }
+
+      const movements = await this.movementRepo.findByReference('transfer', transferId)
+      for (const mov of movements) {
+        if (mov.is_reversed) {
+          continue
+        }
+        await this.movementRepo.reverse(mov.id, reason || 'عكس تحويل مخزون')
+      }
+
+      const updated = await this.transferRepo.update(transferId, {
+        status: 'reversed',
+        notes: reason || transfer.notes,
+      } as any)
+
+      this.eventBus.emit('inventory.transfer.reversed', {
+        id: transferId,
+        type: 'transfer_reversed',
+        companyId: this.companyId,
+        transferId,
+        qty: movements.reduce((s, m) => s + Number(m.qty), 0),
+        description: `عكس تحويل: ${transfer.transfer_no}${reason ? ` - ${reason}` : ''}`,
+        reference: transfer.transfer_no,
+        performedBy: undefined,
+        timestamp: new Date().toISOString(),
+      })
+
+      return { ok: true, data: updated }
+    } catch (e: any) {
+      return { ok: false, error: e.message, code: 'REVERSE_FAILED' }
     }
   }
 

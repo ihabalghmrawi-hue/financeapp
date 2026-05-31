@@ -16,7 +16,7 @@ export default async function TransfersPage() {
       .order('created_at', { ascending: false })
       .limit(100),
     supabase.from('warehouses').select('id, name, name_ar').eq('company_id', COMPANY_ID).eq('is_active', true),
-    supabase.from('products').select('id, name, name_ar').eq('company_id', COMPANY_ID).eq('is_active', true),
+    supabase.from('inventory_items').select('id, name, name_ar').eq('company_id', COMPANY_ID).eq('is_active', true),
     supabase.from('inventory').select('product_id, warehouse_id, quantity').eq('company_id', COMPANY_ID),
   ])
 

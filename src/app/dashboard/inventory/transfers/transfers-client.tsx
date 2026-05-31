@@ -22,6 +22,8 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   approved: { label: 'معتمد', color: 'bg-blue-100 text-blue-700' },
   transferred: { label: 'منقول', color: 'bg-green-100 text-green-700' },
   received: { label: 'مستلم', color: 'bg-green-100 text-green-700' },
+  completed: { label: 'مكتمل', color: 'bg-green-100 text-green-700' },
+  reversed: { label: 'ملغي', color: 'bg-orange-100 text-orange-700' },
   cancelled: { label: 'ملغي', color: 'bg-red-100 text-red-700' },
 }
 
@@ -82,6 +84,48 @@ export function TransfersClient({
       }),
     [transfers, search],
   )
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('هل أنت متأكد من حذف هذه التحويلة؟')) {
+      return
+    }
+    setActionLoading(id)
+    try {
+      const res = await fetch(`/api/inventory/transfers/${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error?.message || 'فشل الحذف')
+      }
+      setTransfers((prev) => prev.filter((t) => t.id !== id))
+    } catch (e: any) {
+      alert(e.message)
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleReverse = async (id: string) => {
+    const reason = prompt('سبب الإلغاء (اختياري):')
+    setActionLoading(id)
+    try {
+      const res = await fetch(`/api/inventory/transfers/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reverse', reason }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error?.message || 'فشل الإلغاء')
+      }
+      setTransfers((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, status: 'reversed', notes: reason || t.notes } : t)),
+      )
+    } catch (e: any) {
+      alert(e.message)
+    } finally {
+      setActionLoading(null)
+    }
+  }
 
   const handleAction = async (id: string, action: string) => {
     setActionLoading(id)
@@ -229,7 +273,7 @@ export function TransfersClient({
                     <td className="px-4 py-3 text-muted-foreground text-xs">{formatDate(t.created_at)}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
-                        {t.status === 'pending' && (
+                        {t.status === 'draft' && (
                           <>
                             <button
                               onClick={() => handleAction(t.id, 'approve')}
@@ -240,23 +284,24 @@ export function TransfersClient({
                               <Check className="w-3.5 h-3.5" />
                             </button>
                             <button
-                              onClick={() => handleAction(t.id, 'cancel')}
+                              onClick={() => handleDelete(t.id)}
                               disabled={actionLoading === t.id}
                               className="p-1.5 hover:bg-red-100 rounded-lg text-red-600"
-                              title="إلغاء"
+                              title="حذف"
                             >
-                              <X className="w-3.5 h-3.5" />
+                              <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </>
                         )}
-                        {t.status === 'approved' && (
+                        {(t.status === 'completed' || t.status === 'received') && (
                           <button
-                            onClick={() => handleAction(t.id, 'receive')}
+                            onClick={() => handleReverse(t.id)}
                             disabled={actionLoading === t.id}
-                            className="flex items-center gap-1 px-2 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200"
+                            className="flex items-center gap-1 px-2 py-1 text-xs bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200"
+                            title="إلغاء التحويلة وعكس حركة المخزون"
                           >
                             <ArrowLeftRight className="w-3 h-3" />
-                            استلام
+                            إلغاء
                           </button>
                         )}
                         {actionLoading === t.id && (

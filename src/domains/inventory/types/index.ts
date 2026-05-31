@@ -49,6 +49,7 @@ export type InventoryDomainEvent =
   | 'inventory.adjusted'
   | 'inventory.transferred'
   | 'inventory.transfer.received'
+  | 'inventory.transfer.reversed'
   | 'inventory.low_stock'
   | 'inventory.reserved'
   | 'inventory.unreserved'
