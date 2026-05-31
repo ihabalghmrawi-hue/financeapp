@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Loader2, BarChart3, TrendingDown, TrendingUp, Package } from 'lucide-react'
+import { Loader2, AlertTriangle, BarChart3, TrendingDown, TrendingUp, Package } from 'lucide-react'
 
 export default function InventoryReportsPage() {
   const [valuation, setValuation] = useState<any>(null)
   const [lowStock, setLowStock] = useState<any[] | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [tab, setTab] = useState<'valuation' | 'low-stock'>('valuation')
 
   useEffect(() => {
@@ -19,13 +20,21 @@ export default function InventoryReportsPage() {
         if (vRes.ok) {
           const v = await vRes.json()
           setValuation(v.data || v)
+        } else {
+          const v = await vRes.json().catch(() => ({}))
+          setError(v.error?.message || v.error || 'فشل تحميل تقييم المخزون')
         }
         if (lRes.ok) {
           const l = await lRes.json()
-          setLowStock(l.data || l)
+          setLowStock(l.data?.items || l.data || l)
+        } else {
+          const l = await lRes.json().catch(() => ({}))
+          if (!error) {
+            setError(l.error?.message || l.error || 'فشل تحميل المخزون المنخفض')
+          }
         }
-      } catch {
-        /* fallback */
+      } catch (e: any) {
+        setError(e.message || 'حدث خطأ في الاتصال')
       } finally {
         setLoading(false)
       }
