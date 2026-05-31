@@ -143,6 +143,7 @@ const ar = {
     inventory: 'المنتجات',
     warehouses: 'المخازن',
     inventoryMovements: 'حركة المخزون',
+    productCategories: 'تصنيفات المنتجات',
     expenses: 'المصروفات',
     wallet: 'الصندوق',
     reports: 'التقارير',

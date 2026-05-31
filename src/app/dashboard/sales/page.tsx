@@ -19,13 +19,35 @@ export default async function SalesPage() {
     }
   })() as BusinessType
 
-  const { data: sales } = await supabase
-    .from('sales')
-    .select('*, customers(name, phone), sale_items(id), sale_payments(method, amount)')
-    .eq('company_id', COMPANY_ID)
-    .eq('business_type', businessType)
-    .order('sale_date', { ascending: false })
-    .limit(100)
+  const [{ data: sales }, { data: customers }, { data: products }] = await Promise.all([
+    supabase
+      .from('sales')
+      .select('*, customers(name, phone), sale_items(id), sale_payments(method, amount)')
+      .eq('company_id', COMPANY_ID)
+      .eq('business_type', businessType)
+      .order('sale_date', { ascending: false })
+      .limit(100),
+    supabase
+      .from('customers')
+      .select('*')
+      .eq('company_id', COMPANY_ID)
+      .eq('business_type', businessType)
+      .eq('is_active', true),
+    supabase
+      .from('products')
+      .select('id, name, name_ar, sale_price, barcode')
+      .eq('company_id', COMPANY_ID)
+      .eq('business_type', businessType)
+      .eq('is_active', true),
+  ])
 
-  return <SalesClient sales={sales || []} currency={CURRENCY} companyId={COMPANY_ID} />
+  return (
+    <SalesClient
+      sales={sales || []}
+      customers={customers || []}
+      products={products || []}
+      currency={CURRENCY}
+      companyId={COMPANY_ID}
+    />
+  )
 }

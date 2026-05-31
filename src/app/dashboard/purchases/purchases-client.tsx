@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Plus, Search, ShoppingBag, X, Check, Loader2, Trash2, Eye, Pencil } from 'lucide-react'
+import { Plus, Search, ShoppingBag, X, Check, Loader2, Trash2, Eye, Pencil, AlertTriangle } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/language-provider'
@@ -38,6 +38,7 @@ export function PurchasesClient({
   const [editingPurchase, setEditingPurchase] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [items, setItems] = useState<any[]>([{ product_id: '', quantity: 1, unit_cost: 0, total: 0 }])
   const [form, setForm] = useState({
     supplier_id: '',
@@ -156,6 +157,23 @@ export function PurchasesClient({
     setShowForm(true)
   }
 
+  const handleDelete = async (id: string) => {
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/purchases/${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'حدث خطأ')
+      }
+      setPurchases((prev) => prev.filter((p) => p.id !== id))
+      setConfirmDelete(null)
+    } catch (e: any) {
+      alert(e.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const closeForm = () => {
     setShowForm(false)
     setEditingPurchase(null)
@@ -246,13 +264,22 @@ export function PurchasesClient({
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <button
-                        onClick={() => openEdit(p)}
-                        className="p-1.5 hover:bg-accent rounded-lg transition-colors"
-                        title="تعديل"
-                      >
-                        <Pencil className="w-4 h-4 text-muted-foreground" />
-                      </button>
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          onClick={() => openEdit(p)}
+                          className="p-1.5 hover:bg-accent rounded-lg transition-colors"
+                          title="تعديل"
+                        >
+                          <Pencil className="w-4 h-4 text-muted-foreground" />
+                        </button>
+                        <button
+                          onClick={() => setConfirmDelete(p.id)}
+                          className="p-1.5 hover:bg-red-100 rounded-lg transition-colors"
+                          title="حذف"
+                        >
+                          <Trash2 className="w-4 h-4 text-red-500" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -435,6 +462,38 @@ export function PurchasesClient({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation */}
+      {confirmDelete && (
+        <div
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          onClick={(e) => e.target === e.currentTarget && setConfirmDelete(null)}
+        >
+          <div className="bg-card rounded-2xl w-full max-w-sm shadow-2xl p-6 text-center">
+            <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-3" />
+            <h3 className="font-bold text-lg mb-2">حذف فاتورة الشراء</h3>
+            <p className="text-sm text-muted-foreground mb-5">
+              هل أنت متأكد من حذف هذه الفاتورة؟ لا يمكن التراجع عن هذا الإجراء.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleDelete(confirmDelete)}
+                disabled={loading}
+                className="flex-1 bg-red-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                حذف
+              </button>
+              <button
+                onClick={() => setConfirmDelete(null)}
+                className="flex-1 border border-input rounded-lg text-sm hover:bg-accent"
+              >
+                إلغاء
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Search, Truck, Plus, Loader2, Check, X, ArrowLeftRight } from 'lucide-react'
+import { Search, Truck, Plus, Loader2, Check, X, ArrowLeftRight, Trash2 } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/language-provider'
@@ -33,6 +33,16 @@ export function TransfersClient({
   const [transfers, setTransfers] = useState(initialTransfers)
   const [search, setSearch] = useState('')
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [showForm, setShowForm] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [transferForm, setTransferForm] = useState({
+    from_warehouse_id: '',
+    to_warehouse_id: '',
+    reference: `TRF-${Date.now()}`,
+    notes: '',
+  })
+  const [transferItems, setTransferItems] = useState([{ product_name: '', quantity: 1 }])
 
   const filtered = useMemo(
     () =>
@@ -75,6 +85,62 @@ export function TransfersClient({
     }
   }
 
+  const addTransferItem = () => setTransferItems((prev) => [...prev, { product_name: '', quantity: 1 }])
+  const removeTransferItem = (idx: number) => setTransferItems((prev) => prev.filter((_, i) => i !== idx))
+  const updateTransferItem = (idx: number, field: string, value: any) => {
+    setTransferItems((prev) => {
+      const updated = [...prev]
+      updated[idx] = { ...updated[idx], [field]: value }
+      return updated
+    })
+  }
+
+  const handleCreateTransfer = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!transferForm.from_warehouse_id || !transferForm.to_warehouse_id) {
+      setError('اختر المستودع المصدر والمستودع الهدف')
+      return
+    }
+    if (transferForm.from_warehouse_id === transferForm.to_warehouse_id) {
+      setError('يجب أن يختلف المستودع المصدر عن المستودع الهدف')
+      return
+    }
+    if (transferItems.some((i) => !i.product_name)) {
+      setError('أدخل اسم المنتج لجميع الأصناف')
+      return
+    }
+    setLoading(true)
+    setError('')
+    try {
+      const res = await fetch('/api/inventory/transfers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...transferForm,
+          company_id: companyId,
+          items: transferItems,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error?.message || data.error || 'حدث خطأ')
+      }
+      setTransfers((prev) => [data.data || data, ...prev])
+      setShowForm(false)
+      setTransferForm({
+        from_warehouse_id: '',
+        to_warehouse_id: '',
+        reference: `TRF-${Date.now()}`,
+        notes: '',
+      })
+      setTransferItems([{ product_name: '', quantity: 1 }])
+    } catch (e: any) {
+      setError(e.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -82,6 +148,13 @@ export function TransfersClient({
           <h1 className="text-xl font-bold">التحويلات</h1>
           <p className="text-sm text-muted-foreground">{transfers.length} تحويلة</p>
         </div>
+        <button
+          onClick={() => setShowForm(true)}
+          className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90"
+        >
+          <Plus className="w-4 h-4" />
+          تحويلة جديدة
+        </button>
       </div>
 
       <div className="relative flex-1">
@@ -173,6 +246,151 @@ export function TransfersClient({
           </table>
         </div>
       </div>
+
+      {/* Create Transfer Modal */}
+      {showForm && (
+        <div
+          className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          onClick={(e) => e.target === e.currentTarget && setShowForm(false)}
+        >
+          <div className="bg-card rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="flex items-center justify-between p-5 border-b">
+              <h2 className="font-bold text-lg">تحويلة جديدة</h2>
+              <button onClick={() => setShowForm(false)} className="p-2 hover:bg-accent rounded-lg">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <form onSubmit={handleCreateTransfer} className="p-5 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">من مستودع</label>
+                  <select
+                    value={transferForm.from_warehouse_id}
+                    onChange={(e) => setTransferForm((f) => ({ ...f, from_warehouse_id: e.target.value }))}
+                    className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none"
+                    required
+                  >
+                    <option value="">اختر المستودع</option>
+                    {warehouses.map((w) => (
+                      <option key={w.id} value={w.id}>
+                        {localizedName(w, lang)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">إلى مستودع</label>
+                  <select
+                    value={transferForm.to_warehouse_id}
+                    onChange={(e) => setTransferForm((f) => ({ ...f, to_warehouse_id: e.target.value }))}
+                    className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none"
+                    required
+                  >
+                    <option value="">اختر المستودع</option>
+                    {warehouses.map((w) => (
+                      <option key={w.id} value={w.id}>
+                        {localizedName(w, lang)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">المرجع</label>
+                <input
+                  type="text"
+                  value={transferForm.reference}
+                  onChange={(e) => setTransferForm((f) => ({ ...f, reference: e.target.value }))}
+                  className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none"
+                />
+              </div>
+
+              {/* Transfer Items */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-medium">المنتجات</label>
+                  <button
+                    type="button"
+                    onClick={addTransferItem}
+                    className="text-xs text-primary flex items-center gap-1 hover:underline"
+                  >
+                    <Plus className="w-3 h-3" /> إضافة صنف
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {transferItems.map((item, idx) => (
+                    <div key={idx} className="grid grid-cols-12 gap-2 items-center">
+                      <div className="col-span-7">
+                        <input
+                          type="text"
+                          value={item.product_name}
+                          onChange={(e) => updateTransferItem(idx, 'product_name', e.target.value)}
+                          placeholder="اسم المنتج"
+                          className="w-full border border-input rounded-lg px-2 py-1.5 text-sm bg-background focus:outline-none"
+                        />
+                      </div>
+                      <div className="col-span-3">
+                        <input
+                          type="number"
+                          min="0.001"
+                          step="0.001"
+                          value={item.quantity}
+                          onChange={(e) => updateTransferItem(idx, 'quantity', parseFloat(e.target.value) || 0)}
+                          placeholder="الكمية"
+                          className="w-full border border-input rounded-lg px-2 py-1.5 text-sm bg-background focus:outline-none text-center"
+                        />
+                      </div>
+                      <div className="col-span-1 flex justify-center">
+                        {transferItems.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeTransferItem(idx)}
+                            className="text-muted-foreground hover:text-red-500"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-1 block">ملاحظات</label>
+                <input
+                  type="text"
+                  value={transferForm.notes}
+                  onChange={(e) => setTransferForm((f) => ({ ...f, notes: e.target.value }))}
+                  className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none"
+                />
+              </div>
+
+              {error && (
+                <p className="text-sm text-red-500 bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded-lg">{error}</p>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 bg-primary text-primary-foreground py-2.5 rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  حفظ التحويلة
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowForm(false)}
+                  className="px-4 border border-input rounded-lg text-sm hover:bg-accent"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

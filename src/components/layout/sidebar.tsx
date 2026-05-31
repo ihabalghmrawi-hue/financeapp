@@ -169,6 +169,12 @@ export function Sidebar({ company, user, staff, features, branding }: SidebarPro
           icon: Warehouse,
           show: features.showInventory && can(staff, 'inventory.view'),
         },
+        {
+          label: t('nav.productCategories'),
+          href: '/dashboard/product-categories',
+          icon: Tag,
+          show: features.showInventory && can(staff, 'inventory.view'),
+        },
       ],
     },
     {

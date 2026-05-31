@@ -143,6 +143,7 @@ const en = {
     inventory: 'Products',
     warehouses: 'Warehouses',
     inventoryMovements: 'Inventory Movements',
+    productCategories: 'Product Categories',
     expenses: 'Expenses',
     wallet: 'Cash Register',
     reports: 'Reports',
