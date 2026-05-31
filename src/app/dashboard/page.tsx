@@ -190,7 +190,7 @@ export default async function DashboardPage() {
             </Suspense>
             <div className="space-y-4">
               <Suspense fallback={<SkeletonCard className="min-h-[160px]" />}>
-                <ErpLowStock companyId={COMPANY_ID} businessType={rawBusinessType} />
+                <ErpLowStock companyId={COMPANY_ID} businessType={rawBusinessType} lang={lang} />
               </Suspense>
               <QuickStatsCard customersCount={0} productsCount={productsCount ?? 0} />
               <QuickActionsCard features={features} />

@@ -2,7 +2,6 @@ import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { formatCurrency } from '@/lib/utils'
 import { t } from '@/lib/i18n/server'
-import { cookies, headers } from 'next/headers'
 import Link from 'next/link'
 import {
   ShoppingCart,

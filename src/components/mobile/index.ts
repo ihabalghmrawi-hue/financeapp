@@ -14,7 +14,6 @@ export { SwipeablePanel } from './SwipeablePanel'
 export { MobileDataGrid } from './MobileDataGrid'
 export { AdaptiveTypography, ResponsiveText } from './AdaptiveTypography'
 export { CapacitorBridge, AndroidSafeArea } from './CapacitorBridge'
-export { LazyWorkspace, MemoizedWorkspace, MobileFallback } from './LazyWorkspace'
 export {
   MobileOptimizedRow,
   MobileRenderer,

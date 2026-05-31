@@ -2,13 +2,17 @@ import { createClient } from '@/lib/supabase/server'
 import { t } from '@/lib/i18n/server'
 import Link from 'next/link'
 import { AlertTriangle, CheckCircle } from 'lucide-react'
-import type { Lang } from '@/lib/i18n'
-import { cookies } from 'next/headers'
 
-export async function ErpLowStock({ companyId, businessType }: { companyId: string; businessType: string }) {
+export async function ErpLowStock({
+  companyId,
+  businessType,
+  lang,
+}: {
+  companyId: string
+  businessType: string
+  lang: string
+}) {
   const supabase = createClient()
-  const cookieStore = await cookies()
-  const lang: Lang = (cookieStore.get('lang')?.value as Lang) || 'ar'
 
   const { data: lowStockProducts } = await supabase
     .from('products')
