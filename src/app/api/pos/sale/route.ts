@@ -72,7 +72,13 @@ export async function POST(req: NextRequest) {
     const payment_status = (paid_amount || 0) >= total ? 'paid' : (paid_amount || 0) > 0 ? 'partial' : 'unpaid'
     const change_amount = Math.max(0, (paid_amount || 0) - total)
 
+    // ── Validate payment ────────────────────────────────────────────────────────
+    if ((paid_amount || 0) <= 0 && total > 0) {
+      return NextResponse.json({ error: 'يجب إدخال مبلغ الدفع قبل إتمام الفاتورة' }, { status: 400 })
+    }
+
     // ── 1. Create sale record ──────────────────────────────────────────────────
+    const sale_date = new Date().toISOString().slice(0, 10)
     const { data: sale, error: saleError } = await supabase
       .from('sales')
       .insert({
@@ -90,6 +96,7 @@ export async function POST(req: NextRequest) {
         change_amount,
         due_amount,
         payment_status,
+        sale_date,
         status: 'completed',
         notes: notes || null,
       })
