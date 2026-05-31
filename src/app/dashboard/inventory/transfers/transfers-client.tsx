@@ -10,6 +10,8 @@ import { localizedName } from '@/lib/i18n'
 interface TransfersClientProps {
   transfers: any[]
   warehouses: any[]
+  products: any[]
+  inventory: any[]
   companyId: string
   currency: string
 }
@@ -26,6 +28,8 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
 export function TransfersClient({
   transfers: initialTransfers,
   warehouses,
+  products,
+  inventory,
   companyId,
   currency,
 }: TransfersClientProps) {
@@ -42,7 +46,27 @@ export function TransfersClient({
     reference: `TRF-${Date.now()}`,
     notes: '',
   })
-  const [transferItems, setTransferItems] = useState([{ product_name: '', quantity: 1 }])
+  const [transferItems, setTransferItems] = useState([{ item_id: '', qty: 1 }])
+
+  const productsByWarehouse = useMemo(() => {
+    const map: Record<string, any[]> = {}
+    for (const inv of inventory) {
+      if (!map[inv.warehouse_id]) {
+        map[inv.warehouse_id] = []
+      }
+      map[inv.warehouse_id].push(inv)
+    }
+    return map
+  }, [inventory])
+
+  const availableProducts = useMemo(() => {
+    if (!transferForm.from_warehouse_id) {
+      return products
+    }
+    const invItems = productsByWarehouse[transferForm.from_warehouse_id] || []
+    const productIds = new Set(invItems.map((i: any) => i.product_id))
+    return products.filter((p: any) => productIds.has(p.id))
+  }, [products, productsByWarehouse, transferForm.from_warehouse_id])
 
   const filtered = useMemo(
     () =>
@@ -85,7 +109,7 @@ export function TransfersClient({
     }
   }
 
-  const addTransferItem = () => setTransferItems((prev) => [...prev, { product_name: '', quantity: 1 }])
+  const addTransferItem = () => setTransferItems((prev) => [...prev, { item_id: '', qty: 1 }])
   const removeTransferItem = (idx: number) => setTransferItems((prev) => prev.filter((_, i) => i !== idx))
   const updateTransferItem = (idx: number, field: string, value: any) => {
     setTransferItems((prev) => {
@@ -105,8 +129,8 @@ export function TransfersClient({
       setError('يجب أن يختلف المستودع المصدر عن المستودع الهدف')
       return
     }
-    if (transferItems.some((i) => !i.product_name)) {
-      setError('أدخل اسم المنتج لجميع الأصناف')
+    if (transferItems.some((i) => !i.item_id)) {
+      setError('اختر المنتج لجميع الأصناف')
       return
     }
     setLoading(true)
@@ -116,9 +140,10 @@ export function TransfersClient({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...transferForm,
-          company_id: companyId,
-          items: transferItems,
+          from_warehouse_id: transferForm.from_warehouse_id,
+          to_warehouse_id: transferForm.to_warehouse_id,
+          notes: transferForm.notes,
+          lines: transferItems,
         }),
       })
       const data = await res.json()
@@ -133,7 +158,7 @@ export function TransfersClient({
         reference: `TRF-${Date.now()}`,
         notes: '',
       })
-      setTransferItems([{ product_name: '', quantity: 1 }])
+      setTransferItems([{ item_id: '', qty: 1 }])
     } catch (e: any) {
       setError(e.message)
     } finally {
@@ -321,21 +346,26 @@ export function TransfersClient({
                   {transferItems.map((item, idx) => (
                     <div key={idx} className="grid grid-cols-12 gap-2 items-center">
                       <div className="col-span-7">
-                        <input
-                          type="text"
-                          value={item.product_name}
-                          onChange={(e) => updateTransferItem(idx, 'product_name', e.target.value)}
-                          placeholder="اسم المنتج"
+                        <select
+                          value={item.item_id}
+                          onChange={(e) => updateTransferItem(idx, 'item_id', e.target.value)}
                           className="w-full border border-input rounded-lg px-2 py-1.5 text-sm bg-background focus:outline-none"
-                        />
+                        >
+                          <option value="">اختر المنتج</option>
+                          {availableProducts.map((p: any) => (
+                            <option key={p.id} value={p.id}>
+                              {localizedName(p, lang)}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                       <div className="col-span-3">
                         <input
                           type="number"
                           min="0.001"
                           step="0.001"
-                          value={item.quantity}
-                          onChange={(e) => updateTransferItem(idx, 'quantity', parseFloat(e.target.value) || 0)}
+                          value={item.qty}
+                          onChange={(e) => updateTransferItem(idx, 'qty', parseFloat(e.target.value) || 0)}
                           placeholder="الكمية"
                           className="w-full border border-input rounded-lg px-2 py-1.5 text-sm bg-background focus:outline-none text-center"
                         />
