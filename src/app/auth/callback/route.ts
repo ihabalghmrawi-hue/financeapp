@@ -14,7 +14,14 @@ export async function GET(request: Request) {
       const user = data.user
       recordLoginAttempt(supabase, user.email ?? 'oauth', true, request)
       createUserSession(supabase, user.id, request)
-      return NextResponse.redirect(`${origin}${next}`)
+
+      const redirectRes = NextResponse.redirect(`${origin}${next}`)
+      redirectRes.cookies.set('app-session-active', '1', {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+      })
+      return redirectRes
     }
   }
 
